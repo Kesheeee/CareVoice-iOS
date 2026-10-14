@@ -1,0 +1,19 @@
+name: iOS checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build-and-core-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core tests
+        run: swift test
+      - name: Build iOS Simulator app
+        run: >-
+          xcodebuild -project CareVoice.xcodeproj -scheme CareVoice
+          -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO build

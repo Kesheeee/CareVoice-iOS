@@ -1,0 +1,242 @@
+[
+  {
+    "id": 1,
+    "en": "Does your child make eye contact? When you call his/her name, does he/she look at you?",
+    "zh": "你的孩子會眼神接觸嗎？當你叫他/她的名字時，他/她會看著你嗎？",
+    "categoryEN": "Social Communication",
+    "categoryZH": "社交溝通",
+    "yesNo": false
+  },
+  {
+    "id": 2,
+    "en": "Does your child smile back or respond to your interactions with a smile?",
+    "zh": "你的孩子會主動對你微笑或笑來回應你的互動嗎？",
+    "categoryEN": "Social Communication",
+    "categoryZH": "社交溝通",
+    "yesNo": false
+  },
+  {
+    "id": 3,
+    "en": "Does your child notice and show interest in other children? (e.g., watching them play)",
+    "zh": "你的孩子會注意到其他小朋友並對他們感興趣嗎？（例如看著他們玩）",
+    "categoryEN": "Social Communication",
+    "categoryZH": "社交溝通",
+    "yesNo": false
+  },
+  {
+    "id": 4,
+    "en": "Does your child imitate your actions or facial expressions? (e.g., waving, clapping)",
+    "zh": "你的孩子會模仿你的動作或表情嗎？（例如揮手、拍手）",
+    "categoryEN": "Social Communication",
+    "categoryZH": "社交溝通",
+    "yesNo": false
+  },
+  {
+    "id": 5,
+    "en": "Does your child show joint attention? (e.g., pointing at something with you, looking at a book together)",
+    "zh": "你的孩子會展示共同注意力嗎？（例如跟你一起指著某樣東西、和你一起看圖書）",
+    "categoryEN": "Social Communication",
+    "categoryZH": "社交溝通",
+    "yesNo": false
+  },
+  {
+    "id": 6,
+    "en": "When your child wants something, does he/she use eye contact or gestures to get your attention?",
+    "zh": "當你的孩子想要東西時，他/她會用眼神或手勢來引起你的注意嗎？",
+    "categoryEN": "Social Communication",
+    "categoryZH": "社交溝通",
+    "yesNo": false
+  },
+  {
+    "id": 7,
+    "en": "Does your child babble (meaningful sounds, not just crying)?",
+    "zh": "你的孩子會發出牙牙學語的聲音嗎（有意義的聲音，不只是哭鬧）？",
+    "categoryEN": "Language Ability",
+    "categoryZH": "語言能力",
+    "yesNo": true
+  },
+  {
+    "id": 8,
+    "en": "Does your child say single words (e.g., \"Mama\", \"car\", \"water\")?",
+    "zh": "你的孩子會說單字嗎（例如「媽」、「車」、「水」）？",
+    "categoryEN": "Language Ability",
+    "categoryZH": "語言能力",
+    "yesNo": true
+  },
+  {
+    "id": 9,
+    "en": "Can your child combine two words together (e.g., \"want car\", \"mommy hug\")?",
+    "zh": "你的孩子能夠將兩個字組合在一起說嗎（例如「要車車」、「媽媽抱」）？",
+    "categoryEN": "Language Ability",
+    "categoryZH": "語言能力",
+    "yesNo": true
+  },
+  {
+    "id": 10,
+    "en": "Does your child repeat speech (e.g., TV ad lines, echoing what you say)?",
+    "zh": "你的孩子會重複說話嗎（例如重複電視廣告詞、重複你說過的話）？",
+    "categoryEN": "Language Ability",
+    "categoryZH": "語言能力",
+    "yesNo": false
+  },
+  {
+    "id": 11,
+    "en": "Can your child express needs with language (e.g., saying \"I want water\" instead of dragging you to the cup)?",
+    "zh": "你的孩子能用語言表達他/她的需求嗎（例如說「我要喝水」而不是只是拉你去水壺）？",
+    "categoryEN": "Language Ability",
+    "categoryZH": "語言能力",
+    "yesNo": false
+  },
+  {
+    "id": 12,
+    "en": "Can your child understand simple instructions (e.g., \"give me the ball\", \"come here\")?",
+    "zh": "你的孩子能夠理解簡單的指示嗎（例如「把球給我」、「過來」）？",
+    "categoryEN": "Language Ability",
+    "categoryZH": "語言能力",
+    "yesNo": false
+  },
+  {
+    "id": 13,
+    "en": "Does your child use gestures to communicate (e.g., pointing, waving goodbye, nodding/shaking head)?",
+    "zh": "你的孩子會用手勢來溝通嗎（例如指物、揮手表示再見、點頭/搖頭）？",
+    "categoryEN": "Gestures & Expression",
+    "categoryZH": "手勢與表達",
+    "yesNo": false
+  },
+  {
+    "id": 14,
+    "en": "When unhappy, does your child use gestures or actions to communicate (e.g., pulling your clothes, guiding you to what they want)?",
+    "zh": "當你的孩子不開心時，他/她會用手勢或行動來表達嗎（例如拉你的衣服、把你推到想要的東西前）？",
+    "categoryEN": "Gestures & Expression",
+    "categoryZH": "手勢與表達",
+    "yesNo": false
+  },
+  {
+    "id": 15,
+    "en": "Does your child line up toys or objects repeatedly (e.g., by color or size in a row)?",
+    "zh": "你的孩子會反覆排列玩具或物品嗎（例如按顏色或大小排成一排）？",
+    "categoryEN": "Repetitive Behaviors",
+    "categoryZH": "重複行為",
+    "yesNo": false
+  },
+  {
+    "id": 16,
+    "en": "Does your child have intensely restricted interests (e.g., only playing with one toy, only talking about one topic)?",
+    "zh": "你的孩子對某些事物有非常強烈的固執興趣嗎（例如只玩同一個玩具、只談論同一個話題）？",
+    "categoryEN": "Repetitive Behaviors",
+    "categoryZH": "重複行為",
+    "yesNo": false
+  },
+  {
+    "id": 17,
+    "en": "Does your child make repetitive body movements (e.g., hand-flapping, spinning, finger flicking)?",
+    "zh": "你的孩子會做出重複的身體動作嗎（例如搖手、轉圈、抖動手指）？",
+    "categoryEN": "Repetitive Behaviors",
+    "categoryZH": "重複行為",
+    "yesNo": false
+  },
+  {
+    "id": 18,
+    "en": "Does your child struggle with changes in daily routine (e.g., taking a different route home, changed schedule)?",
+    "zh": "你的孩子對日常生活的改變感到困難嗎（例如換了一條路回家、改變了日常作息）？",
+    "categoryEN": "Repetitive Behaviors",
+    "categoryZH": "重複行為",
+    "yesNo": false
+  },
+  {
+    "id": 19,
+    "en": "Does your child insist on things being done in a certain way (e.g., must take same route, items must be in fixed positions)?",
+    "zh": "你的孩子堅持某些事情必須以特定方式進行嗎（例如一定要走同一條路、物品必須放在固定位置）？",
+    "categoryEN": "Repetitive Behaviors",
+    "categoryZH": "重複行為",
+    "yesNo": false
+  },
+  {
+    "id": 20,
+    "en": "Does your child overreact to loud noises (e.g., vacuum cleaner, alarm clock causing distress)?",
+    "zh": "你的孩子對大聲的聲音有過度反應嗎（例如吸塵器、鬧鐘聲讓他/她不安）？",
+    "categoryEN": "Sensory Response",
+    "categoryZH": "感官反應",
+    "yesNo": false
+  },
+  {
+    "id": 21,
+    "en": "Does your child reject certain food textures (e.g., only eating soft food, refusing crunchy or pureed food)?",
+    "zh": "你的孩子對某些質地的食物特別排斥嗎（例如只吃軟的食物、拒絕脆的或泥狀食物）？",
+    "categoryEN": "Sensory Response",
+    "categoryZH": "感官反應",
+    "yesNo": false
+  },
+  {
+    "id": 22,
+    "en": "Does your child have unusual reactions to touch (e.g., disliking being touched, or seeking certain textures)?",
+    "zh": "你的孩子對觸覺刺激有特殊反應嗎（例如不喜歡被碰觸、或者特別喜歡某些質地）？",
+    "categoryEN": "Sensory Response",
+    "categoryZH": "感官反應",
+    "yesNo": false
+  },
+  {
+    "id": 23,
+    "en": "Is your child sensitive to bright lights or flashing lights?",
+    "zh": "你的孩子對明亮的光線或閃光敏感嗎？",
+    "categoryEN": "Sensory Response",
+    "categoryZH": "感官反應",
+    "yesNo": false
+  },
+  {
+    "id": 24,
+    "en": "Does your child seem to respond differently to pain (e.g., no reaction to injury, or screaming at light touch)?",
+    "zh": "你的孩子似乎對痛覺的反應與常人不同嗎（例如受傷了但沒有反應，或者對輕微碰觸大喊大叫）？",
+    "categoryEN": "Sensory Response",
+    "categoryZH": "感官反應",
+    "yesNo": false
+  },
+  {
+    "id": 25,
+    "en": "Does your child seek sensory stimulation (e.g., staring at spinning objects, smelling objects)?",
+    "zh": "你的孩子會尋求感官刺激嗎（例如盯著旋轉的物體看、聞物體的氣味）？",
+    "categoryEN": "Sensory Response",
+    "categoryZH": "感官反應",
+    "yesNo": false
+  },
+  {
+    "id": 26,
+    "en": "Does your child engage in pretend play (e.g., pretending to drink from a cup, talking on a toy phone)?",
+    "zh": "你的孩子會進行假想遊戲嗎（例如拿杯子假裝喝茶、拿電話假裝講話）？",
+    "categoryEN": "Play Style",
+    "categoryZH": "遊戲方式",
+    "yesNo": false
+  },
+  {
+    "id": 27,
+    "en": "Does your child play with toys in varied ways (not just one way with the same toy)?",
+    "zh": "你的孩子玩玩具的方式是多樣化的嗎（不是只用一種方式玩同一個玩具）？",
+    "categoryEN": "Play Style",
+    "categoryZH": "遊戲方式",
+    "yesNo": false
+  },
+  {
+    "id": 28,
+    "en": "Does your child play WITH other children (not just parallel play, but interactive)?",
+    "zh": "你的孩子會和其他小朋友一起玩嗎（不只是並排各玩各的，而是有互動）？",
+    "categoryEN": "Play Style",
+    "categoryZH": "遊戲方式",
+    "yesNo": false
+  },
+  {
+    "id": 29,
+    "en": "Has your child ever lost skills they had already learned (e.g., stopped speaking words they used to say)?",
+    "zh": "你的孩子曾經失去過已經學會的技能嗎（例如本來會說的話突然不說了）？",
+    "categoryEN": "Regression",
+    "categoryZH": "退步現象",
+    "yesNo": true
+  },
+  {
+    "id": 30,
+    "en": "During your observation, has there been a noticeable regression in your child's social or communication abilities?",
+    "zh": "在你觀察期間，孩子的社交或溝通能力是否有明顯的退步？",
+    "categoryEN": "Regression",
+    "categoryZH": "退步現象",
+    "yesNo": true
+  }
+]

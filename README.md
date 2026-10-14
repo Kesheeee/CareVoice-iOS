@@ -1,0 +1,75 @@
+# CareVoice for iOS
+
+A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English and Traditional Chinese. Based on the UI+UX_1013 design pack, with the onboarding guidance taking precedence over the mockup's conflicting score screen.
+
+## Run it
+
+1. Clone this **private** repository after accepting your collaborator invitation:
+   ```sh
+   git clone https://github.com/Kesheeee/CareVoice-iOS.git
+   cd CareVoice-iOS
+   ```
+2. Open `CareVoice.xcodeproj` in Xcode 16 or newer.
+3. Select the **CareVoice** scheme and an iPhone simulator, then press **Run**.
+4. For a physical iPhone, choose your Apple development team under **Signing & Capabilities**. Change the bundle identifier if your team needs a unique identifier. An Apple developer account is not needed for the simulator.
+
+Minimum deployment target: **iOS 17**. No package installation, API key, backend, paid service, or secret configuration is required. The checked-in Xcode project is ready to open.
+
+## What works
+
+- Optional nickname and age, six parent-selected journey stages, first-concern notes.
+- Bilingual home, profile, resources and navigation.
+- All 30 supplied observation questions, autosave, skip, “Not sure”, review and immediate professional-follow-up guidance for reported/uncertain loss of skills.
+- Create/edit/delete timestamped observations; categories, place, duration, context and what helped; search and filters.
+- On-device speech transcription where Apple's recognizer supports the selected locale. Permission and availability failures offer text input. Voice capture stops after 60 seconds or on backgrounding. Audio is not saved.
+- Stage-specific personal checklists linked to official DH/SWD information.
+- Family and appointment report formats, multipage PDF export through the iOS share sheet.
+- Local persistence with iOS complete file protection; no analytics or cloud sync; delete-all control.
+
+## Work together
+
+The repository must remain **Private**. The owner can invite your partner at:
+https://github.com/Kesheeee/CareVoice-iOS/settings/access
+
+Invite their GitHub username as a collaborator with write access. They must accept the invitation before cloning. A repository link alone does not grant access.
+
+Use a branch for each change:
+
+```sh
+git switch -c feature/your-feature
+# Edit and test in Xcode
+git add .
+git commit -m "Describe the change"
+git push -u origin feature/your-feature
+```
+
+Open a pull request into `main` and ask your partner to review. See [CONTRIBUTING.md](CONTRIBUTING.md) for the source map and test commands.
+
+## Product boundaries
+
+This is a working development MVP, not a clinically validated screening tool or an App Store release. It produces no risk score, severity level, diagnosis or automated clinical interpretation. A journey stage comes only from the caregiver's selection. Related records are grouped by the chosen category, not AI inference.
+
+The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. Backend accounts, family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
+
+## Verification
+
+```sh
+swift test
+xcodebuild -project CareVoice.xcodeproj -scheme CareVoice \
+  -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+  CODE_SIGNING_ALLOWED=NO build
+```
+
+For UI tests, choose an available iPhone simulator and run **Product → Test** in Xcode. The UI tests use a separate local file and synthetic observations. Test results include screenshots. See [docs/VALIDATION.md](docs/VALIDATION.md) for the actual checks run on the initial version.
+
+## Source materials and official links
+
+The questionnaire content is adapted from the supplied UI+UX_1013 English/Traditional Chinese question lists. The original DOCX, HTML and image pack are not included; the implementation and reconciliation notes are included.
+
+- [DH CAS FAQ](https://www.dhcas.gov.hk/en/faq.html)
+- [DH registration and appointments](https://www.dhcas.gov.hk/en/registration_appointment.html)
+- [DH follow-up and referrals](https://www.dhcas.gov.hk/en/management_referral.html)
+- [SWD central referral system](https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/)
+- [SWD on-site pre-school services](https://www.swd.gov.hk/oprs/index_en.htm)
+
+Links reviewed 15 October 2026. Service eligibility and arrangements must be confirmed with the relevant professional or provider.
