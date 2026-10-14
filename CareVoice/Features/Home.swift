@@ -96,6 +96,7 @@ struct QuestionnaireView: View {
     @State private var summary = false
     @State private var followUp = false
     var body: some View {
+        ScrollViewReader { scroll in
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 if store.questions.isEmpty {
@@ -152,12 +153,15 @@ struct QuestionnaireView: View {
                     Text(store.t("This questionnaire organises observations. It is not a validated screening or diagnostic tool.", "這份問卷用於整理觀察，並非經驗證的篩查或診斷工具。"))
                         .font(.footnote).foregroundStyle(.secondary)
                 }
-            }.padding(24).frame(maxWidth: 680).frame(maxWidth: .infinity)
+            }.padding(24).frame(maxWidth: 680).frame(maxWidth: .infinity).id("questionTop")
         }
         .background(Brand.background).navigationTitle(store.t("Observations", "情況問卷")).navigationBarTitleDisplayMode(.inline)
         .toolbar { Button(store.t("Review", "查看")) { summary = true } }
         .onAppear { index = store.questions.firstIndex { store.data.answers[$0.id] == nil } ?? 0 }
         .sheet(isPresented: $followUp) { NavigationStack { ScrollView { FollowUpCard().padding(24) }.toolbar { Button(store.t("Done", "完成")) { followUp = false } } }.presentationDetents([.medium, .large]) }
+        .onChange(of: index) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
+        .onChange(of: summary) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
+        }
     }
     private func advance() { if index < store.questions.count - 1 { index += 1 } else { summary = true } }
 }

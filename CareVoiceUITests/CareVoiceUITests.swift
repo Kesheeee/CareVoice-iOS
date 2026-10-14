@@ -38,6 +38,7 @@ final class CareVoiceUITests: XCTestCase {
         app.buttons["answer-often"].tap(); app.swipeUp()
         app.buttons["nextQuestion"].tap()
         XCTAssertTrue(app.staticTexts["Question 2 of 30"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["Question 2 of 30"].isHittable)
         snapshot(app, "05-Questionnaire")
         app.navigationBars.buttons.element(boundBy: 0).tap()
         app.buttons["languagePicker"].tap()

@@ -2,6 +2,8 @@
 
 A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English and Traditional Chinese. Based on the UI+UX_1013 design pack, with the onboarding guidance taking precedence over the mockup's conflicting score screen.
 
+<img src="docs/screenshots/home-traditional-chinese.png" alt="CareVoice home screen in Traditional Chinese, running on the iPhone simulator" width="300">
+
 ## Run it
 
 1. Clone this **private** repository after accepting your collaborator invitation:
