@@ -106,21 +106,9 @@ export function QuestionnaireIntro({
   return (
     <section className="questionnaire-intro">
       <h1>{t("Observation questionnaire", "情況問卷")}</h1>
-      <SetupProgress language={language} questionnaire />
-      <div className="questionnaire-facts">
-        <BookOpen size={20} />
-        <ul>
-          <li>{t("30 questions · 7 categories", "30 題 · 7 個類別")}</li>
-          <li>{t("Answers save automatically", "答案自動儲存")}</li>
-          <li>
-            {t(
-              "Not sure and Skip on every question",
-              "每題可選「不確定」或「略過」",
-            )}
-          </li>
-          <li>{t("No scores or diagnosis", "不作評分或診斷")}</li>
-        </ul>
-      </div>
+
+      <div className="questionnaire-meta"><BookOpen size={17} /><span>{t("30 questions · 7 categories", "30 題 · 7 個類別")}</span></div>
+      <div className="questionnaire-rule"><ShieldCheck size={17} /><span>{t("No scores or diagnosis", "不作評分或診斷")}</span></div>
       <h2 className="subheading">{t("Question categories", "問卷類別")}</h2>
       <div className="category-grid">
         {groups.map(([en, tc, count, Icon], i) => (

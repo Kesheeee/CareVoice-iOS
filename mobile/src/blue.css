@@ -1792,3 +1792,43 @@ main {
 .profile-privacy[open] summary > svg:last-child { transform: rotate(180deg); }
 .profile-privacy h3 { font-size: 0.82rem; margin: 14px 0 8px; }
 .profile-privacy p { font-size: 0.76rem; line-height: 1.7; color: var(--color-muted); }
+
+/* Questionnaire: focused single-question flow and compact category overview. */
+.questionnaire-intro { padding-top: 8px; }
+.questionnaire-intro h1 { font-size: 1.75rem; line-height: 1.25; letter-spacing: -0.035em; margin-bottom: 24px; }
+.questionnaire-meta, .questionnaire-rule { display: flex; align-items: center; gap: 9px; font-size: 0.8rem; color: var(--color-muted); margin: 12px 0; }
+.questionnaire-rule { color: var(--color-accent); }
+.questionnaire-intro .subheading { margin: 26px 4px 10px; font-size: 0.8rem; color: var(--color-muted); }
+.questionnaire-intro .category-grid { display: block; overflow: hidden; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); margin-bottom: 24px; }
+.questionnaire-intro .question-group { display: flex; align-items: center; gap: 12px; min-height: 55px; padding: 13px 16px; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; }
+.questionnaire-intro .question-group:last-child { border-bottom: 0; }
+.questionnaire-intro .question-group svg { flex-shrink: 0; color: var(--color-accent); stroke-width: 1.7; }
+.questionnaire-intro .question-group strong { font-size: 0.86rem; font-weight: 500; }
+.questionnaire-intro .question-group small { margin-left: auto; white-space: nowrap; font-size: 0.72rem; color: var(--color-muted); }
+.questionnaire-screen .question-top { margin: 8px 0 16px; gap: 12px; }
+.questionnaire-screen .question-top > span { font-size: 1rem; font-weight: 600; color: var(--color-ink); }
+.questionnaire-screen .question-top button { min-height: 44px; font-size: 0.78rem; }
+.questionnaire-screen .question-progress { gap: 14px; margin-bottom: 24px; }
+.questionnaire-screen .progress-track { height: 4px; border-radius: 4px; background: var(--color-line); }
+.questionnaire-screen .progress-track i { background: var(--color-accent); border-radius: 4px; }
+.questionnaire-screen .question-progress > span { font-size: 0.75rem; color: var(--color-muted); white-space: nowrap; }
+.questionnaire-screen .question-category { margin: 0 0 10px; padding: 0; background: transparent; border-radius: 0; font-size: 0.78rem; font-weight: 500; color: var(--color-accent); }
+.questionnaire-screen .question-title { margin: 0 0 24px; font-size: 1.45rem; line-height: 1.45; font-weight: 600; letter-spacing: -0.02em; }
+.questionnaire-screen .answer-options { display: grid; gap: 10px; margin: 0 0 24px; }
+.questionnaire-screen .answer-options button { min-height: 56px; padding: 14px 16px; border: 1px solid var(--color-line); border-radius: 12px; background: var(--color-surface); font-size: 0.95rem; font-weight: 450; box-shadow: none; }
+.questionnaire-screen .answer-options button.selected { border-color: var(--color-accent); background: var(--color-blue-soft); color: var(--color-accent); }
+.questionnaire-screen .check-circle { width: 22px; height: 22px; flex-shrink: 0; }
+.questionnaire-screen .question-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+.questionnaire-screen .question-controls button { min-height: 50px; border-radius: 12px; }
+.questionnaire-screen .skip-button { display: block; width: 100%; min-height: 48px; margin: 8px 0 0; font-size: 0.84rem; color: var(--color-muted); }
+.questionnaire-screen .fine-print.centered { margin: 4px 0 0; font-size: 0.69rem; }
+.questionnaire-screen .page-heading h1 { font-size: 1.75rem; }
+.questionnaire-screen .review-boundary { background: transparent; border: 0; padding: 0 0 16px; font-size: 0.76rem; line-height: 1.6; color: var(--color-muted); }
+.questionnaire-screen .review-count { display: flex; justify-content: flex-start; align-items: center; gap: 8px; padding: 18px 4px 12px; margin: 0; border: 0; border-radius: 0; background: transparent; font-size: 0.8rem; }
+.questionnaire-screen .review-count svg { width: 17px; color: var(--color-accent); }
+.questionnaire-screen .review-list { overflow: hidden; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); }
+.questionnaire-screen .review-list button { display: grid; grid-template-columns: 1fr auto; gap: 8px 12px; padding: 16px; margin: 0; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; }
+.questionnaire-screen .review-list button:last-child { border-bottom: 0; }
+.questionnaire-screen .review-list button > span { grid-column: 1; font-size: 0.86rem; line-height: 1.5; }
+.questionnaire-screen .review-list button > strong { grid-column: 1; font-size: 0.76rem; font-weight: 500; color: var(--color-accent); }
+.questionnaire-screen .review-list button > svg { grid-column: 2; grid-row: 1 / 3; align-self: center; color: var(--color-muted); }

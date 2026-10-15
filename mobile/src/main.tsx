@@ -404,7 +404,7 @@ function App() {
           </>
         )}
         {page === "questionnaire" && (
-          <>
+          <div className="questionnaire-screen">
             <Back onClick={() => go("home")} label={t("Home", "首頁")} />
             {warning}
             {review ? (
@@ -455,7 +455,7 @@ function App() {
             ) : (
               <>
                 <div className="section-head question-top">
-                  <span>{t("Everyday reflection", "日常觀察問卷")}</span>
+                  <span>{t("Questionnaire", "觀察問卷")}</span>
                   <button
                     className="text-button"
                     onClick={() => setReview(true)}
@@ -464,7 +464,7 @@ function App() {
                   </button>
                 </div>
                 <div className="question-progress">
-                  <div className="progress-track">
+                  <div className="progress-track" role="progressbar" aria-label={t("Question progress", "問卷進度")} aria-valuemin={1} aria-valuemax={30} aria-valuenow={qIndex + 1}>
                     <i style={{ width: `${((qIndex + 1) / 30) * 100}%` }} />
                   </div>
                   <span>{qIndex + 1} / 30</span>
@@ -583,7 +583,7 @@ function App() {
                 </p>
               </>
             )}
-          </>
+          </div>
         )}
         {page === "resources" && <Community language={data.language} />}
         {page === "profile" && (
