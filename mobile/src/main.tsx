@@ -379,7 +379,7 @@ function App() {
         )}
         {page === "records" && (
           <>
-            <PageHeading title={t("Behavior records", "行為記錄")} />
+            <PageHeading title={t("Records", "記錄")} />
             <h2 className="record-method-title">
               {t("Choose recording method", "選擇記錄方式")}
             </h2>
@@ -403,13 +403,7 @@ function App() {
                 {t("Text record", "文字記錄")}
               </button>
             </div>
-            <button
-              className="primary full"
-              onClick={() => setRecord(newRecord())}
-            >
-              <Plus size={19} />
-              {t("Add an observation", "新增觀察")}
-            </button>
+
             <label className="search-box">
               <Search size={18} />
               <input
@@ -418,6 +412,15 @@ function App() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              {search && (
+                <button
+                  className="clear-search"
+                  aria-label={t("Clear search", "清除搜尋")}
+                  onClick={() => setSearch("")}
+                >
+                  <X size={18} />
+                </button>
+              )}
             </label>
             <label className="filter-label">
               {t("Category", "分類")}
@@ -449,7 +452,7 @@ function App() {
             {!data.records.length ? (
               <Empty
                 icon={<BookOpen />}
-                title={t("A notebook for your family", "屬於你們的記錄簿")}
+                title={t("No records yet", "暫無記錄")}
               />
             ) : (
               !data.records.some(
@@ -973,16 +976,20 @@ function App() {
               </button>
             </div>
 
-            {!data.profile && <SetupProgress language={data.language} />}
-            <ProfileFields
-              profile={draftProfile}
-              onChange={setDraftProfile}
-              language={data.language}
-            />
-            <button className="primary full" disabled={locked} type="submit">
-              {t("Save profile", "儲存檔案")}
-              <Check size={18} />
-            </button>
+            <div className="sheet-body">
+              {!data.profile && <SetupProgress language={data.language} />}
+              <ProfileFields
+                profile={draftProfile}
+                onChange={setDraftProfile}
+                language={data.language}
+              />
+            </div>
+            <div className="sheet-actions">
+              <button className="primary full" disabled={locked} type="submit">
+                {t("Save profile", "儲存檔案")}
+                <Check size={18} />
+              </button>
+            </div>
           </form>
         </dialog>
       )}
@@ -1040,147 +1047,156 @@ function App() {
               </button>
             </div>
 
-            {voiceEntry && (
-              <div className="voice-entry-help">
-                <Mic size={22} />
-                <strong>
-                  {t("Use your keyboard microphone", "使用鍵盤的麥克風")}
-                </strong>
-                <p>
-                  {t(
-                    "Tap the observation field, then your phone keyboard’s microphone. Check the transcript before saving. CareVoice does not record or upload audio.",
-                    "點選觀察欄位，再點手機鍵盤的麥克風。儲存前請核對文字，CareVoice 不會錄音或上傳音訊。",
-                  )}
-                </p>
-              </div>
-            )}
-            <label>
-              {t("What happened?", "發生了甚麼？")}
-              <textarea
-                className="observation-input"
-                required
-                maxLength={10000}
-                value={record.text}
-                placeholder={t("Today, I noticed…", "今天，我留意到……")}
-                onChange={(e) => setRecord({ ...record, text: e.target.value })}
-              />
-            </label>
-            <label>
-              {t("Category", "分類")}
-              <select
-                aria-label={t("Category", "分類")}
-                value={record.category}
-                onChange={(e) =>
-                  setRecord({ ...record, category: e.target.value as Category })
-                }
-              >
-                {Object.entries(categories).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {pair(v)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              {t("When", "時間")}
-              <input
-                type="datetime-local"
-                required
-                value={new Date(
-                  new Date(record.date).getTime() -
-                    new Date(record.date).getTimezoneOffset() * 60000,
-                )
-                  .toISOString()
-                  .slice(0, 16)}
-                onChange={(e) => {
-                  if (e.target.value)
-                    setRecord({
-                      ...record,
-                      date: new Date(e.target.value).toISOString(),
-                    });
-                }}
-              />
-            </label>
-            <div className="form-row">
+            <div className="sheet-body">
+              {voiceEntry && (
+                <div className="voice-entry-help">
+                  <Mic size={22} />
+                  <strong>
+                    {t("Use your keyboard microphone", "使用鍵盤的麥克風")}
+                  </strong>
+                  <p>
+                    {t(
+                      "Tap the observation field, then your phone keyboard’s microphone. Check the transcript before saving. CareVoice does not record or upload audio.",
+                      "點選觀察欄位，再點手機鍵盤的麥克風。儲存前請核對文字，CareVoice 不會錄音或上傳音訊。",
+                    )}
+                  </p>
+                </div>
+              )}
               <label>
-                {t("Place (optional)", "地點（選填）")}
-                <input
-                  maxLength={120}
-                  value={record.location}
+                {t("What happened?", "發生了甚麼？")}
+                <textarea
+                  className="observation-input"
+                  required
+                  maxLength={10000}
+                  value={record.text}
+                  placeholder={t("Today, I noticed…", "今天，我留意到……")}
                   onChange={(e) =>
-                    setRecord({ ...record, location: e.target.value })
+                    setRecord({ ...record, text: e.target.value })
                   }
                 />
               </label>
               <label>
-                {t("Minutes (optional)", "分鐘（選填）")}
-                <input
-                  type="number"
-                  min="0"
-                  max="1440"
-                  value={record.durationMinutes ?? ""}
+                {t("Category", "分類")}
+                <select
+                  aria-label={t("Category", "分類")}
+                  value={record.category}
                   onChange={(e) =>
                     setRecord({
                       ...record,
-                      durationMinutes:
-                        e.target.value === "" ? null : Number(e.target.value),
+                      category: e.target.value as Category,
                     })
                   }
+                >
+                  {Object.entries(categories).map(([k, v]) => (
+                    <option key={k} value={k}>
+                      {pair(v)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                {t("When", "時間")}
+                <input
+                  type="datetime-local"
+                  required
+                  value={new Date(
+                    new Date(record.date).getTime() -
+                      new Date(record.date).getTimezoneOffset() * 60000,
+                  )
+                    .toISOString()
+                    .slice(0, 16)}
+                  onChange={(e) => {
+                    if (e.target.value)
+                      setRecord({
+                        ...record,
+                        date: new Date(e.target.value).toISOString(),
+                      });
+                  }}
                 />
               </label>
+              <div className="form-row">
+                <label>
+                  {t("Place (optional)", "地點（選填）")}
+                  <input
+                    maxLength={120}
+                    value={record.location}
+                    onChange={(e) =>
+                      setRecord({ ...record, location: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  {t("Minutes (optional)", "分鐘（選填）")}
+                  <input
+                    type="number"
+                    min="0"
+                    max="1440"
+                    value={record.durationMinutes ?? ""}
+                    onChange={(e) =>
+                      setRecord({
+                        ...record,
+                        durationMinutes:
+                          e.target.value === "" ? null : Number(e.target.value),
+                      })
+                    }
+                  />
+                </label>
+              </div>
+              <details>
+                <summary>
+                  {t("Add context & what helped", "補充情境及有幫助的方法")}
+                </summary>
+                <label>
+                  {t("What happened before?", "之前發生了甚麼？")}
+                  <textarea
+                    value={record.context}
+                    onChange={(e) =>
+                      setRecord({ ...record, context: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  {t("What helped?", "有甚麼幫助？")}
+                  <textarea
+                    value={record.helped}
+                    onChange={(e) =>
+                      setRecord({ ...record, helped: e.target.value })
+                    }
+                  />
+                </label>
+              </details>
+              <p className="fine-print">
+                <AudioLines size={14} />
+                {t(
+                  "Prefer speaking? Use the microphone on your phone’s keyboard.",
+                  "喜歡用說話記錄？可使用手機鍵盤的語音輸入。",
+                )}
+              </p>
             </div>
-            <details>
-              <summary>
-                {t("Add context & what helped", "補充情境及有幫助的方法")}
-              </summary>
-              <label>
-                {t("What happened before?", "之前發生了甚麼？")}
-                <textarea
-                  value={record.context}
-                  onChange={(e) =>
-                    setRecord({ ...record, context: e.target.value })
-                  }
-                />
-              </label>
-              <label>
-                {t("What helped?", "有甚麼幫助？")}
-                <textarea
-                  value={record.helped}
-                  onChange={(e) =>
-                    setRecord({ ...record, helped: e.target.value })
-                  }
-                />
-              </label>
-            </details>
-            <p className="fine-print">
-              <AudioLines size={14} />
-              {t(
-                "Prefer speaking? Use the microphone on your phone’s keyboard.",
-                "喜歡用說話記錄？可使用手機鍵盤的語音輸入。",
-              )}
-            </p>
-            <button
-              className="primary full"
-              disabled={!record.text.trim() || locked}
-              type="submit"
-            >
-              {t("Save observation", "儲存觀察")}
-              <Check size={18} />
-            </button>
-            {data.records.some((r) => r.id === record.id) && (
+            <div className="sheet-actions">
               <button
-                type="button"
-                className="danger-button full"
-                onClick={() => {
-                  const id = record.id;
-                  setRecord(null);
-                  setDeleteId(id);
-                }}
+                className="primary full"
+                disabled={!record.text.trim() || locked}
+                type="submit"
               >
-                <Trash2 size={17} />
-                {t("Delete observation", "刪除觀察")}
+                {t("Save observation", "儲存觀察")}
+                <Check size={18} />
               </button>
-            )}
+              {data.records.some((r) => r.id === record.id) && (
+                <button
+                  type="button"
+                  className="danger-button full"
+                  onClick={() => {
+                    const id = record.id;
+                    setRecord(null);
+                    setDeleteId(id);
+                  }}
+                >
+                  <Trash2 size={17} />
+                  {t("Delete observation", "刪除觀察")}
+                </button>
+              )}
+            </div>
           </form>
         </dialog>
       )}

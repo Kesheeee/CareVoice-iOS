@@ -1,5 +1,5 @@
 /* Hallmark · macrostructure: Mobile dashboard · tone: clear, supportive · anchor hue: blue · theme: UI+UX_1013 v4 */
-/* Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 */
+/* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 */
 .app-shell {
   max-width: 560px;
   background: var(--color-paper);
@@ -891,6 +891,289 @@ h3 {
 }
 @media print {
   .top-tabs {
+    display: none !important;
+  }
+}
+
+/* Phone ergonomics: one navigation, one primary task, fixed form actions. */
+.topbar {
+  min-height: 72px;
+}
+.language,
+.avatar {
+  min-height: 44px;
+  min-width: 44px;
+}
+.language {
+  padding: 0 13px;
+}
+.dashboard-greeting {
+  padding: 24px 0 20px;
+  font-size: 1.5rem;
+}
+.dashboard-profile {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.dashboard-profile .edit-profile {
+  min-height: 44px;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+}
+.profile-identity > span,
+.dashboard-progress {
+  font-size: 0.8rem;
+}
+.dashboard-progress button {
+  min-height: 36px;
+}
+.add-home {
+  margin: 0 0 20px;
+  min-height: 52px;
+  font-size: 0.95rem;
+}
+.dashboard-stats > div {
+  padding: 16px 10px;
+  border-radius: 14px;
+}
+.dashboard-stats strong {
+  font-size: 1.7rem;
+}
+.dashboard-stats > div > span {
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.section-head {
+  margin-top: 28px;
+  margin-bottom: 14px;
+}
+.section-head h2,
+.community-section {
+  font-size: 1rem;
+}
+.module-list > button {
+  min-height: 72px;
+}
+.module-list strong {
+  font-size: 0.9rem;
+}
+.activity-timeline > button > span,
+.empty-activity {
+  font-size: 0.875rem;
+}
+.activity-timeline time {
+  font-size: 0.75rem;
+}
+.bottom-nav {
+  padding-top: 8px;
+  box-shadow: 0 -4px 16px var(--color-shadow);
+}
+.bottom-nav button {
+  min-height: 54px;
+  font-size: 0.72rem;
+  gap: 6px;
+  border-radius: 10px;
+}
+.bottom-nav button.active {
+  background: var(--color-blue-soft);
+}
+.page-heading {
+  padding-top: 24px;
+}
+.page-heading h1 {
+  font-size: 1.5rem;
+}
+.record-method-title {
+  font-size: 0.9rem;
+}
+.record-methods {
+  margin-bottom: 20px;
+}
+.record-methods button {
+  min-height: 58px;
+  font-size: 0.875rem;
+}
+.search-box {
+  margin-top: 0;
+  min-height: 52px;
+}
+.search-box input {
+  flex: 1;
+  min-width: 0;
+}
+.clear-search {
+  min-width: 40px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--color-muted);
+  padding: 0;
+}
+.filter-label {
+  font-size: 0.8rem;
+  margin-bottom: 20px;
+}
+.filter-label select {
+  min-height: 48px;
+  font-size: 0.875rem;
+}
+.record-main > time {
+  width: 50px;
+}
+.record-main > time strong {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+.record-main > time small {
+  font-size: 0.7rem;
+}
+.record-body p {
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.record-tags > span {
+  font-size: 0.7rem;
+  padding: 4px 9px;
+}
+.related-records button {
+  min-height: 44px;
+  padding: 10px;
+  font-size: 0.8rem;
+}
+.related-records h3,
+.related-records time {
+  font-size: 0.7rem;
+}
+.community-link {
+  min-height: 78px;
+}
+.community-link strong {
+  font-size: 0.9rem;
+}
+.community-link small {
+  font-size: 0.72rem;
+}
+.community-questions summary {
+  font-size: 0.9rem;
+  min-height: 44px;
+}
+.community-questions p {
+  font-size: 0.875rem;
+}
+.settings-list button {
+  min-height: 64px;
+  font-size: 0.9rem;
+}
+.settings-list button > span {
+  font-size: 0.8rem;
+}
+.welcome-screen {
+  padding-top: 40px;
+}
+.welcome-screen .primary {
+  min-height: 52px;
+  font-size: 0.95rem;
+}
+.welcome-features > div {
+  font-size: 0.8rem;
+}
+.important-notice p {
+  font-size: 0.8rem;
+}
+.sheet:not(.compact) {
+  padding: 0;
+  overflow: hidden;
+  max-height: calc(100dvh - 24px);
+}
+.sheet:not(.compact) form {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 24px);
+  min-height: 0;
+}
+.sheet-head {
+  padding: 16px 20px;
+  margin: 0;
+  border-bottom: 1px solid var(--color-line);
+  flex-shrink: 0;
+  background: var(--color-surface);
+}
+.sheet-head h2 {
+  font-size: 1.1rem;
+}
+.sheet-body {
+  padding: 0 20px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+.sheet-actions {
+  border-top: 1px solid var(--color-line);
+  padding: 12px 20px max(12px, env(safe-area-inset-bottom));
+  background: var(--color-surface);
+  flex-shrink: 0;
+}
+.sheet-actions .primary {
+  margin: 0;
+  min-height: 50px;
+}
+.sheet-actions .danger-button {
+  min-height: 42px;
+  margin-top: 8px;
+}
+.sheet-body label,
+.stage-options label {
+  font-size: 0.875rem;
+}
+.stage-options label {
+  min-height: 54px;
+  align-items: center;
+}
+.stage-options input {
+  margin-top: 0;
+}
+.sheet-body .fine-print {
+  font-size: 0.76rem;
+}
+@media (max-width: 600px) {
+  .top-tabs {
+    display: none;
+  }
+  .sheet:not(.compact) {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    inset: 0;
+    margin: 0;
+    border-radius: 0;
+  }
+  .sheet:not(.compact) form {
+    height: 100%;
+    max-height: 100dvh;
+  }
+  .sheet-body {
+    flex: 1;
+  }
+  .sheet-head {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+}
+@media (max-width: 359px) {
+  .dashboard-stats > div > span {
+    font-size: 0.7rem;
+  }
+  .record-methods button {
+    font-size: 0.8rem;
+  }
+  .sheet-head,
+  .sheet-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+@media print {
+  .bottom-nav {
     display: none !important;
   }
 }

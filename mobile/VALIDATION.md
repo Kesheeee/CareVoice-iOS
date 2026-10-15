@@ -1,5 +1,9 @@
 # Mobile web verification
 
+## General UI UX pass
+
+15 October 2026: production build and all 5 existing browser suites passed after navigation, typography, recording-action and form layout changes. A 375×812px phone check verified the profile Save action stays on screen while fields scroll and that duplicate top navigation is hidden. Home, Profile and Records screenshots were visually reviewed. Bilingual layouts continue to fit 320/375/414/768px. No business logic, data schema or clinical rules changed.
+
 ## Blue reference update
 
 15 October 2026: production TypeScript/Vite build, 7 domain tests and 5 Chromium browser suites passed. The new suites verify stage-gated onboarding across all six stages, optional manual questionnaire access, autosave/skip, immediate regression follow-up and source link, timing notes, English/Traditional Chinese reports, record methods and category-based related entries, persistence/edit/search/delete, older version-one data, and professional report copy fields. Phone layouts across Welcome, Home, Records, Community, Profile and the editor were checked in both languages at 320/375/414/768px. Descriptive subtitles stay absent. Physical-device keyboard dictation, native builds and Safari remain unverified.

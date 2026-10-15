@@ -86,6 +86,10 @@ export function Dashboard({
           <i style={{ width: `${percent}%` }} />
         </div>
       </section>
+      <button className="primary full add-home" onClick={onAdd}>
+        <Plus size={18} />
+        {t("Add an observation", "新增觀察")}
+      </button>
       <div className="dashboard-stats">
         <div>
           <strong>{monthCount}</strong>
@@ -112,7 +116,7 @@ export function Dashboard({
         </div>
       </div>
       <div className="section-head">
-        <h2>{t("Features", "功能模組")}</h2>
+        <h2>{t("Your tools", "常用功能")}</h2>
       </div>
       <div className="module-list">
         <button onClick={onJourney}>
@@ -126,7 +130,7 @@ export function Dashboard({
           <span className="module-symbol">
             <AudioLines size={22} />
           </span>
-          <strong>{t("Behavior log", "行為記錄")}</strong>
+          <strong>{t("Records", "記錄")}</strong>
           <ChevronRight size={17} />
         </button>
         <button onClick={onReport}>
@@ -169,10 +173,6 @@ export function Dashboard({
           <span>{t("No observations yet", "暫無觀察記錄")}</span>
         </div>
       )}
-      <button className="primary full add-home" onClick={onAdd}>
-        <Plus size={18} />
-        {t("Add an observation", "新增觀察")}
-      </button>
     </>
   );
 }
