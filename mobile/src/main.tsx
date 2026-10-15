@@ -856,10 +856,16 @@ function App() {
                   ? "active"
                   : ""
               }
-              aria-current={page === p ? "page" : undefined}
+              aria-current={
+                page === p ||
+                (p === "home" && ["journey", "questionnaire"].includes(page)) ||
+                (p === "records" && page === "report")
+                  ? "page"
+                  : undefined
+              }
               onClick={() => go(p)}
             >
-              <Icon size={21} strokeWidth={1.7} />
+              <Icon size={23} strokeWidth={1.8} aria-hidden="true" />
               <span>{t(en, cn)}</span>
             </button>
           ))}

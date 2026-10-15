@@ -2,7 +2,7 @@
 
 Reference: UI+UX_1013, Cici UI UX v4. Queenie's onboarding brief governs stage selection and clinical boundaries where mockups conflict.
 
-There is no global top bar, wordmark, top navigation or top-right language control. Each screen begins with its own title, with safe-area padding for phone notches. Navigation lives only at the bottom, and language selection is in Profile.
+There is no global top bar, wordmark, top navigation or top-right language control. Each screen begins with its own title, with safe-area padding for phone notches. Navigation lives only at the bottom, and language selection is in Profile. The tab bar is flat white with a fine top divider, evenly spaced outline icons and small labels. Selection uses blue icon/text rather than a filled pill, with generous touch targets and phone safe-area padding.
 
 The app uses one bottom navigation on phones, a prominent home recording action and fixed dialog headers/save actions with independently scrolling fields. Duplicate recording actions are removed; touch targets and supporting text are larger. Records use 24-hour times and a clear empty state.
 
