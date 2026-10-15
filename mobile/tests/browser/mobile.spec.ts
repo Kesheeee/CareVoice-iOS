@@ -102,6 +102,7 @@ test("Record methods, persistence, explicit related records, edit/filter/delete"
       .click();
     await page.getByLabel("What happened?").fill(text);
     await page.getByLabel("Category", { exact: true }).selectOption("progress");
+    await page.getByRole("button", { name: "More details", exact: true }).click();
     await page.getByLabel("Place (optional)").fill("Home");
     await page
       .getByRole("button", { name: "Save observation", exact: true })

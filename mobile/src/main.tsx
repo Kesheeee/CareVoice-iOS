@@ -880,7 +880,7 @@ function App() {
       )}
       {record && (
         <dialog
-          className="sheet"
+          className="sheet observation-sheet"
           aria-labelledby="record-title"
           onCancel={() => setRecord(null)}
         >
@@ -915,11 +915,11 @@ function App() {
               <h2 id="record-title">
                 {t(
                   data.records.some((r) => r.id === record.id)
-                    ? "Your observation"
-                    : "A moment worth keeping",
+                    ? "Edit observation"
+                    : "Add observation",
                   data.records.some((r) => r.id === record.id)
-                    ? "你嘅觀察"
-                    : "值得記低嘅一刻",
+                    ? "編輯觀察"
+                    : "新增觀察",
                 )}
               </h2>
               <button
@@ -999,6 +999,8 @@ function App() {
                   }}
                 />
               </label>
+              <details className="observation-details">
+                <summary role="button">{t("More details", "補充資料")}<ChevronDown size={17} aria-hidden="true" /></summary>
               <div className="form-row">
                 <label>
                   {t("Place (optional)", "地點（選填）")}
@@ -1027,10 +1029,6 @@ function App() {
                   />
                 </label>
               </div>
-              <details>
-                <summary>
-                  {t("Add context & what helped", "補充當時情況同有幫助嘅方法")}
-                </summary>
                 <label>
                   {t("What happened before?", "之前發生咗咩事？")}
                   <textarea
@@ -1050,13 +1048,7 @@ function App() {
                   />
                 </label>
               </details>
-              <p className="fine-print">
-                <AudioLines size={14} />
-                {t(
-                  "Prefer speaking? Use the microphone on your phone’s keyboard.",
-                  "想用講嘅嚟記錄？可以用手機鍵盤嘅語音輸入。",
-                )}
-              </p>
+
             </div>
             <div className="sheet-actions">
               <button
