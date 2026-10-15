@@ -172,17 +172,6 @@ function App() {
       before?.focus();
     };
   }, [profileOpen, record?.id, resetOpen, deleteId]);
-  const langButton = (
-    <button
-      className="language"
-      aria-label={t("Switch to Traditional Chinese", "Switch to English")}
-      onClick={() => update((d) => ({ ...d, language: zh ? "en" : "zh" }))}
-    >
-      <Globe2 size={16} />
-      {zh ? "EN" : "繁中"}
-    </button>
-  );
-  const logo = <span className="brand">CareVoice</span>;
   const openProfile = () => {
     setDraftProfile(data.profile ?? blankProfile());
     setProfileOpen(true);
@@ -284,14 +273,7 @@ function App() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <button
-          className="logo-button"
-          onClick={() => go("home")}
-          aria-label="CareVoice home"
-        >
-          {logo}
-        </button>
-        <div className="header-actions">{langButton}</div>
+        <span className="brand">CareVoice</span>
       </header>
       {error && (
         <div role="alert" className="error-banner">
@@ -308,26 +290,6 @@ function App() {
             {t("Download saved data", "下載已存資料")}
           </button>
         </div>
-      )}
-      {!["welcome", "questionnaireIntro"].includes(page) && (
-        <nav className="top-tabs" aria-label={t("Sections", "分頁")}>
-          {(
-            [
-              ["home", "Home", "首頁"],
-              ["records", "Records", "記錄"],
-              ["resources", "Community", "社區"],
-              ["profile", "Profile", "我的"],
-            ] as const
-          ).map(([p, en, tc]) => (
-            <button
-              key={p}
-              className={page === p ? "active" : ""}
-              onClick={() => go(p)}
-            >
-              {t(en, tc)}
-            </button>
-          ))}
-        </nav>
       )}
       <main ref={mainRef} tabIndex={-1}>
         {page === "welcome" && (
@@ -746,6 +708,10 @@ function App() {
             </button>
             <div className="settings-list">
               <button
+                aria-label={t(
+                  "Switch to Traditional Chinese",
+                  "Switch to English",
+                )}
                 onClick={() =>
                   update((d) => ({ ...d, language: zh ? "en" : "zh" }))
                 }

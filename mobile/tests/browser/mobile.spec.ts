@@ -44,10 +44,10 @@ test("Queenie onboarding, skip/autosave, regression follow-up and bilingual repo
   await page
     .getByLabel("Roughly when did this happen? (optional)")
     .fill("Last month");
+  await nav(page, "Profile").click();
   await page
     .getByRole("button", { name: "Switch to Traditional Chinese" })
     .click();
-  await expect(page.getByText("值得跟進的變化")).toBeVisible();
   await nav(page, "我的").click();
   await page.getByRole("button", { name: /報告與分享/ }).click();
   await expect(page.locator(".report-paper")).toContainText("Last month");
@@ -202,10 +202,15 @@ test("Phone layouts and bilingual pages fit at 320, 375, 414 and 768px with no s
     await profile(page);
     await page.getByRole("button", { name: "Go to Home", exact: true }).click();
     for (const lang of ["en", "zh"]) {
-      if (lang === "zh")
+      if (lang === "zh") {
+        await nav(page, "Profile").click();
         await page
           .getByRole("button", { name: "Switch to Traditional Chinese" })
           .click();
+        await nav(page, "首頁").click();
+      }
+      await expect(page.locator(".top-tabs")).toHaveCount(0);
+      await expect(page.locator(".topbar button")).toHaveCount(0);
       await page.screenshot({
         path: `test-results/blue-home-${lang}-${width}.png`,
         fullPage: true,
