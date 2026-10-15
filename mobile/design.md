@@ -4,7 +4,7 @@ Reference: UI+UX_1013, Cici UI UX v4. Queenie's onboarding brief governs stage s
 
 The app uses one bottom navigation on phones, a prominent home recording action and fixed dialog headers/save actions with independently scrolling fields. Duplicate recording actions are removed; touch targets and supporting text are larger. Records use 24-hour times and a clear empty state.
 
-The app uses a consistent mobile dashboard: white header, blue navigation, pale blue child profile, two real activity/completion statistics, feature rows and recent activity. Records use timestamped cards and explicit same-category links. No fabricated demo records, phone frames, decorative subtitles, clinical scoring or inferred stages.
+Home uses a compact white child profile, one blue capture action, two shortcuts (next step and reports), one questionnaire count row and recent records. Duplicate completion displays and monthly statistics cards are removed from Home. The app retains a white header and blue bottom navigation. Records use timestamped cards and explicit same-category links. No fabricated demo records, phone frames, decorative subtitles, clinical scoring or inferred stages.
 
 Primary blue is #1565c0, with #0d47a1 for hover and #e3f2fd for pale surfaces. Exact OKLCH equivalents and all other portable tokens live in `src/tokens.css`. System fonts follow the ZIP, with PingFang HK and Traditional Chinese fallbacks. Spacing follows a four-point scale; corner radii are 8–18px. Navigation, forms and dialogs share this system. Motion is limited to pressed controls; reduced motion is supported.
 

@@ -1,5 +1,9 @@
 # Mobile web verification
 
+## Cleaner Home
+
+15 October 2026: production build and all 5 browser suites checked after the Home-only simplification. Both languages fit at 320/375/414/768px. Home retains profile editing, observation capture, questionnaire access, next steps, reports and recent-record editing. Repeated statistics and progress displays were removed. Data and clinical logic are unchanged.
+
 ## General UI UX pass
 
 15 October 2026: production build and all 5 existing browser suites passed after navigation, typography, recording-action and form layout changes. A 375×812px phone check verified the profile Save action stays on screen while fields scroll and that duplicate top navigation is hidden. Home, Profile and Records screenshots were visually reviewed. Bilingual layouts continue to fit 320/375/414/768px. No business logic, data schema or clinical rules changed.
