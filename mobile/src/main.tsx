@@ -182,12 +182,7 @@ function App() {
       {zh ? "EN" : "繁中"}
     </button>
   );
-  const logo = (
-    <span className="brand">
-      <span className="brand-icon">CV</span>
-      CareVoice
-    </span>
-  );
+  const logo = <span className="brand">CareVoice</span>;
   const openProfile = () => {
     setDraftProfile(data.profile ?? blankProfile());
     setProfileOpen(true);
@@ -296,18 +291,7 @@ function App() {
         >
           {logo}
         </button>
-        <div className="header-actions">
-          {langButton}
-          <button
-            className="avatar"
-            aria-label={t("Open profile", "開啟檔案")}
-            onClick={() => go("profile")}
-          >
-            {data.profile?.nickname?.slice(0, 1).toUpperCase() || (
-              <UserRound size={18} />
-            )}
-          </button>
-        </div>
+        <div className="header-actions">{langButton}</div>
       </header>
       {error && (
         <div role="alert" className="error-banner">

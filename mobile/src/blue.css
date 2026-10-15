@@ -1,6 +1,7 @@
 /* Hallmark · macrostructure: Mobile dashboard · tone: clear, supportive · anchor hue: blue · theme: UI+UX_1013 v4 */
 /* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 */
 /* Home refinement: compact profile, single capture action, two shortcuts, recent records. */
+/* App header: wordmark and language only; Profile lives in the bottom navigation. */
 .app-shell {
   max-width: 560px;
   background: var(--color-paper);
@@ -1381,4 +1382,52 @@ h3 {
 }
 .home-recent-list > button > svg {
   color: var(--color-muted);
+}
+
+.topbar {
+  height: auto;
+  min-height: calc(56px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 20px 0;
+  background: var(--color-paper);
+  border: 0;
+  box-shadow: none;
+}
+.topbar .logo-button {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+}
+.topbar .brand {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+.topbar .language {
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  min-height: 44px;
+  padding: 0 4px 0 12px;
+  gap: 6px;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.topbar .language:hover {
+  color: var(--color-accent);
+}
+.topbar .header-actions {
+  gap: 0;
+}
+@media (max-width: 359px) {
+  .topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+@media (min-width: 650px) {
+  .topbar {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
 }

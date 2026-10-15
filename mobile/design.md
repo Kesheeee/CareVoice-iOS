@@ -2,6 +2,8 @@
 
 Reference: UI+UX_1013, Cici UI UX v4. Queenie's onboarding brief governs stage selection and clinical boundaries where mockups conflict.
 
+The top bar is a short, background-matched wordmark with a plain language control; the redundant CV badge and profile avatar are removed. Profile remains in bottom navigation.
+
 The app uses one bottom navigation on phones, a prominent home recording action and fixed dialog headers/save actions with independently scrolling fields. Duplicate recording actions are removed; touch targets and supporting text are larger. Records use 24-hour times and a clear empty state.
 
 Home uses a compact white child profile, one blue capture action, two shortcuts (next step and reports), one questionnaire count row and recent records. Duplicate completion displays and monthly statistics cards are removed from Home. The app retains a white header and blue bottom navigation. Records use timestamped cards and explicit same-category links. No fabricated demo records, phone frames, decorative subtitles, clinical scoring or inferred stages.
