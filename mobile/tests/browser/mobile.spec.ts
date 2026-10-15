@@ -51,7 +51,7 @@ test("Queenie onboarding, skip/autosave, regression follow-up and bilingual repo
   await nav(page, "我的").click();
   await page.getByRole("button", { name: /報告與分享/ }).click();
   await expect(page.locator(".report-paper")).toContainText("Last month");
-  await expect(page.locator(".report-paper")).toContainText("剛留意到一些不同");
+  await expect(page.locator(".report-paper")).toContainText("我只是覺得有啲唔對路");
   await page.reload();
   await expect(page.locator(".dashboard-profile")).toContainText("Alex");
   const saved = await page.evaluate(() =>

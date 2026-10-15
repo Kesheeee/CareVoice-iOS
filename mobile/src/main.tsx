@@ -849,7 +849,7 @@ function App() {
               <h2 id="profile-title">
                 {t(
                   data.profile ? "Edit profile" : "Create child profile",
-                  data.profile ? "編輯檔案" : "建立孩子檔案",
+                  data.profile ? "編輯檔案" : "建立小朋友檔案",
                 )}
               </h2>
               <button

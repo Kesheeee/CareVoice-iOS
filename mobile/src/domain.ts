@@ -73,15 +73,15 @@ export const emptyData = (): AppData => ({
   completedSteps: [],
 });
 export const stages: Record<Stage, [string, string]> = {
-  noticed: ["Just noticing differences", "剛留意到一些不同"],
+  noticed: ["Just noticing differences", "我只是覺得有啲唔對路"],
   professionalFollowUp: [
     "A professional suggested follow-up",
-    "專業人士建議跟進",
+    "母嬰健康院/醫生提過要跟進",
   ],
-  awaitingAssessment: ["Referred / awaiting assessment", "已轉介／等候評估"],
-  assessed: ["Assessed, with a report", "已完成評估並取得報告"],
-  diagnosed: ["Already diagnosed", "已有診斷"],
-  registered: ["Registered for services", "已登記輪候服務"],
+  awaitingAssessment: ["Referred / awaiting assessment", "已轉介/等緊評估"],
+  assessed: ["Assessed, with a report", "已評估，有報告"],
+  diagnosed: ["Already diagnosed", "已確診 ASD"],
+  registered: ["Registered for services", "已經喺中央轉介系統輪候"],
 };
 export const categories: Record<Category, [string, string]> = {
   observation: ["Observation", "日常觀察"],

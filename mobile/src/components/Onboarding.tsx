@@ -145,7 +145,7 @@ export function ProfileFields({
   return (
     <>
       <label>
-        {t("Nickname (optional)", "暱稱（選填）")}
+        {t("Nickname (optional)", "小朋友嘅暱稱（選填）")}
         <input
           maxLength={40}
           autoComplete="nickname"
@@ -192,7 +192,7 @@ export function ProfileFields({
         </label>
       </fieldset>
       <fieldset className="stage-options">
-        <legend>{t("Where are you now?", "你目前在哪個階段？")}</legend>
+        <legend>{t("Where are you now?", "你而家去到邊個階段？")}</legend>
         {Object.entries(stages).map(([value, label]) => (
           <label
             key={value}
@@ -214,11 +214,11 @@ export function ProfileFields({
       <p className="fine-print">
         {t(
           "You choose this stage. Questionnaire answers never change it.",
-          "此階段由你選擇，問卷回答不會改變階段。",
+          "呢個階段由你揀，問卷答案唔會改變你嘅選擇。",
         )}
       </p>
       <label>
-        {t("First noticed", "首次留意日期")}
+        {t("First noticed", "你幾時開始留意到？")}
         <input
           type="date"
           required
@@ -230,7 +230,7 @@ export function ProfileFields({
         />
       </label>
       <label>
-        {t("What prompted you? (optional)", "甚麼令你開始留意？（選填）")}
+        {t("What prompted you? (optional)", "係咩令你開始留意？（選填）")}
         <textarea
           value={profile.concernNotes}
           onChange={(e) =>
@@ -243,13 +243,13 @@ export function ProfileFields({
           <legend>
             {t(
               "From an existing professional report (optional)",
-              "已有專業報告的資料（選填）",
+              "已有專業報告嘅資料（選填）",
             )}
           </legend>
           <p className="fine-print">
             {t(
               "Copy the report exactly. CareVoice does not interpret these details.",
-              "請按報告原文填寫。CareVoice 不會解讀這些資料。",
+              "請照報告原文填寫，CareVoice 唔會解讀呢啲資料。",
             )}
           </p>
           <label>
@@ -274,7 +274,7 @@ export function ProfileFields({
             />
           </label>
           <label>
-            {t("Support level as written in the report", "報告所寫的支援程度")}
+            {t("Support level as written in the report", "報告寫嘅支援程度")}
             <input
               maxLength={160}
               value={profile.reportedSupportLevel ?? ""}
