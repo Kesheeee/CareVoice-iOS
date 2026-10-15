@@ -69,6 +69,7 @@ import {
 } from "./components/Onboarding";
 import { Dashboard } from "./components/Dashboard";
 import { RecordsScreen } from "./components/RecordsScreen";
+import { ReportPreview } from "./components/ReportPreview";
 import { Community } from "./components/Community";
 const questions: Question[] = questionsJson;
 type Page =
@@ -711,20 +712,22 @@ function App() {
           </div>
         )}
         {page === "report" && (
-          <>
+          <div className="reports-screen">
             <Back
               onClick={() => go("records")}
               label={t("Observations", "觀察記錄")}
             />
             <PageHeading title={t("Reports", "報告")} />
-            <div className="segmented">
+            <div className="segmented" role="group" aria-label={t("Report audience", "報告對象")}>
               <button
+                aria-pressed={professional}
                 className={professional ? "active" : ""}
                 onClick={() => setProfessional(true)}
               >
                 {t("Appointment", "專業會面")}
               </button>
               <button
+                aria-pressed={!professional}
                 className={!professional ? "active" : ""}
                 onClick={() => setProfessional(false)}
               >
@@ -733,15 +736,8 @@ function App() {
             </div>
             {safetyRouting && <SafetyRouting language={data.language} />}
             {warning}
-            <div className="report-paper">
-              <span className="report-brand">CareVoice</span>
-              <pre>
-                {reportText(data, [...questions, ...legacyQuestions.filter(q => data.answers[q.id])], professional)
-                  .split("\n")
-                  .slice(1)
-                  .join("\n")}
-              </pre>
-            </div>
+            <ReportPreview text={reportText(data, [...questions, ...legacyQuestions.filter(q => data.answers[q.id])], professional)} />
+            <div className="report-actions">
             <button
               className="primary full"
               onClick={() =>
@@ -758,13 +754,16 @@ function App() {
               <FileText size={18} />
               {t("Print / save PDF", "列印／儲存 PDF")}
             </button>
+            </div>
+            <details className="report-sharing-note"><summary role="button">{t("About sharing", "關於分享")}<ChevronDown size={15} /></summary>
             <p className="fine-print">
               {t(
                 "Review before sharing. Exported reports are independent copies; deleting app data won’t remove them.",
                 "分享之前記得睇清楚。匯出嘅報告係獨立副本，刪除應用程式資料唔會刪埋呢啲副本。",
               )}
             </p>
-          </>
+            </details>
+          </div>
         )}
       </main>
       {!["welcome", "questionnaireIntro"].includes(page) && (
