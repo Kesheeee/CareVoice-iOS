@@ -1737,3 +1737,29 @@ main {
     padding: 16px 14px;
   }
 }
+
+/* Community: compact resource lists and quiet, touch-friendly questions. */
+.community-screen .page-heading { margin: 0 0 28px; }
+.community-screen h1 { font-size: 1.75rem; letter-spacing: -0.035em; }
+.community-screen .community-section { margin: 26px 4px 10px; font-size: 0.86rem; font-weight: 600; color: var(--color-muted); }
+.community-screen .community-group { border: 1px solid var(--color-line); border-radius: 16px; overflow: hidden; box-shadow: none; background: var(--color-surface); }
+.community-screen .community-link { display: flex; align-items: center; gap: 12px; min-height: 72px; padding: 14px 16px; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; box-shadow: none; }
+.community-screen .community-link:last-child { border-bottom: 0; }
+.community-screen .community-resource-icon { display: grid; place-items: center; width: 36px; height: 36px; flex: 0 0 36px; border-radius: 11px; color: var(--color-accent); background: var(--color-blue-soft); }
+.community-screen .community-link strong { flex: 1; min-width: 0; font-size: 0.91rem; font-weight: 500; line-height: 1.45; color: var(--color-ink); }
+.community-screen .community-link > svg { flex-shrink: 0; color: var(--color-muted); width: 16px; }
+.community-screen .community-link:active { background: var(--color-blue-soft); }
+.community-screen .community-questions { border: 1px solid var(--color-line); border-radius: 16px; overflow: hidden; background: var(--color-surface); }
+.community-screen .community-questions details { margin: 0; padding: 0 16px; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; }
+.community-screen .community-questions details:last-child { border-bottom: 0; }
+.community-screen summary { display: flex; align-items: center; gap: 12px; list-style: none; cursor: pointer; }
+.community-screen summary::-webkit-details-marker { display: none; }
+.community-screen .community-questions summary { min-height: 62px; padding: 15px 0; font-size: 0.88rem; font-weight: 500; line-height: 1.5; color: var(--color-ink); }
+.community-screen summary > svg:last-child { flex-shrink: 0; margin-left: auto; color: var(--color-muted); }
+.community-screen details[open] > summary > svg:last-child { transform: rotate(180deg); }
+.community-screen .community-questions p { margin: 0 0 16px; font-size: 0.85rem; line-height: 1.7; color: var(--color-muted); }
+.community-screen .community-questions a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: -6px 0 8px; font-size: 0.82rem; color: var(--color-accent); }
+.community-screen .community-about { margin: 20px 4px 0; padding: 0; border: 0; background: transparent; }
+.community-screen .community-about summary { min-height: 44px; justify-content: center; font-size: 0.74rem; font-weight: 400; color: var(--color-muted); gap: 6px; }
+.community-screen .community-about summary > svg:last-child { margin-left: 0; }
+.community-screen .community-about p { text-align: center; font-size: 0.72rem; line-height: 1.65; }
