@@ -338,9 +338,9 @@ function App() {
           />
         )}
         {page === "journey" && (
-          <>
+          <div className="journey-screen">
             <Back onClick={() => go("home")} label={t("Home", "首頁")} />
-            <PageHeading title={t("Waiting-period navigator", "等候期間嘅下一步")} />
+            <PageHeading title={t("Next steps", "下一步")} />
             {!data.profile ? (
               <Empty
                 icon={<Compass />}
@@ -354,15 +354,12 @@ function App() {
               />
             ) : (
               <>
-                <div className="stage-card">
-                  <Compass size={24} />
-                  <small>{t("YOUR CURRENT STAGE", "目前階段")}</small>
-                  <h2>{pair(stages[data.profile.stage])}</h2>
-                  <button className="text-button" onClick={openProfile}>
-                    {t("Update my stage", "更新階段")}
-                    <Pencil size={14} />
-                  </button>
-                </div>
+                <h2 className="journey-section">{t("Your stage", "你而家嘅階段")}</h2>
+                <button className="journey-stage" onClick={openProfile} aria-label={`${t("Update my stage", "更新階段")} · ${pair(stages[data.profile.stage])}`}>
+                  <span className="journey-stage-icon" aria-hidden="true"><Compass size={22} strokeWidth={1.7} /></span>
+                  <span>{pair(stages[data.profile.stage])}</span>
+                  <Pencil size={17} aria-hidden="true" />
+                </button>
                 <h2 className="subheading">
                   {t("Your personal checklist", "你嘅個人清單")}
                 </h2>
@@ -388,27 +385,30 @@ function App() {
                         <span className="check-circle">
                           {done && <Check size={16} />}
                         </span>
-                        {pair(s)}
+                        <span className="journey-step-label">{pair(s)}</span>
                       </button>
                     );
                   })}
                 </div>
+                <details className="journey-note"><summary role="button">{t("About your checklist", "關於你嘅清單")}<ChevronDown size={15} aria-hidden="true" /></summary>
                 <p className="fine-print">
                   {t(
                     "This is your checklist. Completing a step does not register you for a service or change an official waiting list.",
                     "呢份係你嘅個人清單。剔選項目唔代表已登記服務，亦唔會改變官方輪候狀況。",
                   )}
                 </p>
+                </details>
                 <button
-                  className="secondary full"
+                  className="journey-resources"
                   onClick={() => go("resources")}
                 >
-                  {t("Explore official resources", "查看官方資源")}
+                  <ShieldCheck size={20} aria-hidden="true" />
+                  <span>{t("Explore official resources", "查看官方資源")}</span>
                   <ArrowRight size={16} />
                 </button>
               </>
             )}
-          </>
+          </div>
         )}
         {page === "questionnaire" && (
           <div className="questionnaire-screen">

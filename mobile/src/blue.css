@@ -1865,3 +1865,27 @@ main {
   .report-block h3, .report-document-head { break-after: avoid; }
   .report-block .report-answer { break-before: avoid; }
 }
+
+/* Journey: compact selected stage and a personal checklist. */
+.journey-screen .page-heading { margin: 8px 0 28px; }
+.journey-screen .page-heading h1 { font-size: 1.75rem; letter-spacing: -0.035em; }
+.journey-section, .journey-screen .subheading { margin: 26px 4px 10px; font-size: 0.82rem; font-weight: 600; color: var(--color-muted); }
+.journey-stage { display: flex; align-items: center; gap: 12px; width: 100%; padding: 18px 16px; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); text-align: left; }
+.journey-stage-icon { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border-radius: 12px; color: var(--color-accent); background: var(--color-blue-soft); }
+.journey-stage > span:nth-child(2) { flex: 1; min-width: 0; font-size: 0.95rem; line-height: 1.55; font-weight: 500; }
+.journey-stage > svg { flex-shrink: 0; color: var(--color-accent); }
+.journey-screen .checklist { display: block; overflow: hidden; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); }
+.journey-screen .checklist button { width: 100%; min-height: 72px; gap: 14px; padding: 18px 16px; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; font-size: 0.92rem; line-height: 1.55; }
+.journey-screen .checklist button:last-child { border-bottom: 0; }
+.journey-screen .check-circle { flex: 0 0 24px; width: 24px; height: 24px; border-radius: 7px; }
+.journey-screen .checklist .done { background: var(--color-blue-soft); }
+.journey-screen .checklist .done .journey-step-label { color: var(--color-muted); text-decoration: line-through; }
+.journey-note { margin: 10px 4px 22px; }
+.journey-note summary { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; list-style: none; cursor: pointer; font-size: 0.75rem; color: var(--color-muted); }
+.journey-note summary::-webkit-details-marker { display: none; }
+.journey-note[open] summary svg { transform: rotate(180deg); }
+.journey-note p { font-size: 0.76rem; line-height: 1.7; }
+.journey-resources { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; padding: 16px; border: 1px solid var(--color-line); border-radius: 14px; background: var(--color-surface); color: var(--color-accent); font-size: 0.87rem; text-align: left; }
+.journey-resources span { flex: 1; }
+.journey-resources svg { flex-shrink: 0; }
+.journey-stage:active, .journey-resources:active { background: var(--color-blue-soft); }
