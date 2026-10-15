@@ -1,5 +1,9 @@
 # CareVoice for iOS
 
+## Phone-first web version
+
+The cross-platform phone version is in [`mobile/`](mobile/README.md). It runs in a phone browser now and uses React, TypeScript and a Capacitor configuration for later Android/iOS packaging. From `mobile/`, run `npm ci` then `npm run dev`, or `npm run build` for the static bundle. See its README for features, local data handling and native packaging steps.
+
 A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English and Traditional Chinese. Based on the UI+UX_1013 design pack, with the onboarding guidance taking precedence over the mockup's conflicting score screen.
 
 <img src="docs/screenshots/home-traditional-chinese.png" alt="CareVoice home screen in Traditional Chinese, running on the iPhone simulator" width="300">

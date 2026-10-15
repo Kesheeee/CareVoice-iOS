@@ -1,0 +1,57 @@
+import {test,expect} from '@playwright/test';
+test('Profile, observations, persistence, filters, bilingual questionnaire and report',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:/Let’s make this yours/}).click();
+ await page.getByLabel('Nickname (optional)').fill('Alex');
+ await page.getByRole('button',{name:'Save profile',exact:true}).click();
+ await expect(page.getByRole('button',{name:/Alex/})).toBeVisible();
+ await page.getByRole('button',{name:'Add an observation',exact:true}).click();
+ await page.getByLabel('What happened?').fill('Said hello during play');
+ await page.getByLabel('Category',{exact:true}).selectOption('progress');
+ await page.getByLabel('Place (optional)').fill('Home');
+ await page.getByRole('button',{name:'Save observation',exact:true}).click();
+ await page.reload();
+ await expect(page.getByRole('button',{name:/Said hello during play/})).toBeVisible();
+ await page.getByRole('button',{name:'Observations',exact:true}).click();
+ await page.getByRole('button',{name:/Said hello during play/}).click();
+ await page.getByLabel('What happened?').fill('Said hello again');
+ await page.getByRole('button',{name:'Save observation',exact:true}).click();
+ await page.getByRole('textbox',{name:'Search observations'}).fill('missing');
+ await expect(page.getByText('No matching observations')).toBeVisible();
+ await page.getByRole('button',{name:'Home',exact:true}).click();
+ await page.getByRole('button',{name:/Understand the everyday/}).click();
+ await page.getByRole('button',{name:'Not sure',exact:true}).click();
+ await page.getByRole('button',{name:'Next',exact:true}).click();
+ await expect(page.getByText('2 / 30',{exact:true})).toBeVisible();
+ await page.getByRole('button',{name:'Review answers',exact:true}).click();
+ await page.getByRole('button',{name:/^29\./}).click();
+ await page.getByRole('button',{name:'Yes',exact:true}).click();
+ await expect(page.getByText('A change worth discussing')).toBeVisible();
+ await page.getByRole('button',{name:'Switch to Traditional Chinese'}).click();
+ await expect(page.getByText('值得跟進的變化')).toBeVisible();
+ await page.getByRole('button',{name:'我的',exact:true}).click();
+ await page.getByRole('button',{name:/報告與分享/}).click();
+ await expect(page.locator('.report-paper')).toContainText('Said hello again');
+ await expect(page.locator('.report-paper')).toContainText('Alex');
+ await page.getByRole('button',{name:'Switch to English'}).click();
+ await page.getByRole('button',{name:'Observations',exact:true}).last().click();
+ await page.getByRole('textbox',{name:'Search observations'}).fill('');
+ await page.getByRole('button',{name:/Said hello again/}).click();
+ await page.getByRole('button',{name:'Delete observation',exact:true}).click();
+ await page.getByRole('button',{name:'Delete observation',exact:true}).click();
+ await expect(page.getByText('A notebook for your family')).toBeVisible();
+});
+test('320, 375, 414 and 768 layouts fit without horizontal overflow',async({page})=>{
+ for(const width of [320,375,414,768]){
+  await page.setViewportSize({width,height:900});await page.goto('/');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:`test-results/home-${width}.png`,fullPage:true});
+  await page.getByRole('button',{name:'Switch to Traditional Chinese'}).click();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.getByRole('button',{name:'新增觀察',exact:true}).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  expect(await page.evaluate(()=>document.querySelector('dialog')!.scrollWidth<=document.querySelector('dialog')!.clientWidth)).toBe(true);
+  await page.getByRole('button',{name:'關閉',exact:true}).click();
+  await page.getByRole('button',{name:'Switch to English'}).click();
+ }
+});
