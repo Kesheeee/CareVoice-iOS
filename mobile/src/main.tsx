@@ -40,6 +40,8 @@ import {
   categories,
   emptyData,
   needsFollowUp,
+  needsSafetyRouting,
+  QUESTION_COUNT,
   nextSteps,
   reportText,
   stages,
@@ -55,6 +57,8 @@ import {
 import { browserStore, validateData } from "./platform/storage";
 import { download, shareReport } from "./platform/share";
 import questionsJson from "./questions.json";
+import legacyQuestions from "./legacy-questions.json";
+import { SafetyRouting } from "./components/SafetyRouting";
 import "./styles.css";
 import "./blue.css";
 import {
@@ -178,9 +182,10 @@ function App() {
     setProfileOpen(true);
   };
   const followUp = needsFollowUp(data.answers);
+  const safetyRouting = needsSafetyRouting(data.answers);
   useEffect(() => {
-    if (followUp && page === "questionnaire") window.scrollTo({ top: 0 });
-  }, [followUp, page]);
+    if ((followUp || safetyRouting) && page === "questionnaire") window.scrollTo({ top: 0 });
+  }, [followUp, safetyRouting, data.answers[132], data.answers[133], page]);
   const warning = followUp ? (
     <aside className="notice" role="alert">
       <Heart size={20} />
@@ -189,7 +194,7 @@ function App() {
         <p>
           {t(
             "You answered Yes or Not sure about a loss of skills. Discuss this observation promptly with a qualified professional.",
-            "你在技能退步題目回答「是」或「不確定」。請盡快與合資格專業人士討論這些觀察。",
+            "你喺技能退步題目揀咗「有」或「唔肯定」。請盡快同醫生或母嬰健康院討論你嘅觀察。",
           )}
         </p>
         <a
@@ -288,6 +293,7 @@ function App() {
         )}
         {page === "home" && (
           <>
+            {safetyRouting && <SafetyRouting language={data.language} />}
             {warning}
             <Dashboard
               data={data}
@@ -406,6 +412,7 @@ function App() {
         {page === "questionnaire" && (
           <div className="questionnaire-screen">
             <Back onClick={() => go("home")} label={t("Home", "首頁")} />
+            {safetyRouting && <SafetyRouting language={data.language} />}
             {warning}
             {review ? (
               <>
@@ -423,9 +430,10 @@ function App() {
                 </button>
                 <div className="review-count">
                   <BookOpen />
-                  <strong>{answeredCount(data.answers)} / 30</strong>
+                  <strong>{answeredCount(data.answers)} / {QUESTION_COUNT}</strong>
                   <span>{t("answered", "已回答")}</span>
                 </div>
+                {Object.keys(data.answers).some(id => Number(id) < 101) && <p className="fine-print">{t("Earlier questionnaire responses are preserved in your report and backup. These revised questions start fresh.", "舊版問卷回答已保留喺報告同備份。新版問題需要重新回答。")}</p>}
                 <div className="review-list">
                   {questions.map((q, i) => (
                     <button
@@ -436,7 +444,7 @@ function App() {
                       }}
                     >
                       <span>
-                        {q.id}. {zh ? q.zh : q.en}
+                        {i + 1}. {zh ? q.zh : q.en}
                       </span>
                       <strong>
                         {data.answers[q.id]
@@ -464,10 +472,10 @@ function App() {
                   </button>
                 </div>
                 <div className="question-progress">
-                  <div className="progress-track" role="progressbar" aria-label={t("Question progress", "問卷進度")} aria-valuemin={1} aria-valuemax={30} aria-valuenow={qIndex + 1}>
-                    <i style={{ width: `${((qIndex + 1) / 30) * 100}%` }} />
+                  <div className="progress-track" role="progressbar" aria-label={t("Question progress", "問卷進度")} aria-valuemin={1} aria-valuemax={QUESTION_COUNT} aria-valuenow={qIndex + 1}>
+                    <i style={{ width: `${((qIndex + 1) / QUESTION_COUNT) * 100}%` }} />
                   </div>
-                  <span>{qIndex + 1} / 30</span>
+                  <span>{qIndex + 1} / {QUESTION_COUNT}</span>
                 </div>
                 <p className="question-category">
                   {zh
@@ -479,9 +487,9 @@ function App() {
                 </h1>
 
                 <div className="answer-options">
-                  {(questions[qIndex].yesNo
+                  {(questions[qIndex].options ?? (questions[qIndex].yesNo
                     ? ["yes", "no", "unsure"]
-                    : ["never", "rarely", "sometimes", "often", "unsure"]
+                    : ["never", "sometimes", "often", "unsure"])
                   ).map((a) => (
                     <button
                       key={a}
@@ -510,14 +518,14 @@ function App() {
                     </button>
                   ))}
                 </div>
-                {[29, 30].includes(questions[qIndex].id) &&
+                {questions[qIndex].safety === "regression" &&
                   ["yes", "unsure"].includes(
                     data.answers[questions[qIndex].id],
                   ) && (
                     <label className="regression-note">
                       {t(
                         "Roughly when did this happen? (optional)",
-                        "大概何時發生？（選填）",
+                        "大概係幾時發生？（選填）",
                       )}
                       <input
                         maxLength={250}
@@ -549,12 +557,12 @@ function App() {
                     className="primary"
                     disabled={!data.answers[questions[qIndex].id]}
                     onClick={() =>
-                      qIndex === 29 ? setReview(true) : setQIndex((i) => i + 1)
+                      qIndex === questions.length - 1 ? setReview(true) : setQIndex((i) => i + 1)
                     }
                   >
                     {t(
-                      qIndex === 29 ? "Review" : "Next",
-                      qIndex === 29 ? "檢視" : "下一題",
+                      qIndex === questions.length - 1 ? "Review" : "Next",
+                      qIndex === questions.length - 1 ? "檢視" : "下一題",
                     )}
                     <ArrowRight size={17} />
                   </button>
@@ -569,7 +577,7 @@ function App() {
                         [questions[qIndex].id]: "skipped",
                       },
                     }));
-                    qIndex === 29 ? setReview(true) : setQIndex((i) => i + 1);
+                    qIndex === questions.length - 1 ? setReview(true) : setQIndex((i) => i + 1);
                   }}
                 >
                   {t("Skip for now", "暫時略過")}
@@ -640,7 +648,7 @@ function App() {
               <button onClick={questionnaireStart}>
                 <BookOpen size={20} />
                 {t("Observation questions", "觀察問卷")}
-                <span>{answeredCount(data.answers)}/30</span>
+                <span>{answeredCount(data.answers)}/{QUESTION_COUNT}</span>
                 <ChevronRight size={17} />
               </button>
               <button onClick={() => go("report")}>
@@ -723,11 +731,12 @@ function App() {
                 {t("Family", "家庭摘要")}
               </button>
             </div>
+            {safetyRouting && <SafetyRouting language={data.language} />}
             {warning}
             <div className="report-paper">
               <span className="report-brand">CareVoice</span>
               <pre>
-                {reportText(data, questions, professional)
+                {reportText(data, [...questions, ...legacyQuestions.filter(q => data.answers[q.id])], professional)
                   .split("\n")
                   .slice(1)
                   .join("\n")}
@@ -737,7 +746,7 @@ function App() {
               className="primary full"
               onClick={() =>
                 void shareReport(
-                  reportText(data, questions, professional),
+                  reportText(data, [...questions, ...legacyQuestions.filter(q => data.answers[q.id])], professional),
                   "CareVoice",
                 )
               }

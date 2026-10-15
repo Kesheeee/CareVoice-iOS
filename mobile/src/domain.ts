@@ -15,6 +15,8 @@ export type Category =
   | "play"
   | "eating";
 export type Answer =
+  | "varied"
+  | "limited"
   | "never"
   | "rarely"
   | "sometimes"
@@ -59,6 +61,8 @@ export interface Question {
   categoryEN: string;
   categoryZH: string;
   yesNo: boolean;
+  options?: string[];
+  safety?: string;
 }
 export const emptyData = (): AppData => ({
   version: 1,
@@ -89,19 +93,23 @@ export const categories: Record<Category, [string, string]> = {
   eating: ["Eating", "飲食"],
 };
 export const answers: Record<Answer, [string, string]> = {
+  varied: ["Several kinds", "幾種都玩"],
+  limited: ["Only one or two", "淨係一兩樣"],
   never: ["Never", "從不"],
   rarely: ["Rarely", "少見"],
   sometimes: ["Sometimes", "有時"],
   often: ["Often", "經常"],
-  yes: ["Yes", "是"],
-  no: ["No", "否"],
-  unsure: ["Not sure", "不確定"],
+  yes: ["Yes", "有"],
+  no: ["No", "冇"],
+  unsure: ["Not sure", "唔肯定"],
   skipped: ["Skipped", "已略過"],
 };
 export const needsFollowUp = (a: AppData["answers"]) =>
-  [29, 30].some((id) => a[id] === "yes" || a[id] === "unsure");
+  [29, 30, 131].some((id) => a[id] === "yes" || a[id] === "unsure");
+export const QUESTION_COUNT = 33;
+export const needsSafetyRouting = (a: AppData["answers"]) => [132, 133].some(id => a[id] === "yes" || a[id] === "unsure");
 export const answeredCount = (a: AppData["answers"]) =>
-  Object.values(a).filter((v) => v !== "skipped").length;
+  Object.entries(a).filter(([id, v]) => Number(id) >= 101 && Number(id) <= 133 && v !== "skipped").length;
 export const onboardingDestination = (stage: Stage) =>
   stage === "noticed" ? "questionnaireIntro" : "home";
 export function relatedRecords(
@@ -206,11 +214,14 @@ export function reportText(
     "",
     t("Questionnaire responses", "問卷回答"),
   );
-  for (const q of qs) {
+  let legacyHeading = false;
+  for (const [index, q] of qs.entries()) {
+    if (q.id <= 30 && !legacyHeading) { lines.push("", t("Earlier questionnaire responses (original wording)", "舊版問卷回答（原有題目）")); legacyHeading = true; }
     const a = data.answers[q.id];
     if (a && a !== "skipped")
-      lines.push(`${q.id}. ${zh ? q.zh : q.en}`, answers[a][zh ? 1 : 0]);
+      lines.push(`${q.id <= 30 ? q.id : index + 1}. ${zh ? q.zh : q.en}`, answers[a][zh ? 1 : 0]);
   }
+  if (needsSafetyRouting(data.answers)) lines.push(t("A seizure or self-injury response was Yes or Not sure. Seek medical advice promptly; for immediate danger in Hong Kong call 999 or attend A&E.", "抽搐或傷害自己題目回答為「有」或「唔肯定」。請盡快求醫；如在香港有即時危險，致電 999 或前往急症室。"));
   if (needsFollowUp(data.answers))
     lines.push(
       t(
@@ -218,7 +229,7 @@ export function reportText(
         "技能退步題目回答為「是」或「不確定」，請盡快與合資格專業人士討論。",
       ),
     );
-  for (const id of [29, 30])
+  for (const id of [29, 30, 131])
     if (
       (data.answers[id] === "yes" || data.answers[id] === "unsure") &&
       data.regressionWhen?.[id]

@@ -1,6 +1,6 @@
 # CareVoice mobile web
 
-A phone-first React + TypeScript version of CareVoice. English and Traditional Chinese, with the same 30 questions as the Swift app. The existing native iOS project remains alongside it.
+A phone-first React + TypeScript version of CareVoice. English and Traditional Chinese, with 33 questions: 31 verbatim Cantonese prompts from Queenie’s onboarding document and two additional safety prompts for seizures and self-injury. The existing native iOS project remains alongside it.
 
 The current UI follows the blue Cici UI+UX_1013 v4 reference, with subtitles removed. Queenie's onboarding rules override the mockup's score/results screen: Welcome → child profile → caregiver-selected stage → questionnaire introduction only for the just-noticing stage → answer review → Home. All other stages go straight to Home; everyone can open the questionnaire voluntarily from Profile.
 
@@ -21,7 +21,7 @@ The development server is available on your local network. Open the printed Netw
 
 ## Implemented
 
-Profile with six caregiver-selected journey stages; observation create/edit/delete, context and filters; questionnaire with autosave, skip, review and immediate loss-of-skills follow-up guidance; personal journey checklist; official resource links; family/appointment reports, text sharing/download and browser print-to-PDF; local backup/restore and delete-all. No diagnosis or scores. Voice entry uses the device keyboard's dictation rather than sending microphone recordings to a server.
+Profile with six caregiver-selected journey stages; observation create/edit/delete, context and filters; questionnaire with autosave, skip, review and immediate loss-of-skills, seizure and self-injury routing; personal journey checklist; official resource links; family/appointment reports, text sharing/download and browser print-to-PDF; local backup/restore and delete-all. No diagnosis or scores. Voice entry uses the device keyboard's dictation rather than sending microphone recordings to a server.
 
 ## Android / iOS path
 
@@ -48,3 +48,17 @@ Before a native release, replace `src/platform/storage.ts` with a native protect
 Data is local to this browser and origin, schema version 1, with no analytics, login or cloud sync. CareVoice does not encrypt browser storage. Clearing browser data can erase records. Download a JSON backup to transfer between devices or future native builds. Restore validates the schema before replacing current data. A failed/corrupt read blocks writes to preserve the saved copy. Reports are independent copies once exported.
 
 The original Swift app's persisted JSON uses a different date/enum representation; automatic Swift-to-web data migration is not implemented.
+
+
+## Questionnaire revision — 15 October 2026
+
+Source: `Queenie_CareVoice Categorising Suspected ASD for Onboarding_.docx`. Frequency choices are Never / Sometimes / Often / Not sure; play variety has its own choices. Regression uses Yes / No / Not sure plus optional timing. Skip remains available for every question, resolving the document’s conflicting mandatory-regression instruction in favour of the user’s explicit requirement. No answer changes the caregiver-selected stage or produces a clinical score.
+
+New question IDs 101–133 avoid assigning old answers to rewritten prompts. IDs 1–30 remain valid in storage and backups; reports include those responses under an earlier-questionnaire heading with original wording. Current completion counts exclude earlier responses. The optional timing note for the new regression item uses ID 131.
+
+Safety Yes / Not sure on items 132–133 immediately displays conditional Hong Kong emergency routing and prompt medical follow-up, without interpreting the cause. It remains available on Home and Reports after reload. Emergency calls require the user to tap the phone link. The two safety prompts are implementation additions, not verbatim Queenie quotations. No unverified milestone ages or screening thresholds are used.
+
+Official routes checked 15 October 2026:
+- DH CAS concerns and referral: https://www.dhcas.gov.hk/en/faq.html
+- FSD emergency ambulance: https://www.hkfsd.gov.hk/eng/source/safety/uambu.htm
+- HA A&E directory: https://www.ha.org.hk/visitor/ha_visitor_index.asp?Content_ID=200246&Lang=ENG&Parent_ID=0

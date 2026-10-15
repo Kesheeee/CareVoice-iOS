@@ -27,14 +27,14 @@ test("Queenie onboarding, skip/autosave, regression follow-up and bilingual repo
     .click();
   await page.getByRole("button", { name: "Not sure", exact: true }).click();
   await page.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByText("2 / 30", { exact: true })).toBeVisible();
+  await expect(page.getByText("2 / 33", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Skip for now", exact: true }).click();
-  await expect(page.getByText("3 / 30", { exact: true })).toBeVisible();
+  await expect(page.getByText("3 / 33", { exact: true })).toBeVisible();
   await page
     .getByRole("button", { name: "Review answers", exact: true })
     .click();
   await expect(page.locator(".review-boundary")).toContainText("No score");
-  await page.getByRole("button", { name: /^29\./ }).click();
+  await page.getByRole("button", { name: /^31\./ }).click();
   await page.getByRole("button", { name: "Yes", exact: true }).click();
   await expect(page.getByText("A change worth discussing")).toBeVisible();
   await expect(page.locator(".notice a")).toHaveAttribute(
@@ -58,8 +58,8 @@ test("Queenie onboarding, skip/autosave, regression follow-up and bilingual repo
     JSON.parse(localStorage.getItem("carevoice.mobile.v1")!),
   );
   expect(saved.profile.stage).toBe("noticed");
-  expect(saved.answers[2]).toBe("skipped");
-  expect(saved.regressionWhen[29]).toBe("Last month");
+  expect(saved.answers[102]).toBe("skipped");
+  expect(saved.regressionWhen[131]).toBe("Last month");
 });
 test("Every other caregiver-selected stage bypasses automatic questionnaire; manual access remains", async ({
   page,
@@ -79,7 +79,7 @@ test("Every other caregiver-selected stage bypasses automatic questionnaire; man
     await expect(page.locator(".questionnaire-intro")).toHaveCount(0);
     await nav(page, "Profile").click();
     await page.getByRole("button", { name: /Observation questions/ }).click();
-    await expect(page.getByText("1 / 30", { exact: true })).toBeVisible();
+    await expect(page.getByText("1 / 33", { exact: true })).toBeVisible();
   }
 });
 test("Record methods, persistence, explicit related records, edit/filter/delete", async ({
@@ -267,4 +267,40 @@ test("Phone layouts and bilingual pages fit at 320, 375, 414 and 768px with no s
       await nav(page, lang === "en" ? "Home" : "首頁").click();
     }
   }
+});
+
+test("Queenie Cantonese, play choices, safety routing, and Skip on all questions", async ({page}) => {
+  await page.goto("/"); await profile(page);
+  await page.getByRole("button",{name:"Start questionnaire",exact:true}).click();
+  for(let i=1;i<=33;i++) {
+    await expect(page.getByText(`${i} / 33`,{exact:true})).toBeVisible();
+    await page.getByRole("button",{name:"Skip for now",exact:true}).click();
+  }
+  await expect(page.getByRole("heading",{name:"Your responses"})).toBeVisible();
+  await page.getByRole("button",{name:/^29\./}).click();
+  await page.getByRole("button",{name:"Several kinds",exact:true}).click();
+  await page.getByRole("button",{name:"Review answers",exact:true}).click();
+  for(const number of [32,33]) {
+    await page.getByRole("button",{name:new RegExp(`^${number}\\.`)}).click();
+    await page.getByRole("button",{name:"Not sure",exact:true}).click();
+    await expect(page.getByRole("alert",{name:"Safety guidance"})).toBeVisible();
+    await expect(page.getByRole("link",{name:"Call 999 · Hong Kong emergency"})).toHaveAttribute("href","tel:999");
+    await page.getByRole("button",{name:"No",exact:true}).click();
+    await expect(page.getByRole("alert",{name:"Safety guidance"})).toHaveCount(0);
+    await page.getByRole("button",{name:"Review answers",exact:true}).click();
+  }
+  await nav(page,"Profile").click();
+  await page.getByRole("button",{name:"Switch to Traditional Chinese"}).click();
+  await page.getByRole("button",{name:/觀察問卷/}).click();
+  await expect(page.getByRole("heading",{name:"你嘅小朋友喺聽到佢個名嘅時候會唔會回應你？"})).toBeVisible();
+  await expect(page.getByRole("button",{name:"唔肯定",exact:true})).toBeVisible();
+  await page.getByRole("button",{name:"檢視回答",exact:true}).click();
+  await page.getByRole("button",{name:/^33\./}).click();
+  await page.getByRole("button",{name:"有",exact:true}).click();
+  await expect(page.getByRole("alert",{name:"安全指引"})).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("alert",{name:"安全指引"})).toBeVisible();
+  const saved = await page.evaluate(()=>JSON.parse(localStorage.getItem("carevoice.mobile.v1")!));
+  expect(saved.answers[129]).toBe("varied");
+  expect(saved.answers[133]).toBe("yes");
 });

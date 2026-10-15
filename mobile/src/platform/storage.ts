@@ -61,7 +61,7 @@ export function validateData(raw: unknown): AppData {
       typeof d.regressionWhen !== "object" ||
       Array.isArray(d.regressionWhen) ||
       Object.entries(d.regressionWhen).some(
-        ([k, v]) => !["29", "30"].includes(k) || typeof v !== "string",
+        ([k, v]) => !["29", "30", "131"].includes(k) || typeof v !== "string",
       ))
   )
     throw new Error("Invalid regression notes");
@@ -77,7 +77,7 @@ export function validateData(raw: unknown): AppData {
   if (
     Object.entries(d.answers).some(
       ([id, a]) =>
-        !/^([1-9]|[12][0-9]|30)$/.test(id) || !Object.hasOwn(answers, a),
+        !/^([1-9]|[12][0-9]|30|10[1-9]|1[12][0-9]|13[0-3])$/.test(id) || !Object.hasOwn(answers, a),
     )
   )
     throw new Error("Invalid answers");

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   emptyData,
   needsFollowUp,
+  needsSafetyRouting,
   answeredCount,
   reportText,
   onboardingDestination,
@@ -71,7 +72,7 @@ test("Backup validation preserves a valid round trip and rejects unsafe shapes",
     assert.throws(() => validateData(bad));
 });
 test("Loss-of-skills guidance is independent of completion and selected stage", () => {
-  for (const id of [29, 30])
+  for (const id of [29, 30, 131])
     for (const a of ["yes", "unsure"] as const) {
       const d = emptyData();
       d.answers[id] = a;
@@ -81,7 +82,7 @@ test("Loss-of-skills guidance is independent of completion and selected stage", 
   assert.equal(needsFollowUp({ 29: "no", 30: "skipped" }), false);
 });
 test("Skipped answers do not count as answered", () =>
-  assert.equal(answeredCount({ 1: "never", 2: "skipped", 3: "unsure" }), 2));
+  assert.equal(answeredCount({ 1: "yes", 101: "never", 102: "skipped", 103: "unsure" }), 2));
 test("Report includes observations and guidance without inferring a stage", () => {
   const d = emptyData();
   d.answers[29] = "yes";
@@ -101,4 +102,18 @@ test("Report includes observations and guidance without inferring a stage", () =
   assert.match(text, /qualified professional/);
   assert.doesNotMatch(text, /Parent-selected stage:/);
   assert.equal(d.profile, null);
+});
+
+test("Safety routing responds to Yes and Not sure, never treats Skip as No", () => {
+  for (const id of [132, 133]) {
+    for (const a of ["yes", "unsure"] as const) assert.equal(needsSafetyRouting({ [id]: a }), true);
+    for (const a of ["no", "skipped"] as const) assert.equal(needsSafetyRouting({ [id]: a }), false);
+  }
+});
+test("Revised and legacy answers persist independently, including play choices", () => {
+  const d = emptyData(); d.answers = {1:"often",29:"yes",101:"never",129:"varied",131:"unsure",132:"skipped",133:"no"};
+  d.regressionWhen = {29:"Previously",131:"Yesterday"};
+  assert.deepEqual(validateData(JSON.parse(JSON.stringify(d))),d);
+  assert.equal(answeredCount(d.answers),4);
+  assert.throws(() => validateData({...d, answers:{134:"yes"}}));
 });

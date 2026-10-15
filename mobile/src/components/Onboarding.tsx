@@ -84,13 +84,13 @@ export function Welcome({
   );
 }
 const groups = [
-  ["Social communication", "社交溝通", 6, MessageCircle],
-  ["Language", "語言能力", 6, Volume2],
-  ["Gestures & expression", "手勢與表達", 2, Hand],
-  ["Repetitive behaviours", "重複行為", 5, Sparkles],
+  ["Social communication", "社交溝通", 10, MessageCircle],
+  ["Language & gestures", "語言與手勢", 7, Volume2],
+  ["Repetitive behaviours", "重複行為", 4, Sparkles],
   ["Sensory responses", "感官反應", 6, AudioLines],
   ["Play", "遊戲方式", 3, Heart],
-  ["Loss of skills", "技能退步", 2, ShieldCheck],
+  ["Loss of skills", "技能退步", 1, ShieldCheck],
+  ["Safety", "安全", 2, ShieldCheck],
 ] as const;
 export function QuestionnaireIntro({
   language,
@@ -107,7 +107,7 @@ export function QuestionnaireIntro({
     <section className="questionnaire-intro">
       <h1>{t("Observation questionnaire", "情況問卷")}</h1>
 
-      <div className="questionnaire-meta"><BookOpen size={17} /><span>{t("30 questions · 7 categories", "30 題 · 7 個類別")}</span></div>
+      <div className="questionnaire-meta"><BookOpen size={17} /><span>{t("33 questions · 7 categories", "33 題 · 7 個類別")}</span></div>
       <div className="questionnaire-rule"><ShieldCheck size={17} /><span>{t("No scores or diagnosis", "不作評分或診斷")}</span></div>
       <h2 className="subheading">{t("Question categories", "問卷類別")}</h2>
       <div className="category-grid">

@@ -1,3 +1,4 @@
+import { QUESTION_COUNT } from "../domain";
 import {
   ArrowUpRight,
   BookOpen,
@@ -82,7 +83,7 @@ export function Dashboard({
       <button className="home-questionnaire" onClick={onQuestionnaire}>
         <BookOpen size={20} />
         <span>{t("Questionnaire", "情況問卷")}</span>
-        <span className="home-question-count">{reviewed}/30</span>
+        <span className="home-question-count">{reviewed}/{QUESTION_COUNT}</span>
         <ChevronRight size={17} />
       </button>
       <div className="home-recent-head">
