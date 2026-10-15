@@ -209,7 +209,7 @@ main {
 .greeting-sun {
   position: absolute;
   right: 0;
-  top: 78px;
+  top: 48px;
   color: var(--color-gold);
   width: 36px;
 }
@@ -1150,7 +1150,7 @@ summary {
   }
   .greeting-sun {
     right: 10px;
-    top: 92px;
+    top: 56px;
     width: 43px;
   }
   .greeting h1 {
@@ -1181,7 +1181,7 @@ summary {
   }
   .greeting-sun {
     width: 28px;
-    top: 83px;
+    top: 48px;
   }
   .greeting h1 {
     font-size: 2rem;

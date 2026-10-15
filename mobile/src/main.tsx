@@ -301,23 +301,12 @@ function App() {
         {page === "home" && (
           <>
             <section className="greeting">
-              <div className="eyebrow">
-                <span className="tiny-sun" />
-                <span>
-                  {t("A LITTLE SUPPORT, EVERY DAY", "每一天，一點支持")}
-                </span>
-              </div>
               <h1>
                 {t("Small moments.", "陪伴成長，")}
                 <br />
                 <span>{t("Meaningful steps.", "一起向前。")}</span>
               </h1>
-              <p>
-                {t(
-                  "A place for your observations, and a little clarity for what comes next.",
-                  "記下日常點滴，讓下一步更清晰。",
-                )}
-              </p>
+
               <Sun className="greeting-sun" size={48} strokeWidth={1.4} />
             </section>
             <button className="child-strip" onClick={openProfile}>
@@ -332,14 +321,11 @@ function App() {
                       data.profile ? "你的孩子" : "從認識你們開始",
                     )}
                 </strong>
-                <small>
-                  {data.profile
-                    ? `${Math.floor(data.profile.ageMonths / 12)} ${t("years", "歲")} ${data.profile.ageMonths % 12} ${t("months", "個月")} · ${pair(stages[data.profile.stage])}`
-                    : t(
-                        "Add a nickname and choose your journey stage",
-                        "加入暱稱，選擇目前的階段",
-                      )}
-                </small>
+                {data.profile && (
+                  <small>
+                    {`${Math.floor(data.profile.ageMonths / 12)} ${t("years", "歲")} ${data.profile.ageMonths % 12} ${t("months", "個月")} · ${pair(stages[data.profile.stage])}`}
+                  </small>
+                )}
               </span>
               <ChevronRight size={18} />
             </button>
@@ -349,15 +335,9 @@ function App() {
                 <span className="sound-icon">
                   <AudioLines size={25} />
                 </span>
-                <span>{t("YOUR EVERYDAY NOTEBOOK", "你的日常記錄簿")}</span>
               </div>
               <h2>{t("What did you notice today?", "今天，留意到甚麼？")}</h2>
-              <p>
-                {t(
-                  "A new word. A difficult moment. A little win. Every observation has a place here.",
-                  "一句新說話、一個困難時刻、一點小進步，都值得記下。",
-                )}
-              </p>
+
               <button
                 className="capture-button"
                 onClick={() => {
@@ -379,7 +359,6 @@ function App() {
             </section>
             <div className="section-head">
               <h2>{t("One step at a time", "一步一步來")}</h2>
-              <span>{t("AT YOUR PACE", "按你的步伐")}</span>
             </div>
             <div className="path-grid">
               <button
@@ -393,12 +372,7 @@ function App() {
                   <ArrowUpRight size={19} />
                 </span>
                 <h3>{t("Understand the everyday", "了解日常點滴")}</h3>
-                <p>
-                  {t(
-                    "Reflect with 30 gentle observation questions.",
-                    "用 30 個觀察問題，整理你的發現。",
-                  )}
-                </p>
+
                 <div className="progress-track">
                   <i
                     style={{
@@ -422,16 +396,7 @@ function App() {
                   <ArrowUpRight size={19} />
                 </span>
                 <h3>{t("Find your next step", "找到下一步")}</h3>
-                <p>
-                  {t(
-                    "A simple checklist for where your family is now.",
-                    "配合家庭目前階段的簡單清單。",
-                  )}
-                </p>
-                <small>
-                  {t("Your care journey", "你的支援旅程")}
-                  <ArrowRight size={14} />
-                </small>
+
               </button>
             </div>
             <div className="section-head">
@@ -457,35 +422,14 @@ function App() {
                   <h3>
                     {t("Your story starts with a moment", "從一個小小時刻開始")}
                   </h3>
-                  <p>
-                    {t(
-                      "Add your first observation whenever you’re ready.",
-                      "準備好時，記下第一個觀察吧。",
-                    )}
-                  </p>
                 </div>
               </div>
             )}
-            <div className="reassurance">
-              <Heart size={17} />
-              <p>
-                {t(
-                  "You don’t have to figure everything out today.",
-                  "不用今天就把一切想通。",
-                )}
-              </p>
-            </div>
           </>
         )}
         {page === "records" && (
           <>
-            <PageHeading
-              title={t("Everyday observations", "日常觀察")}
-              text={t(
-                "Small details, gathered in one place.",
-                "把點點滴滴，放在同一個地方。",
-              )}
-            />
+            <PageHeading title={t("Everyday observations", "日常觀察")} />
             <button
               className="primary full"
               onClick={() => setRecord(newRecord())}
@@ -533,10 +477,6 @@ function App() {
               <Empty
                 icon={<BookOpen />}
                 title={t("A notebook for your family", "屬於你們的記錄簿")}
-                text={t(
-                  "Record what happened, where you were, and what helped. Start with whatever feels important.",
-                  "記下發生了甚麼、地點和有幫助的方法，從你覺得重要的事開始。",
-                )}
               />
             ) : (
               !data.records.some(
@@ -549,10 +489,6 @@ function App() {
                 <Empty
                   icon={<Search />}
                   title={t("No matching observations", "沒有相符的觀察")}
-                  text={t(
-                    "Try another word or category.",
-                    "試試其他字詞或分類。",
-                  )}
                 />
               )
             )}
@@ -565,21 +501,12 @@ function App() {
         {page === "journey" && (
           <>
             <Back onClick={() => go("home")} label={t("Home", "首頁")} />
-            <PageHeading
-              title={t("A little direction", "一點方向")}
-              text={t(
-                "Practical steps for your family’s journey.",
-                "配合你們旅程的實際小步驟。",
-              )}
-            />
+            <PageHeading title={t("A little direction", "一點方向")} />
             {!data.profile ? (
               <Empty
                 icon={<Compass />}
                 title={t("Where are you now?", "你目前在哪個階段？")}
-                text={t(
-                  "Create a profile to see your personal checklist.",
-                  "建立檔案，查看你的個人清單。",
-                )}
+
                 action={
                   <button className="primary" onClick={openProfile}>
                     {t("Create a profile", "建立檔案")}
@@ -652,10 +579,6 @@ function App() {
               <>
                 <PageHeading
                   title={t("Your observations, together", "整理你的觀察")}
-                  text={t(
-                    "A reflection of your answers, without a score or diagnosis.",
-                    "整理你的回答，不作評分或診斷。",
-                  )}
                 />
                 <div className="review-count">
                   <BookOpen />
@@ -713,12 +636,7 @@ function App() {
                 <h1 className="question-title">
                   {zh ? questions[qIndex].zh : questions[qIndex].en}
                 </h1>
-                <p className="muted">
-                  {t(
-                    "Think about everyday moments. There’s no right or wrong answer.",
-                    "回想日常的片段，答案沒有對錯。",
-                  )}
-                </p>
+
                 <div className="answer-options">
                   {(questions[qIndex].yesNo
                     ? ["yes", "no", "unsure"]
@@ -802,13 +720,7 @@ function App() {
         )}
         {page === "resources" && (
           <>
-            <PageHeading
-              title={t("A place to turn", "找到可靠的支援")}
-              text={t(
-                "Official Hong Kong resources to explore with the people supporting your family.",
-                "與支援你家庭的專業人士，一起了解香港的官方資訊。",
-              )}
-            />
+            <PageHeading title={t("A place to turn", "找到可靠的支援")} />
             <div className="resource-intro">
               <Heart size={24} />
               <p>
@@ -875,7 +787,7 @@ function App() {
                   </span>
                   <ArrowUpRight size={20} />
                   <h2>{t(en, cn)}</h2>
-                  <p>{t(desc, descZh)}</p>
+
                   <small>{t("Opens official website", "開啟官方網站")}</small>
                 </a>
               ))}
@@ -890,13 +802,7 @@ function App() {
         )}
         {page === "profile" && (
           <>
-            <PageHeading
-              title={t("Your family, your pace", "你們的步伐")}
-              text={t(
-                "A little about your child. You’re in control.",
-                "認識孩子多一點，一切由你決定。",
-              )}
-            />
+            <PageHeading title={t("Your family, your pace", "你們的步伐")} />
             <button className="profile-summary" onClick={openProfile}>
               <span className="large-avatar">
                 <Leaf size={30} />
@@ -1003,10 +909,6 @@ function App() {
             />
             <PageHeading
               title={t("Ready for a conversation", "為下一次傾談做好準備")}
-              text={t(
-                "Bring your everyday observations into the room.",
-                "把日常的觀察帶進會面。",
-              )}
             />
             <div className="segmented">
               <button
@@ -1138,12 +1040,7 @@ function App() {
                 <X />
               </button>
             </div>
-            <p className="muted">
-              {t(
-                "No full name, photo, or exact birth date needed.",
-                "無須提供全名、相片或確實出生日期。",
-              )}
-            </p>
+
             <label>
               {t("Nickname (optional)", "暱稱（選填）")}
               <input
@@ -1286,12 +1183,7 @@ function App() {
                 <X />
               </button>
             </div>
-            <p className="muted">
-              {t(
-                "Your words are enough. Start with what you noticed.",
-                "用你自己的說話，記下留意到的事。",
-              )}
-            </p>
+
             <label>
               {t("What happened?", "發生了甚麼？")}
               <textarea
@@ -1517,11 +1409,10 @@ function App() {
     </div>
   );
 }
-function PageHeading({ title, text }: { title: string; text: string }) {
+function PageHeading({ title }: { title: string }) {
   return (
     <div className="page-heading">
       <h1>{title}</h1>
-      <p>{text}</p>
     </div>
   );
 }
@@ -1536,19 +1427,17 @@ function Back({ onClick, label }: { onClick: () => void; label: string }) {
 function Empty({
   icon,
   title,
-  text,
   action,
 }: {
   icon: React.ReactNode;
   title: string;
-  text: string;
   action?: React.ReactNode;
 }) {
   return (
     <section className="empty-state">
       <span>{icon}</span>
       <h2>{title}</h2>
-      <p>{text}</p>
+
       {action}
     </section>
   );
