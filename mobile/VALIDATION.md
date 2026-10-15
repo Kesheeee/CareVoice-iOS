@@ -1,5 +1,9 @@
 # Mobile web verification
 
+## Cleaner Records
+
+15 October 2026: production build and browser checks passed for the new Records toolbar, add action, voice/report menu, search, category chips, collapsed same-category related records, editing and deletion. Bilingual screen layouts fit 320/375/414/768px. Empty and populated 375px Records screens were visually reviewed. An accessibility-role issue on the native menu summary was corrected and the Records flow rerun successfully. No record schema or clinical logic changed.
+
 ## Cleaner Home
 
 15 October 2026: production build and all 5 browser suites checked after the Home-only simplification. Both languages fit at 320/375/414/768px. Home retains profile editing, observation capture, questionnaire access, next steps, reports and recent-record editing. Repeated statistics and progress displays were removed. Data and clinical logic are unchanged.

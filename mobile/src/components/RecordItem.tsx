@@ -1,4 +1,4 @@
-import { ChevronRight, Link2 } from "lucide-react";
+import { ChevronRight, Clock3, Link2, MapPin } from "lucide-react";
 import {
   categories,
   relatedRecords,
@@ -23,46 +23,49 @@ export function RecordItem({
   return (
     <article className="record-entry">
       <button className="record-main" onClick={() => onEdit({ ...record })}>
-        <time>
-          <strong>
-            {date.toLocaleTimeString(zh ? "zh-HK" : "en-HK", {
+        <span className="record-topline">
+          <span className={`record-tag tag-${record.category}`}>
+            {categories[record.category][zh ? 1 : 0]}
+          </span>
+          <time>
+            {date.toLocaleString(zh ? "zh-HK" : "en-HK", {
+              month: "short",
+              day: "numeric",
               hour: "2-digit",
               minute: "2-digit",
               hour12: false,
             })}
-          </strong>
-          <small>
-            {date.toLocaleDateString(zh ? "zh-HK" : "en-HK", {
-              month: "short",
-              day: "numeric",
-            })}
-          </small>
-        </time>
-        <div className="record-body">
-          <p>{record.text}</p>
-          <div className="record-tags">
-            <span className={`record-tag tag-${record.category}`}>
-              {categories[record.category][zh ? 1 : 0]}
-            </span>
-            {record.location && <span>{record.location}</span>}
+          </time>
+        </span>
+        <span className="record-note">{record.text}</span>
+        {(record.location || record.durationMinutes !== null) && (
+          <span className="record-footline">
+            {record.location && (
+              <span>
+                <MapPin size={13} />
+                {record.location}
+              </span>
+            )}
             {record.durationMinutes !== null && (
               <span>
+                <Clock3 size={13} />
                 {record.durationMinutes} {t("min", "分鐘")}
               </span>
             )}
-          </div>
-        </div>
-        <ChevronRight size={16} />
+          </span>
+        )}
       </button>
       {related.length > 0 && (
-        <div className="related-records">
-          <h3>
-            <Link2 size={13} />
-            {t(
-              "Related past records · same category",
-              "關聯的過往記錄 · 相同分類",
-            )}
-          </h3>
+        <details className="related-records">
+          <summary role="button">
+            <Link2 size={14} />
+            <span>{t("Related records", "關聯記錄")}</span>
+            <span className="related-count">{related.length}</span>
+            <ChevronRight size={14} />
+          </summary>
+          <p className="related-basis">
+            {t("Grouped by the same category", "按相同分類顯示")}
+          </p>
           {related.map((r) => (
             <button key={r.id} onClick={() => onEdit({ ...r })}>
               <time>
@@ -74,7 +77,7 @@ export function RecordItem({
               <span>{r.text}</span>
             </button>
           ))}
-        </div>
+        </details>
       )}
     </article>
   );

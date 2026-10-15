@@ -88,6 +88,9 @@ test("Record methods, persistence, explicit related records, edit/filter/delete"
   await page.goto("/");
   await profile(page, "Registered for services");
   await nav(page, "Records").click();
+  await page
+    .getByRole("button", { name: "More record actions", exact: true })
+    .click();
   await page.getByRole("button", { name: "Voice entry", exact: true }).click();
   await expect(
     page.getByText("Use your keyboard microphone", { exact: true }),
@@ -95,7 +98,7 @@ test("Record methods, persistence, explicit related records, edit/filter/delete"
   await page.getByRole("button", { name: "Close", exact: true }).click();
   for (const text of ["Said hello during play", "Waved goodbye"]) {
     await page
-      .getByRole("button", { name: "Text record", exact: true })
+      .getByRole("button", { name: "Add a record", exact: true })
       .click();
     await page.getByLabel("What happened?").fill(text);
     await page.getByLabel("Category", { exact: true }).selectOption("progress");
@@ -106,6 +109,19 @@ test("Record methods, persistence, explicit related records, edit/filter/delete"
   }
   await expect(page.locator(".related-records")).toHaveCount(1);
   await expect(page.locator(".related-records")).toContainText("same category");
+  await page.locator(".related-records summary").click();
+  await expect(
+    page.getByText("Grouped by the same category", { exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("group", { name: "Filter category" })
+    .getByRole("button", { name: "Play", exact: true })
+    .click();
+  await expect(page.getByText("No matching observations")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Clear filters", exact: true })
+    .click();
+  await expect(page.locator(".record-main")).toHaveCount(2);
   await page.reload();
   await nav(page, "Records").click();
   await page
@@ -231,7 +247,7 @@ test("Phone layouts and bilingual pages fit at 320, 375, 414 and 768px with no s
       await nav(page, lang === "en" ? "Records" : "記錄").click();
       await page
         .getByRole("button", {
-          name: lang === "en" ? "Text record" : "文字記錄",
+          name: lang === "en" ? "Add a record" : "新增記錄",
           exact: true,
         })
         .click();

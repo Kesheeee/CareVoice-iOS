@@ -63,7 +63,7 @@ import {
   SetupProgress,
 } from "./components/Onboarding";
 import { Dashboard } from "./components/Dashboard";
-import { RecordItem } from "./components/RecordItem";
+import { RecordsScreen } from "./components/RecordsScreen";
 import { Community } from "./components/Community";
 const questions: Question[] = questionsJson;
 type Page =
@@ -220,20 +220,6 @@ function App() {
       month: "short",
       day: "numeric",
     });
-  function recordCard(r: Observation) {
-    return (
-      <RecordItem
-        key={r.id}
-        record={r}
-        records={data.records}
-        language={data.language}
-        onEdit={(r) => {
-          setVoiceEntry(false);
-          setRecord(r);
-        }}
-      />
-    );
-  }
   function questionnaireStart() {
     setReview(false);
     const first = questions.findIndex((q) => !data.answers[q.id]);
@@ -321,101 +307,27 @@ function App() {
           </>
         )}
         {page === "records" && (
-          <>
-            <PageHeading title={t("Records", "記錄")} />
-            <h2 className="record-method-title">
-              {t("Choose recording method", "選擇記錄方式")}
-            </h2>
-            <div className="record-methods">
-              <button
-                onClick={() => {
-                  setVoiceEntry(true);
-                  setRecord(newRecord());
-                }}
-              >
-                <Mic size={20} />
-                {t("Voice entry", "語音輸入")}
-              </button>
-              <button
-                onClick={() => {
-                  setVoiceEntry(false);
-                  setRecord(newRecord());
-                }}
-              >
-                <Pencil size={20} />
-                {t("Text record", "文字記錄")}
-              </button>
-            </div>
-
-            <label className="search-box">
-              <Search size={18} />
-              <input
-                aria-label={t("Search observations", "搜尋觀察")}
-                placeholder={t("Search your observations", "搜尋你的觀察")}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              {search && (
-                <button
-                  className="clear-search"
-                  aria-label={t("Clear search", "清除搜尋")}
-                  onClick={() => setSearch("")}
-                >
-                  <X size={18} />
-                </button>
-              )}
-            </label>
-            <label className="filter-label">
-              {t("Category", "分類")}
-              <select
-                aria-label={t("Filter category", "篩選分類")}
-                value={filter}
-                onChange={(e) => setFilter(e.target.value as Category | "all")}
-              >
-                <option value="all">{t("All observations", "全部觀察")}</option>
-                {Object.entries(categories).map(([k, v]) => (
-                  <option key={k} value={k}>
-                    {pair(v)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="records-list">
-              {[...data.records]
-                .filter(
-                  (r) =>
-                    (filter === "all" || r.category === filter) &&
-                    `${r.text} ${r.location} ${r.context} ${r.helped}`
-                      .toLowerCase()
-                      .includes(search.toLowerCase()),
-                )
-                .sort((a, b) => b.date.localeCompare(a.date))
-                .map(recordCard)}
-            </div>
-            {!data.records.length ? (
-              <Empty
-                icon={<BookOpen />}
-                title={t("No records yet", "暫無記錄")}
-              />
-            ) : (
-              !data.records.some(
-                (r) =>
-                  (filter === "all" || r.category === filter) &&
-                  `${r.text} ${r.location} ${r.context} ${r.helped}`
-                    .toLowerCase()
-                    .includes(search.toLowerCase()),
-              ) && (
-                <Empty
-                  icon={<Search />}
-                  title={t("No matching observations", "沒有相符的觀察")}
-                />
-              )
-            )}
-            <button className="secondary full" onClick={() => go("report")}>
-              <FileText size={18} />
-              {t("Prepare a report", "準備報告")}
-            </button>
-          </>
+          <RecordsScreen
+            records={data.records}
+            language={data.language}
+            search={search}
+            filter={filter}
+            onSearch={setSearch}
+            onFilter={setFilter}
+            onAdd={() => {
+              setVoiceEntry(false);
+              setRecord(newRecord());
+            }}
+            onVoice={() => {
+              setVoiceEntry(true);
+              setRecord(newRecord());
+            }}
+            onReport={() => go("report")}
+            onEdit={(r) => {
+              setVoiceEntry(false);
+              setRecord(r);
+            }}
+          />
         )}
         {page === "journey" && (
           <>
