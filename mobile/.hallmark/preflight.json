@@ -1,1 +1,11 @@
-{"date":"2026-10-15","framework":"React + Vite + TypeScript (new additive mobile app)","preserved":{"brand":"CareVoice blue and teal from CareVoiceApp.swift","content":"Existing bilingual questions and six caregiver-selected stages"},"font":"System Avenir Next / Segoe UI / Traditional Chinese fallback","motion":"cut","spacing":"4px scale"}
+{
+  "date": "2026-10-15",
+  "framework": "React + Vite + TypeScript (new additive mobile app)",
+  "preserved": {
+    "brand": "CareVoice blue and teal from CareVoiceApp.swift",
+    "content": "Existing bilingual questions and six caregiver-selected stages"
+  },
+  "font": "System Avenir Next / Segoe UI / Traditional Chinese fallback",
+  "motion": "cut",
+  "spacing": "4px scale"
+}

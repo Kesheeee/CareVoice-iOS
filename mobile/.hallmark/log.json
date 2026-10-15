@@ -1,1 +1,9 @@
-[{"date":"2026-10-15","macrostructure":"Workbench","theme":"existing CareVoice brand","enrichment":"none","brief":"Phone-first bilingual caregiver notebook, observations and care journey"}]
+[
+  {
+    "date": "2026-10-15",
+    "macrostructure": "Workbench",
+    "theme": "existing CareVoice brand",
+    "enrichment": "none",
+    "brief": "Phone-first bilingual caregiver notebook, observations and care journey"
+  }
+]

@@ -1,74 +1,1560 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { createRoot } from 'react-dom/client';
-import { AudioLines, ArrowLeft, ArrowRight, ArrowUpRight, BookOpen, Check, ChevronRight, CircleCheck, Compass, Download, FileText, Globe2, Heart, House, Leaf, LockKeyhole, MessageCircle, MoreHorizontal, Pencil, Plus, Search, Share2, ShieldCheck, Sparkles, Sun, Trash2, UserRound, X } from 'lucide-react';
-import { answeredCount, answers, categories, emptyData, needsFollowUp, nextSteps, reportText, stages, type Answer, type AppData, type Category, type Language, type Observation, type Profile, type Question, type Stage } from './domain';
-import { browserStore, validateData } from './platform/storage';
-import { download, shareReport } from './platform/share';
-import questionsJson from './questions.json';
-import './styles.css';
+import React, { useEffect, useRef, useState } from "react";
+import { createRoot } from "react-dom/client";
+import {
+  AudioLines,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  BookOpen,
+  Check,
+  ChevronRight,
+  CircleCheck,
+  Compass,
+  Download,
+  FileText,
+  Globe2,
+  Heart,
+  House,
+  Leaf,
+  LockKeyhole,
+  MessageCircle,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Search,
+  Share2,
+  ShieldCheck,
+  Sparkles,
+  Sun,
+  Trash2,
+  UserRound,
+  X,
+} from "lucide-react";
+import {
+  answeredCount,
+  answers,
+  categories,
+  emptyData,
+  needsFollowUp,
+  nextSteps,
+  reportText,
+  stages,
+  type Answer,
+  type AppData,
+  type Category,
+  type Language,
+  type Observation,
+  type Profile,
+  type Question,
+  type Stage,
+} from "./domain";
+import { browserStore, validateData } from "./platform/storage";
+import { download, shareReport } from "./platform/share";
+import questionsJson from "./questions.json";
+import "./styles.css";
 const questions: Question[] = questionsJson;
-type Page = 'home' | 'records' | 'resources' | 'profile' | 'questionnaire' | 'journey' | 'report';
-const blankProfile = (): Profile => ({nickname:'',ageMonths:36,stage:'noticed',concernNotes:'',firstConcernDate:new Date().toISOString().slice(0,10)});
-const newRecord = (): Observation => ({id:crypto.randomUUID(),date:new Date().toISOString(),text:'',category:'observation',location:'',durationMinutes:null,context:'',helped:''});
-function App(){
- const [initial] = useState(()=>{try{return {data:browserStore.load(),error:''};}catch{return {data:emptyData(),error:'Saved data could not be read. It has not been overwritten. Download a copy before resetting. / 未能讀取資料，原有資料並未被覆寫。請先下載備份。'};}});
- const [data,setData]=useState(initial.data), [error,setError]=useState(initial.error), [locked,setLocked]=useState(!!initial.error);
- const [page,setPage]=useState<Page>('home'), [profileOpen,setProfileOpen]=useState(false), [draftProfile,setDraftProfile]=useState<Profile>(blankProfile), [record,setRecord]=useState<Observation|null>(null), [deleteId,setDeleteId]=useState<string|null>(null), [resetOpen,setResetOpen]=useState(false);
- const [search,setSearch]=useState(''),[filter,setFilter]=useState<Category|'all'>('all'),[qIndex,setQIndex]=useState(0),[review,setReview]=useState(false),[professional,setProfessional]=useState(true),[saved,setSaved]=useState(false);
- const mainRef=useRef<HTMLElement>(null), importRef=useRef<HTMLInputElement>(null);
- const zh=data.language==='zh',t=(a:string,b:string)=>zh?b:a, pair=(v:[string,string])=>v[zh?1:0];
- function update(fn:(d:AppData)=>AppData){if(locked)return;const next=fn(data);try{browserStore.save(next);setData(next);setError('');}catch{setError(t('Could not save. Your last saved records are preserved. Free some browser storage and try again.','未能儲存。上次儲存的記錄已保留。請釋放瀏覽器儲存空間後重試。'));}}
- function go(p:Page){setPage(p);setSaved(false);window.scrollTo({top:0});requestAnimationFrame(()=>mainRef.current?.focus());}
- useEffect(()=>{document.documentElement.lang=zh?'zh-Hant':'en';},[zh]);
- useEffect(()=>{window.scrollTo({top:0});},[qIndex,review]);
- useEffect(()=>{if(!profileOpen&&!record&&!resetOpen&&!deleteId)return;const before=document.activeElement as HTMLElement;const dialog=document.querySelector<HTMLDialogElement>('dialog');dialog?.showModal();dialog?.querySelector<HTMLElement>('input,button')?.focus();return()=>{dialog?.close();before?.focus();};},[profileOpen,record?.id,resetOpen,deleteId]);
- const langButton=<button className="language" aria-label={t('Switch to Traditional Chinese','Switch to English')} onClick={()=>update(d=>({...d,language:zh?'en':'zh'}))}><Globe2 size={16}/>{zh?'EN':'繁中'}</button>;
- const logo=<span className="brand"><span className="brand-icon"><AudioLines size={22}/></span>CareVoice<span className="brand-dot">.</span></span>;
- const openProfile=()=>{setDraftProfile(data.profile??blankProfile());setProfileOpen(true);};
- const followUp=needsFollowUp(data.answers);
- const warning=followUp?<aside className="notice"><Heart size={20}/><div><strong>{t('A change worth discussing','值得跟進的變化')}</strong><p>{t('You answered Yes or Not sure about a loss of skills. Discuss this observation promptly with a qualified professional.','你在技能退步題目回答「是」或「不確定」。請盡快與合資格專業人士討論這些觀察。')}</p></div></aside>:null;
- const dateLabel=(d:string)=>new Date(d).toLocaleDateString(zh?'zh-HK':'en-HK',{month:'short',day:'numeric'});
- function recordCard(r:Observation){return <button className="record-card" key={r.id} onClick={()=>setRecord({...r})}><span className={`category-icon ${r.category}`} >{r.category==='progress'?<Sparkles size={20}/>:<MessageCircle size={20}/>}</span><span className="record-content"><span className="record-meta">{pair(categories[r.category])}<span>{dateLabel(r.date)}</span></span><strong>{r.text}</strong>{r.location&&<small>{r.location}</small>}</span><ChevronRight size={16}/></button>;}
- function questionnaireStart(){setReview(false);const first=questions.findIndex(q=>!data.answers[q.id]);setQIndex(first<0?0:first);go('questionnaire');}
- async function importBackup(file?:File){if(!file)return;try{if(file.size>10_000_000)throw Error();const incoming=validateData(JSON.parse(await file.text()));if(!window.confirm(t('Replace this device’s CareVoice data with this backup?','以此備份取代本裝置的 CareVoice 資料？')))return;browserStore.save(incoming);setLocked(false);setData(incoming);setError('');go('home');}catch{setError(t('Could not import this backup. Current data was kept. Choose a valid CareVoice JSON backup.','未能匯入備份，現有資料已保留。請選擇有效的 CareVoice JSON 備份。'));}finally{if(importRef.current)importRef.current.value='';}}
- return <div className="app-shell">
-  <header className="topbar"><button className="logo-button" onClick={()=>go('home')} aria-label="CareVoice home">{logo}</button><div className="header-actions">{langButton}<button className="avatar" aria-label={t('Open profile','開啟檔案')} onClick={()=>go('profile')}>{data.profile?.nickname?.slice(0,1).toUpperCase()||<UserRound size={18}/>}</button></div></header>
-  {error&&<div role="alert" className="error-banner">{error}<button onClick={()=>download(localStorage.getItem('carevoice.mobile.v1')||'','carevoice-recovery.json','application/json')}>{t('Download saved data','下載已存資料')}</button></div>}
-  <main ref={mainRef} tabIndex={-1}>
-   {page==='home'&&<>
-    <section className="greeting"><div className="eyebrow"><span className="tiny-sun"/><span>{t('A LITTLE SUPPORT, EVERY DAY','每一天，一點支持')}</span></div><h1>{t('Small moments.','陪伴成長，')}<br/><span>{t('Meaningful steps.','一起向前。')}</span></h1><p>{t('A place for your observations, and a little clarity for what comes next.','記下日常點滴，讓下一步更清晰。')}</p><Sun className="greeting-sun" size={48} strokeWidth={1.4}/></section>
-    <button className="child-strip" onClick={openProfile}><span className="child-avatar"><Leaf size={23}/></span><span><strong>{data.profile?.nickname||t(data.profile?'Your child':'Let’s make this yours',data.profile?'你的孩子':'從認識你們開始')}</strong><small>{data.profile?`${Math.floor(data.profile.ageMonths/12)} ${t('years','歲')} ${data.profile.ageMonths%12} ${t('months','個月')} · ${pair(stages[data.profile.stage])}`:t('Add a nickname and choose your journey stage','加入暱稱，選擇目前的階段')}</small></span><ChevronRight size={18}/></button>
-    {warning}
-    <section className="capture-card"><div className="capture-top"><span className="sound-icon"><AudioLines size={25}/></span><span>{t('YOUR EVERYDAY NOTEBOOK','你的日常記錄簿')}</span></div><h2>{t('What did you notice today?','今天，留意到甚麼？')}</h2><p>{t('A new word. A difficult moment. A little win. Every observation has a place here.','一句新說話、一個困難時刻、一點小進步，都值得記下。')}</p><button className="capture-button" onClick={()=>{setRecord(newRecord());setSaved(false);}}><Plus size={20}/>{t('Add an observation','新增觀察')}<ArrowRight size={18}/></button><div className="private-note"><LockKeyhole size={13}/>{t('Stored in this browser · only shared by you','儲存在此瀏覽器 · 由你決定分享')}</div></section>
-    <div className="section-head"><h2>{t('One step at a time','一步一步來')}</h2><span>{t('AT YOUR PACE','按你的步伐')}</span></div>
-    <div className="path-grid"><button className="path-card questionnaire" onClick={questionnaireStart}><span className="path-icon"><BookOpen size={22}/></span><span className="card-arrow"><ArrowUpRight size={19}/></span><h3>{t('Understand the everyday','了解日常點滴')}</h3><p>{t('Reflect with 30 gentle observation questions.','用 30 個觀察問題，整理你的發現。')}</p><div className="progress-track"><i style={{width:`${Object.keys(data.answers).length/30*100}%`}}/></div><small>{Object.keys(data.answers).length}/30 {t('reviewed','已檢視')}</small></button><button className="path-card journey" onClick={()=>go('journey')}><span className="path-icon"><Compass size={22}/></span><span className="card-arrow"><ArrowUpRight size={19}/></span><h3>{t('Find your next step','找到下一步')}</h3><p>{t('A simple checklist for where your family is now.','配合家庭目前階段的簡單清單。')}</p><small>{t('Your care journey','你的支援旅程')}<ArrowRight size={14}/></small></button></div>
-    <div className="section-head"><h2>{t('Recent observations','最近的觀察')}</h2><button className="text-button" onClick={()=>go('records')}>{t('View all','查看全部')}<ArrowRight size={14}/></button></div>
-    {data.records.length?<div className="records-list">{[...data.records].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,3).map(recordCard)}</div>:<div className="empty-notebook"><span><MessageCircle size={24}/></span><div><h3>{t('Your story starts with a moment','從一個小小時刻開始')}</h3><p>{t('Add your first observation whenever you’re ready.','準備好時，記下第一個觀察吧。')}</p></div></div>}
-    <div className="reassurance"><Heart size={17}/><p>{t('You don’t have to figure everything out today.','不用今天就把一切想通。')}</p></div>
-   </>}
-   {page==='records'&&<><PageHeading title={t('Everyday observations','日常觀察')} text={t('Small details, gathered in one place.','把點點滴滴，放在同一個地方。')}/><button className="primary full" onClick={()=>setRecord(newRecord())}><Plus size={19}/>{t('Add an observation','新增觀察')}</button><label className="search-box"><Search size={18}/><input aria-label={t('Search observations','搜尋觀察')} placeholder={t('Search your observations','搜尋你的觀察')} value={search} onChange={e=>setSearch(e.target.value)}/></label><label className="filter-label">{t('Category','分類')}<select aria-label={t('Filter category','篩選分類')} value={filter} onChange={e=>setFilter(e.target.value as Category|'all')}><option value="all">{t('All observations','全部觀察')}</option>{Object.entries(categories).map(([k,v])=><option key={k} value={k}>{pair(v)}</option>)}</select></label><div className="records-list">{[...data.records].filter(r=>(filter==='all'||r.category===filter)&&`${r.text} ${r.location} ${r.context} ${r.helped}`.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>b.date.localeCompare(a.date)).map(recordCard)}</div>{!data.records.length?<Empty icon={<BookOpen/>} title={t('A notebook for your family','屬於你們的記錄簿')} text={t('Record what happened, where you were, and what helped. Start with whatever feels important.','記下發生了甚麼、地點和有幫助的方法，從你覺得重要的事開始。')}/>:!data.records.some(r=>(filter==='all'||r.category===filter)&&`${r.text} ${r.location} ${r.context} ${r.helped}`.toLowerCase().includes(search.toLowerCase()))&&<Empty icon={<Search/>} title={t('No matching observations','沒有相符的觀察')} text={t('Try another word or category.','試試其他字詞或分類。')}/>}<button className="secondary full" onClick={()=>go('report')}><FileText size={18}/>{t('Prepare a report','準備報告')}</button></>}
-   {page==='journey'&&<><Back onClick={()=>go('home')} label={t('Home','首頁')}/><PageHeading title={t('A little direction','一點方向')} text={t('Practical steps for your family’s journey.','配合你們旅程的實際小步驟。')}/>{!data.profile?<Empty icon={<Compass/>} title={t('Where are you now?','你目前在哪個階段？')} text={t('Create a profile to see your personal checklist.','建立檔案，查看你的個人清單。')} action={<button className="primary" onClick={openProfile}>{t('Create a profile','建立檔案')}</button>}/>:<><div className="stage-card"><Compass size={24}/><small>{t('YOUR CURRENT STAGE','目前階段')}</small><h2>{pair(stages[data.profile.stage])}</h2><button className="text-button" onClick={openProfile}>{t('Update my stage','更新階段')}<Pencil size={14}/></button></div><h2 className="subheading">{t('Your personal checklist','你的個人清單')}</h2><div className="checklist">{nextSteps(data.profile.stage).map((s,i)=>{const key=`${data.profile!.stage}-${i}`,done=data.completedSteps.includes(key);return <button key={key} role="checkbox" aria-checked={done} className={done?'done':''} onClick={()=>update(d=>({...d,completedSteps:done?d.completedSteps.filter(k=>k!==key):[...d.completedSteps,key]}))}><span className="check-circle">{done&&<Check size={16}/>}</span>{pair(s)}</button>;})}</div><p className="fine-print">{t('This is your checklist. Completing a step does not register you for a service or change an official waiting list.','這是你的個人清單。勾選項目不代表已登記服務，亦不會更改官方輪候狀況。')}</p><button className="secondary full" onClick={()=>go('resources')}>{t('Explore official resources','查看官方資源')}<ArrowRight size={16}/></button></>}</>}
-   {page==='questionnaire'&&<><Back onClick={()=>go('home')} label={t('Home','首頁')}/>{warning}{review?<><PageHeading title={t('Your observations, together','整理你的觀察')} text={t('A reflection of your answers, without a score or diagnosis.','整理你的回答，不作評分或診斷。')}/><div className="review-count"><BookOpen/><strong>{answeredCount(data.answers)} / 30</strong><span>{t('answered','已回答')}</span></div><div className="review-list">{questions.map((q,i)=><button key={q.id} onClick={()=>{setQIndex(i);setReview(false);}}><span>{q.id}. {zh?q.zh:q.en}</span><strong>{data.answers[q.id]?pair(answers[data.answers[q.id]]):t('Unanswered','未回答')}</strong><Pencil size={14}/></button>)}</div><button className="primary full" onClick={()=>go('report')}>{t('Prepare a report','準備報告')}<ArrowRight size={17}/></button></>:<><div className="section-head question-top"><span>{t('Everyday reflection','日常觀察問卷')}</span><button className="text-button" onClick={()=>setReview(true)}>{t('Review answers','檢視回答')}</button></div><div className="question-progress"><div className="progress-track"><i style={{width:`${(qIndex+1)/30*100}%`}}/></div><span>{qIndex+1} / 30</span></div><p className="question-category">{zh?questions[qIndex].categoryZH:questions[qIndex].categoryEN}</p><h1 className="question-title">{zh?questions[qIndex].zh:questions[qIndex].en}</h1><p className="muted">{t('Think about everyday moments. There’s no right or wrong answer.','回想日常的片段，答案沒有對錯。')}</p><div className="answer-options">{(questions[qIndex].yesNo?['yes','no','unsure']:['never','rarely','sometimes','often','unsure']).map(a=><button key={a} aria-pressed={data.answers[questions[qIndex].id]===a} className={data.answers[questions[qIndex].id]===a?'selected':''} onClick={()=>update(d=>({...d,answers:{...d.answers,[questions[qIndex].id]:a as Answer}}))}>{pair(answers[a as Answer])}<span className="check-circle">{data.answers[questions[qIndex].id]===a&&<Check size={16}/>}</span></button>)}</div><div className="question-controls"><button className="secondary" disabled={qIndex===0} onClick={()=>setQIndex(i=>i-1)}><ArrowLeft size={17}/>{t('Back','上一題')}</button><button className="primary" disabled={!data.answers[questions[qIndex].id]} onClick={()=>qIndex===29?setReview(true):setQIndex(i=>i+1)}>{t(qIndex===29?'Review':'Next',qIndex===29?'檢視':'下一題')}<ArrowRight size={17}/></button></div><button className="skip-button" onClick={()=>{update(d=>({...d,answers:{...d.answers,[questions[qIndex].id]:'skipped'}}));qIndex===29?setReview(true):setQIndex(i=>i+1);}}>{t('Skip for now','暫時略過')}</button><p className="fine-print centered"><LockKeyhole size={12}/>{t('Answers save automatically on this device.','答案自動儲存在此裝置。')}</p></>}</>}
-   {page==='resources'&&<><PageHeading title={t('A place to turn','找到可靠的支援')} text={t('Official Hong Kong resources to explore with the people supporting your family.','與支援你家庭的專業人士，一起了解香港的官方資訊。')}/><div className="resource-intro"><Heart size={24}/><p>{t('You don’t have to navigate this alone. Start with a conversation with your doctor, MCHC, or social worker.','不用獨自面對。可以先與醫生、母嬰健康院或社工談談。')}</p></div><div className="resources">{[
- ['Where to start','從哪裡開始','Discuss developmental concerns with your MCHC or family doctor.','與母嬰健康院或家庭醫生討論發展方面的疑問。','https://www.dhcas.gov.hk/en/faq.html','DH'],
- ['Assessment appointments','評估預約','Registration and appointments after receiving a referral.','取得轉介後的登記及預約安排。','https://www.dhcas.gov.hk/en/registration_appointment.html','DH'],
- ['Follow-up and referrals','跟進及轉介','Understand next steps with your assessment team.','與評估團隊了解跟進安排。','https://www.dhcas.gov.hk/en/management_referral.html','DH'],
- ['Central referral system','康復服務中央轉介系統','Explore service referrals with an authorised professional.','與獲授權的專業人士了解服務轉介。','https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/','SWD'],
- ['On-site pre-school support','到校學前支援','Information about on-site pre-school rehabilitation services.','到校學前康復服務的官方資訊。','https://www.swd.gov.hk/oprs/index_en.htm','SWD']
- ].map(([en,cn,desc,descZh,url,dept])=><a className="resource-card" key={url} href={url} target="_blank" rel="noopener noreferrer"><span className="resource-dept">{dept==='DH'?t('Department of Health','衛生署'):t('Social Welfare Department','社會福利署')}</span><ArrowUpRight size={20}/><h2>{t(en,cn)}</h2><p>{t(desc,descZh)}</p><small>{t('Opens official website','開啟官方網站')}</small></a>)}</div><p className="fine-print">{t('Service providers confirm eligibility and arrangements. CareVoice does not book appointments or manage waiting lists.','服務資格與安排以機構確認為準。CareVoice 不提供預約或輪候管理。')}</p></>}
-   {page==='profile'&&<><PageHeading title={t('Your family, your pace','你們的步伐')} text={t('A little about your child. You’re in control.','認識孩子多一點，一切由你決定。')}/><button className="profile-summary" onClick={openProfile}><span className="large-avatar"><Leaf size={30}/></span><h2>{data.profile?.nickname||t(data.profile?'Your child':'Create your profile',data.profile?'你的孩子':'建立你的檔案')}</h2><p>{data.profile?`${data.profile.ageMonths} ${t('months','個月')} · ${pair(stages[data.profile.stage])}`:t('A nickname is all you need to get started.','用暱稱即可開始。')}</p><span className="text-button">{t(data.profile?'Edit profile':'Get started',data.profile?'編輯檔案':'開始使用')}<Pencil size={14}/></span></button><div className="settings-list"><button onClick={()=>update(d=>({...d,language:zh?'en':'zh'}))}><Globe2 size={20}/>{t('Language','語言')}<span>{zh?'繁體中文':'English'}</span><ChevronRight size={17}/></button><button onClick={questionnaireStart}><BookOpen size={20}/>{t('Observation questions','觀察問卷')}<span>{answeredCount(data.answers)}/30</span><ChevronRight size={17}/></button><button onClick={()=>go('report')}><FileText size={20}/>{t('Reports & sharing','報告與分享')}<ChevronRight size={17}/></button><button onClick={()=>download(JSON.stringify(data,null,2),'carevoice-backup.json','application/json')}><Download size={20}/>{t('Download a backup','下載備份')}<ChevronRight size={17}/></button><button onClick={()=>importRef.current?.click()}><Share2 size={20}/>{t('Restore a backup','還原備份')}<ChevronRight size={17}/></button><button className="danger-text" onClick={()=>setResetOpen(true)}><Trash2 size={20}/>{t('Delete all local data','刪除所有本機資料')}<ChevronRight size={17}/></button></div><aside className="privacy-card"><ShieldCheck size={23}/><div><h3>{t('Your notebook stays with you','你的記錄，由你保管')}</h3><p>{t('Records stay in this browser. No account, analytics, or cloud sync. Clearing browser data can erase them; keep a backup. Browser storage is not encrypted by CareVoice.','記錄儲存在此瀏覽器，沒有帳戶、分析追蹤或雲端同步。清除瀏覽器資料會刪除記錄，請保留備份。CareVoice 並未加密瀏覽器儲存資料。')}</p></div></aside><p className="fine-print">{t('CareVoice organises caregiver observations. It does not provide a diagnosis, score, or clinical assessment.','CareVoice 協助整理照顧者的觀察，不提供診斷、評分或臨床評估。')}</p></>}
-   {page==='report'&&<><Back onClick={()=>go('records')} label={t('Observations','觀察記錄')}/><PageHeading title={t('Ready for a conversation','為下一次傾談做好準備')} text={t('Bring your everyday observations into the room.','把日常的觀察帶進會面。')}/><div className="segmented"><button className={professional?'active':''} onClick={()=>setProfessional(true)}>{t('Appointment','專業會面')}</button><button className={!professional?'active':''} onClick={()=>setProfessional(false)}>{t('Family','家庭摘要')}</button></div>{warning}<div className="report-paper"><span className="report-brand">CareVoice</span><pre>{reportText(data,questions,professional).split('\n').slice(1).join('\n')}</pre></div><button className="primary full" onClick={()=>void shareReport(reportText(data,questions,professional),'CareVoice')}><Share2 size={18}/>{t('Share or download report','分享或下載報告')}</button><button className="secondary full" onClick={()=>window.print()}><FileText size={18}/>{t('Print / save PDF','列印／儲存 PDF')}</button><p className="fine-print">{t('Review before sharing. Exported reports are independent copies; deleting app data won’t remove them.','分享前請先檢視。匯出的報告是獨立副本，刪除應用程式資料不會刪除這些副本。')}</p></>}
-  </main>
-  <nav className="bottom-nav" aria-label={t('Main navigation','主要導覽')}>{([['home',House,'Home','首頁'],['records',BookOpen,'Observations','觀察'],['resources',Compass,'Resources','資源'],['profile',UserRound,'Profile','我的']] as const).map(([p,Icon,en,cn])=><button key={p} className={(page===p||(p==='home'&&['journey','questionnaire'].includes(page))||(p==='records'&&page==='report'))?'active':''} aria-current={page===p?'page':undefined} onClick={()=>go(p)}><Icon size={21} strokeWidth={1.7}/><span>{t(en,cn)}</span></button>)}</nav>
-  <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={e=>void importBackup(e.target.files?.[0])}/>
-  {profileOpen&&<dialog className="sheet" aria-labelledby="profile-title" onCancel={()=>setProfileOpen(false)}><form onSubmit={e=>{e.preventDefault();if(locked)return;const next={...data,profile:{...draftProfile,nickname:draftProfile.nickname.trim()}};try{browserStore.save(next);setData(next);setError('');setProfileOpen(false);}catch{setError(t('Profile could not be saved. Please try again.','未能儲存檔案，請重試。'));}}}><div className="sheet-head"><h2 id="profile-title">{t(data.profile?'Edit profile':'A little about your child',data.profile?'編輯檔案':'認識你的孩子')}</h2><button type="button" className="icon-button" aria-label={t('Close','關閉')} onClick={()=>setProfileOpen(false)}><X/></button></div><p className="muted">{t('No full name, photo, or exact birth date needed.','無須提供全名、相片或確實出生日期。')}</p><label>{t('Nickname (optional)','暱稱（選填）')}<input maxLength={40} value={draftProfile.nickname} placeholder={t('What do you call your little one?','你怎樣稱呼孩子？')} onChange={e=>setDraftProfile({...draftProfile,nickname:e.target.value})}/></label><label>{t('Age in months','年齡（月）')}<input type="number" min="0" max="83" required value={draftProfile.ageMonths} onChange={e=>setDraftProfile({...draftProfile,ageMonths:Number(e.target.value)})}/></label><label>{t('Where are you now?','你目前在哪個階段？')}<select aria-label={t('Where are you now?','你目前在哪個階段？')} value={draftProfile.stage} onChange={e=>setDraftProfile({...draftProfile,stage:e.target.value as Stage})}>{Object.entries(stages).map(([k,v])=><option key={k} value={k}>{pair(v)}</option>)}</select></label><p className="fine-print">{t('Choose your situation. This is not a clinical level.','選擇目前的情況，這不是臨床嚴重程度。')}</p><label>{t('First noticed','首次留意日期')}<input type="date" required max={new Date().toISOString().slice(0,10)} value={draftProfile.firstConcernDate} onChange={e=>setDraftProfile({...draftProfile,firstConcernDate:e.target.value})}/></label><label>{t('What prompted you? (optional)','甚麼令你開始留意？（選填）')}<textarea value={draftProfile.concernNotes} onChange={e=>setDraftProfile({...draftProfile,concernNotes:e.target.value})}/></label><button className="primary full" disabled={locked} type="submit">{t('Save profile','儲存檔案')}<Check size={18}/></button></form></dialog>}
-  {record&&<dialog className="sheet" aria-labelledby="record-title" onCancel={()=>setRecord(null)}><form onSubmit={e=>{e.preventDefault();if(!record.text.trim()||locked)return;const next={...data,records:[...data.records.filter(r=>r.id!==record.id),{...record,text:record.text.trim()}]};try{browserStore.save(next);setData(next);setError('');setRecord(null);setSaved(true);}catch{setError(t('Observation could not be saved. Please try again.','未能儲存觀察，請重試。'));}}}><div className="sheet-head"><h2 id="record-title">{t(data.records.some(r=>r.id===record.id)?'Your observation':'A moment worth keeping',data.records.some(r=>r.id===record.id)?'你的觀察':'值得記下的一刻')}</h2><button type="button" className="icon-button" aria-label={t('Close','關閉')} onClick={()=>setRecord(null)}><X/></button></div><p className="muted">{t('Your words are enough. Start with what you noticed.','用你自己的說話，記下留意到的事。')}</p><label>{t('What happened?','發生了甚麼？')}<textarea className="observation-input" required maxLength={10000} value={record.text} placeholder={t('Today, I noticed…','今天，我留意到……')} onChange={e=>setRecord({...record,text:e.target.value})}/></label><label>{t('Category','分類')}<select aria-label={t('Category','分類')} value={record.category} onChange={e=>setRecord({...record,category:e.target.value as Category})}>{Object.entries(categories).map(([k,v])=><option key={k} value={k}>{pair(v)}</option>)}</select></label><label>{t('When','時間')}<input type="datetime-local" required value={new Date(new Date(record.date).getTime()-new Date(record.date).getTimezoneOffset()*60000).toISOString().slice(0,16)} onChange={e=>{if(e.target.value)setRecord({...record,date:new Date(e.target.value).toISOString()});}}/></label><div className="form-row"><label>{t('Place (optional)','地點（選填）')}<input maxLength={120} value={record.location} onChange={e=>setRecord({...record,location:e.target.value})}/></label><label>{t('Minutes (optional)','分鐘（選填）')}<input type="number" min="0" max="1440" value={record.durationMinutes??''} onChange={e=>setRecord({...record,durationMinutes:e.target.value===''?null:Number(e.target.value)})}/></label></div><details><summary>{t('Add context & what helped','補充情境及有幫助的方法')}</summary><label>{t('What happened before?','之前發生了甚麼？')}<textarea value={record.context} onChange={e=>setRecord({...record,context:e.target.value})}/></label><label>{t('What helped?','有甚麼幫助？')}<textarea value={record.helped} onChange={e=>setRecord({...record,helped:e.target.value})}/></label></details><p className="fine-print"><AudioLines size={14}/>{t('Prefer speaking? Use the microphone on your phone’s keyboard.','喜歡用說話記錄？可使用手機鍵盤的語音輸入。')}</p><button className="primary full" disabled={!record.text.trim()||locked} type="submit">{t('Save observation','儲存觀察')}<Check size={18}/></button>{data.records.some(r=>r.id===record.id)&&<button type="button" className="danger-button full" onClick={()=>{const id=record.id;setRecord(null);setDeleteId(id);}}><Trash2 size={17}/>{t('Delete observation','刪除觀察')}</button>}</form></dialog>}
-  {deleteId&&<dialog className="sheet compact" aria-labelledby="delete-title" onCancel={()=>setDeleteId(null)}><h2 id="delete-title">{t('Delete this observation?','刪除此觀察？')}</h2><p>{t('This removes it from this browser. Exported copies won’t be affected.','這會從此瀏覽器刪除觀察，已匯出的副本不受影響。')}</p><button className="danger-button full" onClick={()=>{update(d=>({...d,records:d.records.filter(r=>r.id!==deleteId)}));setDeleteId(null);}}>{t('Delete observation','刪除觀察')}</button><button className="secondary full" onClick={()=>setDeleteId(null)}>{t('Keep observation','保留觀察')}</button></dialog>}
-  {resetOpen&&<dialog className="sheet compact" aria-labelledby="reset-title" onCancel={()=>setResetOpen(false)}><h2 id="reset-title">{t('Delete all local data?','刪除所有本機資料？')}</h2><p>{t('Your profile, observations and answers will be removed from this browser. Download a backup first if you want to keep them.','你的檔案、觀察和回答將從此瀏覽器刪除。如需保留，請先下載備份。')}</p><button className="secondary full" onClick={()=>download(JSON.stringify(data,null,2),'carevoice-backup.json','application/json')}>{t('Download backup','下載備份')}</button><button className="danger-button full" onClick={()=>{try{browserStore.clear();setData(emptyData());setLocked(false);setError('');setResetOpen(false);go('home');}catch{setError(t('Could not delete data. Please try again.','未能刪除資料，請重試。'));}}}>{t('Delete everything','全部刪除')}</button><button className="text-button full" onClick={()=>setResetOpen(false)}>{t('Cancel','取消')}</button></dialog>}
-  <div className="sr-only" role="status">{saved?t('Observation saved','觀察已儲存'):''}</div>
- </div>;
+type Page =
+  | "home"
+  | "records"
+  | "resources"
+  | "profile"
+  | "questionnaire"
+  | "journey"
+  | "report";
+const blankProfile = (): Profile => ({
+  nickname: "",
+  ageMonths: 36,
+  stage: "noticed",
+  concernNotes: "",
+  firstConcernDate: new Date().toISOString().slice(0, 10),
+});
+const newRecord = (): Observation => ({
+  id:
+    typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) =>
+          b.toString(16).padStart(2, "0"),
+        ).join(""),
+  date: new Date().toISOString(),
+  text: "",
+  category: "observation",
+  location: "",
+  durationMinutes: null,
+  context: "",
+  helped: "",
+});
+function App() {
+  const [initial] = useState(() => {
+    try {
+      return { data: browserStore.load(), error: "" };
+    } catch {
+      return {
+        data: emptyData(),
+        error:
+          "Saved data could not be read. It has not been overwritten. Download a copy before resetting. / 未能讀取資料，原有資料並未被覆寫。請先下載備份。",
+      };
+    }
+  });
+  const [data, setData] = useState(initial.data),
+    [error, setError] = useState(initial.error),
+    [locked, setLocked] = useState(!!initial.error);
+  const [page, setPage] = useState<Page>("home"),
+    [profileOpen, setProfileOpen] = useState(false),
+    [draftProfile, setDraftProfile] = useState<Profile>(blankProfile),
+    [record, setRecord] = useState<Observation | null>(null),
+    [deleteId, setDeleteId] = useState<string | null>(null),
+    [resetOpen, setResetOpen] = useState(false);
+  const [search, setSearch] = useState(""),
+    [filter, setFilter] = useState<Category | "all">("all"),
+    [qIndex, setQIndex] = useState(0),
+    [review, setReview] = useState(false),
+    [professional, setProfessional] = useState(true),
+    [saved, setSaved] = useState(false);
+  const mainRef = useRef<HTMLElement>(null),
+    importRef = useRef<HTMLInputElement>(null);
+  const zh = data.language === "zh",
+    t = (a: string, b: string) => (zh ? b : a),
+    pair = (v: [string, string]) => v[zh ? 1 : 0];
+  function update(fn: (d: AppData) => AppData) {
+    if (locked) return;
+    const next = fn(data);
+    try {
+      browserStore.save(next);
+      setData(next);
+      setError("");
+    } catch {
+      setError(
+        t(
+          "Could not save. Your last saved records are preserved. Free some browser storage and try again.",
+          "未能儲存。上次儲存的記錄已保留。請釋放瀏覽器儲存空間後重試。",
+        ),
+      );
+    }
+  }
+  function go(p: Page) {
+    setPage(p);
+    setSaved(false);
+    window.scrollTo({ top: 0 });
+    requestAnimationFrame(() => mainRef.current?.focus());
+  }
+  useEffect(() => {
+    document.documentElement.lang = zh ? "zh-Hant" : "en";
+  }, [zh]);
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [qIndex, review]);
+  useEffect(() => {
+    if (!profileOpen && !record && !resetOpen && !deleteId) return;
+    const before = document.activeElement as HTMLElement;
+    const dialog = document.querySelector<HTMLDialogElement>("dialog");
+    dialog?.showModal();
+    dialog?.querySelector<HTMLElement>("input,button")?.focus();
+    return () => {
+      dialog?.close();
+      before?.focus();
+    };
+  }, [profileOpen, record?.id, resetOpen, deleteId]);
+  const langButton = (
+    <button
+      className="language"
+      aria-label={t("Switch to Traditional Chinese", "Switch to English")}
+      onClick={() => update((d) => ({ ...d, language: zh ? "en" : "zh" }))}
+    >
+      <Globe2 size={16} />
+      {zh ? "EN" : "繁中"}
+    </button>
+  );
+  const logo = (
+    <span className="brand">
+      <span className="brand-icon">
+        <AudioLines size={22} />
+      </span>
+      CareVoice<span className="brand-dot">.</span>
+    </span>
+  );
+  const openProfile = () => {
+    setDraftProfile(data.profile ?? blankProfile());
+    setProfileOpen(true);
+  };
+  const followUp = needsFollowUp(data.answers);
+  const warning = followUp ? (
+    <aside className="notice">
+      <Heart size={20} />
+      <div>
+        <strong>{t("A change worth discussing", "值得跟進的變化")}</strong>
+        <p>
+          {t(
+            "You answered Yes or Not sure about a loss of skills. Discuss this observation promptly with a qualified professional.",
+            "你在技能退步題目回答「是」或「不確定」。請盡快與合資格專業人士討論這些觀察。",
+          )}
+        </p>
+      </div>
+    </aside>
+  ) : null;
+  const dateLabel = (d: string) =>
+    new Date(d).toLocaleDateString(zh ? "zh-HK" : "en-HK", {
+      month: "short",
+      day: "numeric",
+    });
+  function recordCard(r: Observation) {
+    return (
+      <button
+        className="record-card"
+        key={r.id}
+        onClick={() => setRecord({ ...r })}
+      >
+        <span className={`category-icon ${r.category}`}>
+          {r.category === "progress" ? (
+            <Sparkles size={20} />
+          ) : (
+            <MessageCircle size={20} />
+          )}
+        </span>
+        <span className="record-content">
+          <span className="record-meta">
+            {pair(categories[r.category])}
+            <span>{dateLabel(r.date)}</span>
+          </span>
+          <strong>{r.text}</strong>
+          {r.location && <small>{r.location}</small>}
+        </span>
+        <ChevronRight size={16} />
+      </button>
+    );
+  }
+  function questionnaireStart() {
+    setReview(false);
+    const first = questions.findIndex((q) => !data.answers[q.id]);
+    setQIndex(first < 0 ? 0 : first);
+    go("questionnaire");
+  }
+  async function importBackup(file?: File) {
+    if (!file) return;
+    try {
+      if (file.size > 10_000_000) throw Error();
+      const incoming = validateData(JSON.parse(await file.text()));
+      if (
+        !window.confirm(
+          t(
+            "Replace this device’s CareVoice data with this backup?",
+            "以此備份取代本裝置的 CareVoice 資料？",
+          ),
+        )
+      )
+        return;
+      browserStore.save(incoming);
+      setLocked(false);
+      setData(incoming);
+      setError("");
+      go("home");
+    } catch {
+      setError(
+        t(
+          "Could not import this backup. Current data was kept. Choose a valid CareVoice JSON backup.",
+          "未能匯入備份，現有資料已保留。請選擇有效的 CareVoice JSON 備份。",
+        ),
+      );
+    } finally {
+      if (importRef.current) importRef.current.value = "";
+    }
+  }
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <button
+          className="logo-button"
+          onClick={() => go("home")}
+          aria-label="CareVoice home"
+        >
+          {logo}
+        </button>
+        <div className="header-actions">
+          {langButton}
+          <button
+            className="avatar"
+            aria-label={t("Open profile", "開啟檔案")}
+            onClick={() => go("profile")}
+          >
+            {data.profile?.nickname?.slice(0, 1).toUpperCase() || (
+              <UserRound size={18} />
+            )}
+          </button>
+        </div>
+      </header>
+      {error && (
+        <div role="alert" className="error-banner">
+          {error}
+          <button
+            onClick={() =>
+              download(
+                localStorage.getItem("carevoice.mobile.v1") || "",
+                "carevoice-recovery.json",
+                "application/json",
+              )
+            }
+          >
+            {t("Download saved data", "下載已存資料")}
+          </button>
+        </div>
+      )}
+      <main ref={mainRef} tabIndex={-1}>
+        {page === "home" && (
+          <>
+            <section className="greeting">
+              <div className="eyebrow">
+                <span className="tiny-sun" />
+                <span>
+                  {t("A LITTLE SUPPORT, EVERY DAY", "每一天，一點支持")}
+                </span>
+              </div>
+              <h1>
+                {t("Small moments.", "陪伴成長，")}
+                <br />
+                <span>{t("Meaningful steps.", "一起向前。")}</span>
+              </h1>
+              <p>
+                {t(
+                  "A place for your observations, and a little clarity for what comes next.",
+                  "記下日常點滴，讓下一步更清晰。",
+                )}
+              </p>
+              <Sun className="greeting-sun" size={48} strokeWidth={1.4} />
+            </section>
+            <button className="child-strip" onClick={openProfile}>
+              <span className="child-avatar">
+                <Leaf size={23} />
+              </span>
+              <span>
+                <strong>
+                  {data.profile?.nickname ||
+                    t(
+                      data.profile ? "Your child" : "Let’s make this yours",
+                      data.profile ? "你的孩子" : "從認識你們開始",
+                    )}
+                </strong>
+                <small>
+                  {data.profile
+                    ? `${Math.floor(data.profile.ageMonths / 12)} ${t("years", "歲")} ${data.profile.ageMonths % 12} ${t("months", "個月")} · ${pair(stages[data.profile.stage])}`
+                    : t(
+                        "Add a nickname and choose your journey stage",
+                        "加入暱稱，選擇目前的階段",
+                      )}
+                </small>
+              </span>
+              <ChevronRight size={18} />
+            </button>
+            {warning}
+            <section className="capture-card">
+              <div className="capture-top">
+                <span className="sound-icon">
+                  <AudioLines size={25} />
+                </span>
+                <span>{t("YOUR EVERYDAY NOTEBOOK", "你的日常記錄簿")}</span>
+              </div>
+              <h2>{t("What did you notice today?", "今天，留意到甚麼？")}</h2>
+              <p>
+                {t(
+                  "A new word. A difficult moment. A little win. Every observation has a place here.",
+                  "一句新說話、一個困難時刻、一點小進步，都值得記下。",
+                )}
+              </p>
+              <button
+                className="capture-button"
+                onClick={() => {
+                  setRecord(newRecord());
+                  setSaved(false);
+                }}
+              >
+                <Plus size={20} />
+                {t("Add an observation", "新增觀察")}
+                <ArrowRight size={18} />
+              </button>
+              <div className="private-note">
+                <LockKeyhole size={13} />
+                {t(
+                  "Stored in this browser · only shared by you",
+                  "儲存在此瀏覽器 · 由你決定分享",
+                )}
+              </div>
+            </section>
+            <div className="section-head">
+              <h2>{t("One step at a time", "一步一步來")}</h2>
+              <span>{t("AT YOUR PACE", "按你的步伐")}</span>
+            </div>
+            <div className="path-grid">
+              <button
+                className="path-card questionnaire"
+                onClick={questionnaireStart}
+              >
+                <span className="path-icon">
+                  <BookOpen size={22} />
+                </span>
+                <span className="card-arrow">
+                  <ArrowUpRight size={19} />
+                </span>
+                <h3>{t("Understand the everyday", "了解日常點滴")}</h3>
+                <p>
+                  {t(
+                    "Reflect with 30 gentle observation questions.",
+                    "用 30 個觀察問題，整理你的發現。",
+                  )}
+                </p>
+                <div className="progress-track">
+                  <i
+                    style={{
+                      width: `${(Object.keys(data.answers).length / 30) * 100}%`,
+                    }}
+                  />
+                </div>
+                <small>
+                  {Object.keys(data.answers).length}/30{" "}
+                  {t("reviewed", "已檢視")}
+                </small>
+              </button>
+              <button
+                className="path-card journey"
+                onClick={() => go("journey")}
+              >
+                <span className="path-icon">
+                  <Compass size={22} />
+                </span>
+                <span className="card-arrow">
+                  <ArrowUpRight size={19} />
+                </span>
+                <h3>{t("Find your next step", "找到下一步")}</h3>
+                <p>
+                  {t(
+                    "A simple checklist for where your family is now.",
+                    "配合家庭目前階段的簡單清單。",
+                  )}
+                </p>
+                <small>
+                  {t("Your care journey", "你的支援旅程")}
+                  <ArrowRight size={14} />
+                </small>
+              </button>
+            </div>
+            <div className="section-head">
+              <h2>{t("Recent observations", "最近的觀察")}</h2>
+              <button className="text-button" onClick={() => go("records")}>
+                {t("View all", "查看全部")}
+                <ArrowRight size={14} />
+              </button>
+            </div>
+            {data.records.length ? (
+              <div className="records-list">
+                {[...data.records]
+                  .sort((a, b) => b.date.localeCompare(a.date))
+                  .slice(0, 3)
+                  .map(recordCard)}
+              </div>
+            ) : (
+              <div className="empty-notebook">
+                <span>
+                  <MessageCircle size={24} />
+                </span>
+                <div>
+                  <h3>
+                    {t("Your story starts with a moment", "從一個小小時刻開始")}
+                  </h3>
+                  <p>
+                    {t(
+                      "Add your first observation whenever you’re ready.",
+                      "準備好時，記下第一個觀察吧。",
+                    )}
+                  </p>
+                </div>
+              </div>
+            )}
+            <div className="reassurance">
+              <Heart size={17} />
+              <p>
+                {t(
+                  "You don’t have to figure everything out today.",
+                  "不用今天就把一切想通。",
+                )}
+              </p>
+            </div>
+          </>
+        )}
+        {page === "records" && (
+          <>
+            <PageHeading
+              title={t("Everyday observations", "日常觀察")}
+              text={t(
+                "Small details, gathered in one place.",
+                "把點點滴滴，放在同一個地方。",
+              )}
+            />
+            <button
+              className="primary full"
+              onClick={() => setRecord(newRecord())}
+            >
+              <Plus size={19} />
+              {t("Add an observation", "新增觀察")}
+            </button>
+            <label className="search-box">
+              <Search size={18} />
+              <input
+                aria-label={t("Search observations", "搜尋觀察")}
+                placeholder={t("Search your observations", "搜尋你的觀察")}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </label>
+            <label className="filter-label">
+              {t("Category", "分類")}
+              <select
+                aria-label={t("Filter category", "篩選分類")}
+                value={filter}
+                onChange={(e) => setFilter(e.target.value as Category | "all")}
+              >
+                <option value="all">{t("All observations", "全部觀察")}</option>
+                {Object.entries(categories).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {pair(v)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="records-list">
+              {[...data.records]
+                .filter(
+                  (r) =>
+                    (filter === "all" || r.category === filter) &&
+                    `${r.text} ${r.location} ${r.context} ${r.helped}`
+                      .toLowerCase()
+                      .includes(search.toLowerCase()),
+                )
+                .sort((a, b) => b.date.localeCompare(a.date))
+                .map(recordCard)}
+            </div>
+            {!data.records.length ? (
+              <Empty
+                icon={<BookOpen />}
+                title={t("A notebook for your family", "屬於你們的記錄簿")}
+                text={t(
+                  "Record what happened, where you were, and what helped. Start with whatever feels important.",
+                  "記下發生了甚麼、地點和有幫助的方法，從你覺得重要的事開始。",
+                )}
+              />
+            ) : (
+              !data.records.some(
+                (r) =>
+                  (filter === "all" || r.category === filter) &&
+                  `${r.text} ${r.location} ${r.context} ${r.helped}`
+                    .toLowerCase()
+                    .includes(search.toLowerCase()),
+              ) && (
+                <Empty
+                  icon={<Search />}
+                  title={t("No matching observations", "沒有相符的觀察")}
+                  text={t(
+                    "Try another word or category.",
+                    "試試其他字詞或分類。",
+                  )}
+                />
+              )
+            )}
+            <button className="secondary full" onClick={() => go("report")}>
+              <FileText size={18} />
+              {t("Prepare a report", "準備報告")}
+            </button>
+          </>
+        )}
+        {page === "journey" && (
+          <>
+            <Back onClick={() => go("home")} label={t("Home", "首頁")} />
+            <PageHeading
+              title={t("A little direction", "一點方向")}
+              text={t(
+                "Practical steps for your family’s journey.",
+                "配合你們旅程的實際小步驟。",
+              )}
+            />
+            {!data.profile ? (
+              <Empty
+                icon={<Compass />}
+                title={t("Where are you now?", "你目前在哪個階段？")}
+                text={t(
+                  "Create a profile to see your personal checklist.",
+                  "建立檔案，查看你的個人清單。",
+                )}
+                action={
+                  <button className="primary" onClick={openProfile}>
+                    {t("Create a profile", "建立檔案")}
+                  </button>
+                }
+              />
+            ) : (
+              <>
+                <div className="stage-card">
+                  <Compass size={24} />
+                  <small>{t("YOUR CURRENT STAGE", "目前階段")}</small>
+                  <h2>{pair(stages[data.profile.stage])}</h2>
+                  <button className="text-button" onClick={openProfile}>
+                    {t("Update my stage", "更新階段")}
+                    <Pencil size={14} />
+                  </button>
+                </div>
+                <h2 className="subheading">
+                  {t("Your personal checklist", "你的個人清單")}
+                </h2>
+                <div className="checklist">
+                  {nextSteps(data.profile.stage).map((s, i) => {
+                    const key = `${data.profile!.stage}-${i}`,
+                      done = data.completedSteps.includes(key);
+                    return (
+                      <button
+                        key={key}
+                        role="checkbox"
+                        aria-checked={done}
+                        className={done ? "done" : ""}
+                        onClick={() =>
+                          update((d) => ({
+                            ...d,
+                            completedSteps: done
+                              ? d.completedSteps.filter((k) => k !== key)
+                              : [...d.completedSteps, key],
+                          }))
+                        }
+                      >
+                        <span className="check-circle">
+                          {done && <Check size={16} />}
+                        </span>
+                        {pair(s)}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="fine-print">
+                  {t(
+                    "This is your checklist. Completing a step does not register you for a service or change an official waiting list.",
+                    "這是你的個人清單。勾選項目不代表已登記服務，亦不會更改官方輪候狀況。",
+                  )}
+                </p>
+                <button
+                  className="secondary full"
+                  onClick={() => go("resources")}
+                >
+                  {t("Explore official resources", "查看官方資源")}
+                  <ArrowRight size={16} />
+                </button>
+              </>
+            )}
+          </>
+        )}
+        {page === "questionnaire" && (
+          <>
+            <Back onClick={() => go("home")} label={t("Home", "首頁")} />
+            {warning}
+            {review ? (
+              <>
+                <PageHeading
+                  title={t("Your observations, together", "整理你的觀察")}
+                  text={t(
+                    "A reflection of your answers, without a score or diagnosis.",
+                    "整理你的回答，不作評分或診斷。",
+                  )}
+                />
+                <div className="review-count">
+                  <BookOpen />
+                  <strong>{answeredCount(data.answers)} / 30</strong>
+                  <span>{t("answered", "已回答")}</span>
+                </div>
+                <div className="review-list">
+                  {questions.map((q, i) => (
+                    <button
+                      key={q.id}
+                      onClick={() => {
+                        setQIndex(i);
+                        setReview(false);
+                      }}
+                    >
+                      <span>
+                        {q.id}. {zh ? q.zh : q.en}
+                      </span>
+                      <strong>
+                        {data.answers[q.id]
+                          ? pair(answers[data.answers[q.id]])
+                          : t("Unanswered", "未回答")}
+                      </strong>
+                      <Pencil size={14} />
+                    </button>
+                  ))}
+                </div>
+                <button className="primary full" onClick={() => go("report")}>
+                  {t("Prepare a report", "準備報告")}
+                  <ArrowRight size={17} />
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="section-head question-top">
+                  <span>{t("Everyday reflection", "日常觀察問卷")}</span>
+                  <button
+                    className="text-button"
+                    onClick={() => setReview(true)}
+                  >
+                    {t("Review answers", "檢視回答")}
+                  </button>
+                </div>
+                <div className="question-progress">
+                  <div className="progress-track">
+                    <i style={{ width: `${((qIndex + 1) / 30) * 100}%` }} />
+                  </div>
+                  <span>{qIndex + 1} / 30</span>
+                </div>
+                <p className="question-category">
+                  {zh
+                    ? questions[qIndex].categoryZH
+                    : questions[qIndex].categoryEN}
+                </p>
+                <h1 className="question-title">
+                  {zh ? questions[qIndex].zh : questions[qIndex].en}
+                </h1>
+                <p className="muted">
+                  {t(
+                    "Think about everyday moments. There’s no right or wrong answer.",
+                    "回想日常的片段，答案沒有對錯。",
+                  )}
+                </p>
+                <div className="answer-options">
+                  {(questions[qIndex].yesNo
+                    ? ["yes", "no", "unsure"]
+                    : ["never", "rarely", "sometimes", "often", "unsure"]
+                  ).map((a) => (
+                    <button
+                      key={a}
+                      aria-pressed={data.answers[questions[qIndex].id] === a}
+                      className={
+                        data.answers[questions[qIndex].id] === a
+                          ? "selected"
+                          : ""
+                      }
+                      onClick={() =>
+                        update((d) => ({
+                          ...d,
+                          answers: {
+                            ...d.answers,
+                            [questions[qIndex].id]: a as Answer,
+                          },
+                        }))
+                      }
+                    >
+                      {pair(answers[a as Answer])}
+                      <span className="check-circle">
+                        {data.answers[questions[qIndex].id] === a && (
+                          <Check size={16} />
+                        )}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <div className="question-controls">
+                  <button
+                    className="secondary"
+                    disabled={qIndex === 0}
+                    onClick={() => setQIndex((i) => i - 1)}
+                  >
+                    <ArrowLeft size={17} />
+                    {t("Back", "上一題")}
+                  </button>
+                  <button
+                    className="primary"
+                    disabled={!data.answers[questions[qIndex].id]}
+                    onClick={() =>
+                      qIndex === 29 ? setReview(true) : setQIndex((i) => i + 1)
+                    }
+                  >
+                    {t(
+                      qIndex === 29 ? "Review" : "Next",
+                      qIndex === 29 ? "檢視" : "下一題",
+                    )}
+                    <ArrowRight size={17} />
+                  </button>
+                </div>
+                <button
+                  className="skip-button"
+                  onClick={() => {
+                    update((d) => ({
+                      ...d,
+                      answers: {
+                        ...d.answers,
+                        [questions[qIndex].id]: "skipped",
+                      },
+                    }));
+                    qIndex === 29 ? setReview(true) : setQIndex((i) => i + 1);
+                  }}
+                >
+                  {t("Skip for now", "暫時略過")}
+                </button>
+                <p className="fine-print centered">
+                  <LockKeyhole size={12} />
+                  {t(
+                    "Answers save automatically on this device.",
+                    "答案自動儲存在此裝置。",
+                  )}
+                </p>
+              </>
+            )}
+          </>
+        )}
+        {page === "resources" && (
+          <>
+            <PageHeading
+              title={t("A place to turn", "找到可靠的支援")}
+              text={t(
+                "Official Hong Kong resources to explore with the people supporting your family.",
+                "與支援你家庭的專業人士，一起了解香港的官方資訊。",
+              )}
+            />
+            <div className="resource-intro">
+              <Heart size={24} />
+              <p>
+                {t(
+                  "You don’t have to navigate this alone. Start with a conversation with your doctor, MCHC, or social worker.",
+                  "不用獨自面對。可以先與醫生、母嬰健康院或社工談談。",
+                )}
+              </p>
+            </div>
+            <div className="resources">
+              {[
+                [
+                  "Where to start",
+                  "從哪裡開始",
+                  "Discuss developmental concerns with your MCHC or family doctor.",
+                  "與母嬰健康院或家庭醫生討論發展方面的疑問。",
+                  "https://www.dhcas.gov.hk/en/faq.html",
+                  "DH",
+                ],
+                [
+                  "Assessment appointments",
+                  "評估預約",
+                  "Registration and appointments after receiving a referral.",
+                  "取得轉介後的登記及預約安排。",
+                  "https://www.dhcas.gov.hk/en/registration_appointment.html",
+                  "DH",
+                ],
+                [
+                  "Follow-up and referrals",
+                  "跟進及轉介",
+                  "Understand next steps with your assessment team.",
+                  "與評估團隊了解跟進安排。",
+                  "https://www.dhcas.gov.hk/en/management_referral.html",
+                  "DH",
+                ],
+                [
+                  "Central referral system",
+                  "康復服務中央轉介系統",
+                  "Explore service referrals with an authorised professional.",
+                  "與獲授權的專業人士了解服務轉介。",
+                  "https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/",
+                  "SWD",
+                ],
+                [
+                  "On-site pre-school support",
+                  "到校學前支援",
+                  "Information about on-site pre-school rehabilitation services.",
+                  "到校學前康復服務的官方資訊。",
+                  "https://www.swd.gov.hk/oprs/index_en.htm",
+                  "SWD",
+                ],
+              ].map(([en, cn, desc, descZh, url, dept]) => (
+                <a
+                  className="resource-card"
+                  key={url}
+                  href={url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="resource-dept">
+                    {dept === "DH"
+                      ? t("Department of Health", "衛生署")
+                      : t("Social Welfare Department", "社會福利署")}
+                  </span>
+                  <ArrowUpRight size={20} />
+                  <h2>{t(en, cn)}</h2>
+                  <p>{t(desc, descZh)}</p>
+                  <small>{t("Opens official website", "開啟官方網站")}</small>
+                </a>
+              ))}
+            </div>
+            <p className="fine-print">
+              {t(
+                "Service providers confirm eligibility and arrangements. CareVoice does not book appointments or manage waiting lists.",
+                "服務資格與安排以機構確認為準。CareVoice 不提供預約或輪候管理。",
+              )}
+            </p>
+          </>
+        )}
+        {page === "profile" && (
+          <>
+            <PageHeading
+              title={t("Your family, your pace", "你們的步伐")}
+              text={t(
+                "A little about your child. You’re in control.",
+                "認識孩子多一點，一切由你決定。",
+              )}
+            />
+            <button className="profile-summary" onClick={openProfile}>
+              <span className="large-avatar">
+                <Leaf size={30} />
+              </span>
+              <h2>
+                {data.profile?.nickname ||
+                  t(
+                    data.profile ? "Your child" : "Create your profile",
+                    data.profile ? "你的孩子" : "建立你的檔案",
+                  )}
+              </h2>
+              <p>
+                {data.profile
+                  ? `${data.profile.ageMonths} ${t("months", "個月")} · ${pair(stages[data.profile.stage])}`
+                  : t(
+                      "A nickname is all you need to get started.",
+                      "用暱稱即可開始。",
+                    )}
+              </p>
+              <span className="text-button">
+                {t(
+                  data.profile ? "Edit profile" : "Get started",
+                  data.profile ? "編輯檔案" : "開始使用",
+                )}
+                <Pencil size={14} />
+              </span>
+            </button>
+            <div className="settings-list">
+              <button
+                onClick={() =>
+                  update((d) => ({ ...d, language: zh ? "en" : "zh" }))
+                }
+              >
+                <Globe2 size={20} />
+                {t("Language", "語言")}
+                <span>{zh ? "繁體中文" : "English"}</span>
+                <ChevronRight size={17} />
+              </button>
+              <button onClick={questionnaireStart}>
+                <BookOpen size={20} />
+                {t("Observation questions", "觀察問卷")}
+                <span>{answeredCount(data.answers)}/30</span>
+                <ChevronRight size={17} />
+              </button>
+              <button onClick={() => go("report")}>
+                <FileText size={20} />
+                {t("Reports & sharing", "報告與分享")}
+                <ChevronRight size={17} />
+              </button>
+              <button
+                onClick={() =>
+                  download(
+                    JSON.stringify(data, null, 2),
+                    "carevoice-backup.json",
+                    "application/json",
+                  )
+                }
+              >
+                <Download size={20} />
+                {t("Download a backup", "下載備份")}
+                <ChevronRight size={17} />
+              </button>
+              <button onClick={() => importRef.current?.click()}>
+                <Share2 size={20} />
+                {t("Restore a backup", "還原備份")}
+                <ChevronRight size={17} />
+              </button>
+              <button
+                className="danger-text"
+                onClick={() => setResetOpen(true)}
+              >
+                <Trash2 size={20} />
+                {t("Delete all local data", "刪除所有本機資料")}
+                <ChevronRight size={17} />
+              </button>
+            </div>
+            <aside className="privacy-card">
+              <ShieldCheck size={23} />
+              <div>
+                <h3>
+                  {t("Your notebook stays with you", "你的記錄，由你保管")}
+                </h3>
+                <p>
+                  {t(
+                    "Records stay in this browser. No account, analytics, or cloud sync. Clearing browser data can erase them; keep a backup. Browser storage is not encrypted by CareVoice.",
+                    "記錄儲存在此瀏覽器，沒有帳戶、分析追蹤或雲端同步。清除瀏覽器資料會刪除記錄，請保留備份。CareVoice 並未加密瀏覽器儲存資料。",
+                  )}
+                </p>
+              </div>
+            </aside>
+            <p className="fine-print">
+              {t(
+                "CareVoice organises caregiver observations. It does not provide a diagnosis, score, or clinical assessment.",
+                "CareVoice 協助整理照顧者的觀察，不提供診斷、評分或臨床評估。",
+              )}
+            </p>
+          </>
+        )}
+        {page === "report" && (
+          <>
+            <Back
+              onClick={() => go("records")}
+              label={t("Observations", "觀察記錄")}
+            />
+            <PageHeading
+              title={t("Ready for a conversation", "為下一次傾談做好準備")}
+              text={t(
+                "Bring your everyday observations into the room.",
+                "把日常的觀察帶進會面。",
+              )}
+            />
+            <div className="segmented">
+              <button
+                className={professional ? "active" : ""}
+                onClick={() => setProfessional(true)}
+              >
+                {t("Appointment", "專業會面")}
+              </button>
+              <button
+                className={!professional ? "active" : ""}
+                onClick={() => setProfessional(false)}
+              >
+                {t("Family", "家庭摘要")}
+              </button>
+            </div>
+            {warning}
+            <div className="report-paper">
+              <span className="report-brand">CareVoice</span>
+              <pre>
+                {reportText(data, questions, professional)
+                  .split("\n")
+                  .slice(1)
+                  .join("\n")}
+              </pre>
+            </div>
+            <button
+              className="primary full"
+              onClick={() =>
+                void shareReport(
+                  reportText(data, questions, professional),
+                  "CareVoice",
+                )
+              }
+            >
+              <Share2 size={18} />
+              {t("Share or download report", "分享或下載報告")}
+            </button>
+            <button className="secondary full" onClick={() => window.print()}>
+              <FileText size={18} />
+              {t("Print / save PDF", "列印／儲存 PDF")}
+            </button>
+            <p className="fine-print">
+              {t(
+                "Review before sharing. Exported reports are independent copies; deleting app data won’t remove them.",
+                "分享前請先檢視。匯出的報告是獨立副本，刪除應用程式資料不會刪除這些副本。",
+              )}
+            </p>
+          </>
+        )}
+      </main>
+      <nav className="bottom-nav" aria-label={t("Main navigation", "主要導覽")}>
+        {(
+          [
+            ["home", House, "Home", "首頁"],
+            ["records", BookOpen, "Observations", "觀察"],
+            ["resources", Compass, "Resources", "資源"],
+            ["profile", UserRound, "Profile", "我的"],
+          ] as const
+        ).map(([p, Icon, en, cn]) => (
+          <button
+            key={p}
+            className={
+              page === p ||
+              (p === "home" && ["journey", "questionnaire"].includes(page)) ||
+              (p === "records" && page === "report")
+                ? "active"
+                : ""
+            }
+            aria-current={page === p ? "page" : undefined}
+            onClick={() => go(p)}
+          >
+            <Icon size={21} strokeWidth={1.7} />
+            <span>{t(en, cn)}</span>
+          </button>
+        ))}
+      </nav>
+      <input
+        ref={importRef}
+        type="file"
+        accept="application/json,.json"
+        hidden
+        onChange={(e) => void importBackup(e.target.files?.[0])}
+      />
+      {profileOpen && (
+        <dialog
+          className="sheet"
+          aria-labelledby="profile-title"
+          onCancel={() => setProfileOpen(false)}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (locked) return;
+              const next = {
+                ...data,
+                profile: {
+                  ...draftProfile,
+                  nickname: draftProfile.nickname.trim(),
+                },
+              };
+              try {
+                browserStore.save(next);
+                setData(next);
+                setError("");
+                setProfileOpen(false);
+              } catch {
+                setError(
+                  t(
+                    "Profile could not be saved. Please try again.",
+                    "未能儲存檔案，請重試。",
+                  ),
+                );
+              }
+            }}
+          >
+            <div className="sheet-head">
+              <h2 id="profile-title">
+                {t(
+                  data.profile ? "Edit profile" : "A little about your child",
+                  data.profile ? "編輯檔案" : "認識你的孩子",
+                )}
+              </h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={t("Close", "關閉")}
+                onClick={() => setProfileOpen(false)}
+              >
+                <X />
+              </button>
+            </div>
+            <p className="muted">
+              {t(
+                "No full name, photo, or exact birth date needed.",
+                "無須提供全名、相片或確實出生日期。",
+              )}
+            </p>
+            <label>
+              {t("Nickname (optional)", "暱稱（選填）")}
+              <input
+                maxLength={40}
+                value={draftProfile.nickname}
+                placeholder={t(
+                  "What do you call your little one?",
+                  "你怎樣稱呼孩子？",
+                )}
+                onChange={(e) =>
+                  setDraftProfile({ ...draftProfile, nickname: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              {t("Age in months", "年齡（月）")}
+              <input
+                type="number"
+                min="0"
+                max="83"
+                required
+                value={draftProfile.ageMonths}
+                onChange={(e) =>
+                  setDraftProfile({
+                    ...draftProfile,
+                    ageMonths: Number(e.target.value),
+                  })
+                }
+              />
+            </label>
+            <label>
+              {t("Where are you now?", "你目前在哪個階段？")}
+              <select
+                aria-label={t("Where are you now?", "你目前在哪個階段？")}
+                value={draftProfile.stage}
+                onChange={(e) =>
+                  setDraftProfile({
+                    ...draftProfile,
+                    stage: e.target.value as Stage,
+                  })
+                }
+              >
+                {Object.entries(stages).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {pair(v)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p className="fine-print">
+              {t(
+                "Choose your situation. This is not a clinical level.",
+                "選擇目前的情況，這不是臨床嚴重程度。",
+              )}
+            </p>
+            <label>
+              {t("First noticed", "首次留意日期")}
+              <input
+                type="date"
+                required
+                max={new Date().toISOString().slice(0, 10)}
+                value={draftProfile.firstConcernDate}
+                onChange={(e) =>
+                  setDraftProfile({
+                    ...draftProfile,
+                    firstConcernDate: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <label>
+              {t("What prompted you? (optional)", "甚麼令你開始留意？（選填）")}
+              <textarea
+                value={draftProfile.concernNotes}
+                onChange={(e) =>
+                  setDraftProfile({
+                    ...draftProfile,
+                    concernNotes: e.target.value,
+                  })
+                }
+              />
+            </label>
+            <button className="primary full" disabled={locked} type="submit">
+              {t("Save profile", "儲存檔案")}
+              <Check size={18} />
+            </button>
+          </form>
+        </dialog>
+      )}
+      {record && (
+        <dialog
+          className="sheet"
+          aria-labelledby="record-title"
+          onCancel={() => setRecord(null)}
+        >
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!record.text.trim() || locked) return;
+              const next = {
+                ...data,
+                records: [
+                  ...data.records.filter((r) => r.id !== record.id),
+                  { ...record, text: record.text.trim() },
+                ],
+              };
+              try {
+                browserStore.save(next);
+                setData(next);
+                setError("");
+                setRecord(null);
+                setSaved(true);
+              } catch {
+                setError(
+                  t(
+                    "Observation could not be saved. Please try again.",
+                    "未能儲存觀察，請重試。",
+                  ),
+                );
+              }
+            }}
+          >
+            <div className="sheet-head">
+              <h2 id="record-title">
+                {t(
+                  data.records.some((r) => r.id === record.id)
+                    ? "Your observation"
+                    : "A moment worth keeping",
+                  data.records.some((r) => r.id === record.id)
+                    ? "你的觀察"
+                    : "值得記下的一刻",
+                )}
+              </h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label={t("Close", "關閉")}
+                onClick={() => setRecord(null)}
+              >
+                <X />
+              </button>
+            </div>
+            <p className="muted">
+              {t(
+                "Your words are enough. Start with what you noticed.",
+                "用你自己的說話，記下留意到的事。",
+              )}
+            </p>
+            <label>
+              {t("What happened?", "發生了甚麼？")}
+              <textarea
+                className="observation-input"
+                required
+                maxLength={10000}
+                value={record.text}
+                placeholder={t("Today, I noticed…", "今天，我留意到……")}
+                onChange={(e) => setRecord({ ...record, text: e.target.value })}
+              />
+            </label>
+            <label>
+              {t("Category", "分類")}
+              <select
+                aria-label={t("Category", "分類")}
+                value={record.category}
+                onChange={(e) =>
+                  setRecord({ ...record, category: e.target.value as Category })
+                }
+              >
+                {Object.entries(categories).map(([k, v]) => (
+                  <option key={k} value={k}>
+                    {pair(v)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              {t("When", "時間")}
+              <input
+                type="datetime-local"
+                required
+                value={new Date(
+                  new Date(record.date).getTime() -
+                    new Date(record.date).getTimezoneOffset() * 60000,
+                )
+                  .toISOString()
+                  .slice(0, 16)}
+                onChange={(e) => {
+                  if (e.target.value)
+                    setRecord({
+                      ...record,
+                      date: new Date(e.target.value).toISOString(),
+                    });
+                }}
+              />
+            </label>
+            <div className="form-row">
+              <label>
+                {t("Place (optional)", "地點（選填）")}
+                <input
+                  maxLength={120}
+                  value={record.location}
+                  onChange={(e) =>
+                    setRecord({ ...record, location: e.target.value })
+                  }
+                />
+              </label>
+              <label>
+                {t("Minutes (optional)", "分鐘（選填）")}
+                <input
+                  type="number"
+                  min="0"
+                  max="1440"
+                  value={record.durationMinutes ?? ""}
+                  onChange={(e) =>
+                    setRecord({
+                      ...record,
+                      durationMinutes:
+                        e.target.value === "" ? null : Number(e.target.value),
+                    })
+                  }
+                />
+              </label>
+            </div>
+            <details>
+              <summary>
+                {t("Add context & what helped", "補充情境及有幫助的方法")}
+              </summary>
+              <label>
+                {t("What happened before?", "之前發生了甚麼？")}
+                <textarea
+                  value={record.context}
+                  onChange={(e) =>
+                    setRecord({ ...record, context: e.target.value })
+                  }
+                />
+              </label>
+              <label>
+                {t("What helped?", "有甚麼幫助？")}
+                <textarea
+                  value={record.helped}
+                  onChange={(e) =>
+                    setRecord({ ...record, helped: e.target.value })
+                  }
+                />
+              </label>
+            </details>
+            <p className="fine-print">
+              <AudioLines size={14} />
+              {t(
+                "Prefer speaking? Use the microphone on your phone’s keyboard.",
+                "喜歡用說話記錄？可使用手機鍵盤的語音輸入。",
+              )}
+            </p>
+            <button
+              className="primary full"
+              disabled={!record.text.trim() || locked}
+              type="submit"
+            >
+              {t("Save observation", "儲存觀察")}
+              <Check size={18} />
+            </button>
+            {data.records.some((r) => r.id === record.id) && (
+              <button
+                type="button"
+                className="danger-button full"
+                onClick={() => {
+                  const id = record.id;
+                  setRecord(null);
+                  setDeleteId(id);
+                }}
+              >
+                <Trash2 size={17} />
+                {t("Delete observation", "刪除觀察")}
+              </button>
+            )}
+          </form>
+        </dialog>
+      )}
+      {deleteId && (
+        <dialog
+          className="sheet compact"
+          aria-labelledby="delete-title"
+          onCancel={() => setDeleteId(null)}
+        >
+          <h2 id="delete-title">
+            {t("Delete this observation?", "刪除此觀察？")}
+          </h2>
+          <p>
+            {t(
+              "This removes it from this browser. Exported copies won’t be affected.",
+              "這會從此瀏覽器刪除觀察，已匯出的副本不受影響。",
+            )}
+          </p>
+          <button
+            className="danger-button full"
+            onClick={() => {
+              update((d) => ({
+                ...d,
+                records: d.records.filter((r) => r.id !== deleteId),
+              }));
+              setDeleteId(null);
+            }}
+          >
+            {t("Delete observation", "刪除觀察")}
+          </button>
+          <button className="secondary full" onClick={() => setDeleteId(null)}>
+            {t("Keep observation", "保留觀察")}
+          </button>
+        </dialog>
+      )}
+      {resetOpen && (
+        <dialog
+          className="sheet compact"
+          aria-labelledby="reset-title"
+          onCancel={() => setResetOpen(false)}
+        >
+          <h2 id="reset-title">
+            {t("Delete all local data?", "刪除所有本機資料？")}
+          </h2>
+          <p>
+            {t(
+              "Your profile, observations and answers will be removed from this browser. Download a backup first if you want to keep them.",
+              "你的檔案、觀察和回答將從此瀏覽器刪除。如需保留，請先下載備份。",
+            )}
+          </p>
+          <button
+            className="secondary full"
+            onClick={() =>
+              download(
+                JSON.stringify(data, null, 2),
+                "carevoice-backup.json",
+                "application/json",
+              )
+            }
+          >
+            {t("Download backup", "下載備份")}
+          </button>
+          <button
+            className="danger-button full"
+            onClick={() => {
+              try {
+                browserStore.clear();
+                setData(emptyData());
+                setLocked(false);
+                setError("");
+                setResetOpen(false);
+                go("home");
+              } catch {
+                setError(
+                  t(
+                    "Could not delete data. Please try again.",
+                    "未能刪除資料，請重試。",
+                  ),
+                );
+              }
+            }}
+          >
+            {t("Delete everything", "全部刪除")}
+          </button>
+          <button
+            className="text-button full"
+            onClick={() => setResetOpen(false)}
+          >
+            {t("Cancel", "取消")}
+          </button>
+        </dialog>
+      )}
+      <div className="sr-only" role="status">
+        {saved ? t("Observation saved", "觀察已儲存") : ""}
+      </div>
+    </div>
+  );
 }
-function PageHeading({title,text}:{title:string;text:string}){return <div className="page-heading"><h1>{title}</h1><p>{text}</p></div>;}
-function Back({onClick,label}:{onClick:()=>void;label:string}){return <button className="back-button" onClick={onClick}><ArrowLeft size={17}/>{label}</button>;}
-function Empty({icon,title,text,action}:{icon:React.ReactNode;title:string;text:string;action?:React.ReactNode}){return <section className="empty-state"><span>{icon}</span><h2>{title}</h2><p>{text}</p>{action}</section>;}
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+function PageHeading({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="page-heading">
+      <h1>{title}</h1>
+      <p>{text}</p>
+    </div>
+  );
+}
+function Back({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button className="back-button" onClick={onClick}>
+      <ArrowLeft size={17} />
+      {label}
+    </button>
+  );
+}
+function Empty({
+  icon,
+  title,
+  text,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <section className="empty-state">
+      <span>{icon}</span>
+      <h2>{title}</h2>
+      <p>{text}</p>
+      {action}
+    </section>
+  );
+}
+createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
