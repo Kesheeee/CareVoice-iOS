@@ -29,6 +29,9 @@ export interface Profile {
   stage: Stage;
   concernNotes: string;
   firstConcernDate: string;
+  diagnosingBody?: string;
+  diagnosisDate?: string;
+  reportedSupportLevel?: string;
 }
 export interface Observation {
   id: string;
@@ -47,6 +50,7 @@ export interface AppData {
   records: Observation[];
   answers: Record<number, Answer>;
   completedSteps: string[];
+  regressionWhen?: Record<number, string>;
 }
 export interface Question {
   id: number;
@@ -77,8 +81,8 @@ export const stages: Record<Stage, [string, string]> = {
 };
 export const categories: Record<Category, [string, string]> = {
   observation: ["Observation", "日常觀察"],
-  distress: ["Emotions", "情緒困擾"],
-  progress: ["Little wins", "小小進步"],
+  distress: ["Distress", "情緒困擾"],
+  progress: ["Progress", "進步"],
   communication: ["Communication", "溝通"],
   sensory: ["Sensory", "感官"],
   play: ["Play", "遊戲"],
@@ -98,6 +102,22 @@ export const needsFollowUp = (a: AppData["answers"]) =>
   [29, 30].some((id) => a[id] === "yes" || a[id] === "unsure");
 export const answeredCount = (a: AppData["answers"]) =>
   Object.values(a).filter((v) => v !== "skipped").length;
+export const onboardingDestination = (stage: Stage) =>
+  stage === "noticed" ? "questionnaireIntro" : "home";
+export function relatedRecords(
+  records: Observation[],
+  record: Observation,
+): Observation[] {
+  return records
+    .filter(
+      (r) =>
+        r.id !== record.id &&
+        r.category === record.category &&
+        r.date <= record.date,
+    )
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 2);
+}
 export function nextSteps(stage: Stage): [string, string][] {
   if (stage === "noticed" || stage === "professionalFollowUp")
     return [
@@ -155,7 +175,27 @@ export function reportText(
       t("Parent-selected stage: ", "家長選擇的階段：") +
         stages[p.stage][zh ? 1 : 0],
     );
-    if (professional) lines.push(p.firstConcernDate, p.concernNotes);
+    if (professional) {
+      lines.push(p.firstConcernDate, p.concernNotes);
+      if (p.stage === "diagnosed") {
+        if (p.diagnosingBody)
+          lines.push(
+            t(
+              "Diagnosing organisation (copied from report): ",
+              "診斷機構（按報告填寫）：",
+            ) + p.diagnosingBody,
+          );
+        if (p.diagnosisDate)
+          lines.push(t("Report date: ", "報告日期：") + p.diagnosisDate);
+        if (p.reportedSupportLevel)
+          lines.push(
+            t(
+              "Support level (copied from report): ",
+              "支援程度（按報告填寫）：",
+            ) + p.reportedSupportLevel,
+          );
+      }
+    }
   }
   lines.push(
     "",
@@ -178,6 +218,15 @@ export function reportText(
         "技能退步題目回答為「是」或「不確定」，請盡快與合資格專業人士討論。",
       ),
     );
+  for (const id of [29, 30])
+    if (
+      (data.answers[id] === "yes" || data.answers[id] === "unsure") &&
+      data.regressionWhen?.[id]
+    )
+      lines.push(
+        t(`Q${id} — roughly when: `, `第 ${id} 題 — 大約何時：`) +
+          data.regressionWhen[id],
+      );
   lines.push("", t("Observations", "觀察記錄"));
   for (const r of [...data.records].sort((a, b) =>
     a.date.localeCompare(b.date),

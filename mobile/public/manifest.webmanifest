@@ -5,8 +5,8 @@
   "description": "Everyday observations, meaningful next steps.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8f9f7",
-  "theme_color": "#176356",
+  "background_color": "#f6f8fb",
+  "theme_color": "#1565c0",
   "icons": [
     {
       "src": "/icon.svg",

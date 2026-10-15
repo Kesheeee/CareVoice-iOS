@@ -1,25 +1,31 @@
 :root {
-  --color-paper: oklch(98% 0.006 120);
-  --color-surface: oklch(100% 0 0);
-  --color-ink: oklch(26% 0.025 170);
-  --color-muted: oklch(49% 0.015 165);
-  --color-line: oklch(90% 0.013 150);
-  --color-accent: oklch(43% 0.077 169);
-  --color-accent-hover: oklch(36% 0.07 169);
-  --color-soft: oklch(94% 0.024 160);
-  --color-blue: oklch(47% 0.11 253);
-  --color-blue-soft: oklch(95% 0.021 247);
-  --color-sand: oklch(96% 0.025 82);
-  --color-gold: oklch(69% 0.124 65);
-  --color-danger: oklch(44% 0.14 25);
-  --color-danger-soft: oklch(96% 0.018 30);
+  --color-paper: oklch(0.97845987 0.00453078 258.324487);
+  --color-surface: oklch(0.99999999 0.00000004 89.875563);
+  --color-ink: oklch(0.22843817 0.03842926 282.932396);
+  --color-muted: oklch(0.49038881 0.02310953 260.140401);
+  --color-line: oklch(0.92618601 0.01090889 256.697057);
+  --color-accent: oklch(0.51340082 0.16028197 255.673341);
+  --color-accent-hover: oklch(0.42171694 0.15692414 259.913273);
+  --color-soft: oklch(0.95324998 0.02178313 239.42747);
+  --color-blue: oklch(0.51340082 0.16028197 255.673341);
+  --color-blue-soft: oklch(0.95324998 0.02178313 239.42747);
+  --color-sand: oklch(0.96853152 0.02815715 79.479552);
+  --color-gold: oklch(0.56872599 0.1487592 50.754209);
+  --color-danger: oklch(0.50128208 0.17831791 28.704727);
+  --color-danger-soft: oklch(0.96885997 0.01521628 22.394961);
   --color-backdrop: oklch(20% 0.025 170 / 0.42);
   --color-shadow: oklch(22% 0.03 170 / 0.06);
   --color-focus: oklch(50% 0.14 250);
+  --color-success: oklch(0.5234322 0.13465905 144.167224);
+  --color-success-soft: oklch(0.95714927 0.02099289 147.636004);
+  --color-pink-soft: oklch(0.94050844 0.0281922 355.436664);
+  --color-purple-soft: oklch(0.93702364 0.02100773 304.023978);
   --font-display:
-    "Avenir Next", "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    -apple-system, BlinkMacSystemFont, "PingFang HK", "PingFang TC", "Segoe UI",
+    "Microsoft JhengHei", "Helvetica Neue", sans-serif;
   --font-body:
-    "Avenir Next", "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    -apple-system, BlinkMacSystemFont, "PingFang HK", "PingFang TC", "Segoe UI",
+    "Microsoft JhengHei", "Helvetica Neue", sans-serif;
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -30,8 +36,8 @@
   --text-body: 0.9375rem;
   --text-display: clamp(2.15rem, 6.8vw, 2.8rem);
   --radius-sm: 12px;
-  --radius-md: 20px;
-  --radius-lg: 26px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);

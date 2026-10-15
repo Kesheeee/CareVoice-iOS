@@ -2,6 +2,12 @@
 
 A phone-first React + TypeScript version of CareVoice. English and Traditional Chinese, with the same 30 questions as the Swift app. The existing native iOS project remains alongside it.
 
+The current UI follows the blue Cici UI+UX_1013 v4 reference, with subtitles removed. Queenie's onboarding rules override the mockup's score/results screen: Welcome → child profile → caregiver-selected stage → questionnaire introduction only for the just-noticing stage → answer review → Home. All other stages go straight to Home; everyone can open the questionnaire voluntarily from Profile.
+
+Home shows actual monthly record counts and questionnaire completion, not clinical scores. Records link earlier entries only by an explicitly chosen category. Community contains official resources, parent support links and information questions rather than a live forum. Loss-of-skills Yes/Not sure surfaces an official professional contact route immediately and offers an optional timing note. Existing professional report details are optional copies, never inferred. Voice entry uses the phone keyboard's dictation; CareVoice itself does not capture or upload audio.
+
+The additional `regressionWhen` and professional-report fields are optional additions to schema version 1. Older saved data and backups load without migration or deletion. See `design.md` for the shared design system.
+
 ## Run
 
 ```sh

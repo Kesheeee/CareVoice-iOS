@@ -1,6 +1,13 @@
 [
   {
     "date": "2026-10-15",
+    "macrostructure": "Mobile dashboard",
+    "theme": "UI+UX_1013 v4 blue",
+    "enrichment": "none",
+    "brief": "Reference-led bilingual dashboard, stage-based onboarding, explicit records and Community"
+  },
+  {
+    "date": "2026-10-15",
     "macrostructure": "Workbench",
     "theme": "existing CareVoice brand",
     "enrichment": "none",

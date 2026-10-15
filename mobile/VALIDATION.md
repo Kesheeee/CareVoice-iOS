@@ -1,5 +1,11 @@
 # Mobile web verification
 
+## Blue reference update
+
+15 October 2026: production TypeScript/Vite build, 7 domain tests and 5 Chromium browser suites passed. The new suites verify stage-gated onboarding across all six stages, optional manual questionnaire access, autosave/skip, immediate regression follow-up and source link, timing notes, English/Traditional Chinese reports, record methods and category-based related entries, persistence/edit/search/delete, older version-one data, and professional report copy fields. Phone layouts across Welcome, Home, Records, Community, Profile and the editor were checked in both languages at 320/375/414/768px. Descriptive subtitles stay absent. Physical-device keyboard dictation, native builds and Safari remain unverified.
+
+The score/severity/inferred-stage results in the reference mockups were deliberately replaced by a response review, following Queenie's brief. Age is entered in years/months; real names, photographs and exact birth dates are not collected.
+
 15 October 2026, Windows / Node 24 / Chromium automated browser checks.
 
 - TypeScript check and Vite production build passed.

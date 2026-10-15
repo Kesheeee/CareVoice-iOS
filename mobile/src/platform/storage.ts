@@ -56,6 +56,25 @@ export function validateData(raw: unknown): AppData {
   if (new Set(d.records.map((r) => r.id)).size !== d.records.length)
     throw new Error("Duplicate observation IDs");
   if (
+    d.regressionWhen !== undefined &&
+    (!d.regressionWhen ||
+      typeof d.regressionWhen !== "object" ||
+      Array.isArray(d.regressionWhen) ||
+      Object.entries(d.regressionWhen).some(
+        ([k, v]) => !["29", "30"].includes(k) || typeof v !== "string",
+      ))
+  )
+    throw new Error("Invalid regression notes");
+  if (
+    d.profile &&
+    [
+      d.profile.diagnosingBody,
+      d.profile.diagnosisDate,
+      d.profile.reportedSupportLevel,
+    ].some((v) => v !== undefined && typeof v !== "string")
+  )
+    throw new Error("Invalid report details");
+  if (
     Object.entries(d.answers).some(
       ([id, a]) =>
         !/^([1-9]|[12][0-9]|30)$/.test(id) || !Object.hasOwn(answers, a),

@@ -5,8 +5,59 @@ import {
   needsFollowUp,
   answeredCount,
   reportText,
+  onboardingDestination,
+  relatedRecords,
 } from "../src/domain.ts";
 import { validateData } from "../src/platform/storage.ts";
+
+test("Only the just-noticing stage enters the automatic questionnaire", () => {
+  assert.equal(onboardingDestination("noticed"), "questionnaireIntro");
+  for (const stage of [
+    "professionalFollowUp",
+    "awaitingAssessment",
+    "assessed",
+    "diagnosed",
+    "registered",
+  ] as const)
+    assert.equal(onboardingDestination(stage), "home");
+});
+test("Related records use explicit category and past date, without inferred relationships", () => {
+  const r = {
+    id: "now",
+    date: "2026-10-15",
+    text: "Now",
+    category: "progress" as const,
+    location: "",
+    durationMinutes: null,
+    context: "",
+    helped: "",
+  };
+  const past = { ...r, id: "past", date: "2026-10-14" };
+  assert.deepEqual(
+    relatedRecords(
+      [
+        r,
+        past,
+        { ...past, id: "future", date: "2026-10-16" },
+        { ...past, id: "other", category: "play" },
+      ],
+      r,
+    ),
+    [past],
+  );
+});
+test("Optional regression/report fields round-trip alongside older version-one data", () => {
+  const d = emptyData();
+  d.regressionWhen = { 29: "Last month" };
+  assert.deepEqual(
+    validateData(JSON.parse(JSON.stringify(d))).regressionWhen,
+    d.regressionWhen,
+  );
+  assert.throws(() => validateData({ ...d, regressionWhen: { 29: 123 } }));
+  assert.throws(() =>
+    validateData({ ...d, regressionWhen: { 1: "Invalid question" } }),
+  );
+});
 test("Backup validation preserves a valid round trip and rejects unsafe shapes", () => {
   const d = emptyData();
   assert.deepEqual(validateData(JSON.parse(JSON.stringify(d))), d);
