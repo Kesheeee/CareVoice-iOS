@@ -151,8 +151,8 @@ export function RecordsScreen({
           {records.length ? <Search size={29} /> : <BookOpen size={29} />}
           <h2>
             {records.length
-              ? t("No matching observations", "沒有相符的觀察")
-              : t("No records yet", "暫無記錄")}
+              ? t("No matching observations", "搵唔到相符嘅觀察")
+              : t("No records yet", "仲未有記錄")}
           </h2>
           {records.length > 0 && (
             <button

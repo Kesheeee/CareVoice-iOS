@@ -49,7 +49,7 @@ test("Queenie onboarding, skip/autosave, regression follow-up and bilingual repo
     .getByRole("button", { name: "Switch to Traditional Chinese" })
     .click();
   await nav(page, "我的").click();
-  await page.getByRole("button", { name: /報告與分享/ }).click();
+  await page.getByRole("button", { name: /報告同分享/ }).click();
   await expect(page.locator(".report-paper")).toContainText("Last month");
   await expect(page.locator(".report-paper")).toContainText("我只是覺得有啲唔對路");
   await page.reload();

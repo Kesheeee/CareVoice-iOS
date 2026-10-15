@@ -91,13 +91,13 @@ export function Community({ language }: { language: Language }) {
       <div className="community-questions">
         <details>
           <summary role="button">
-            {t("Where can I discuss my concerns?", "可以向誰提出疑問？")}
+            {t("Where can I discuss my concerns?", "有疑問可以搵邊個？")}
             <ChevronDown size={17} aria-hidden="true" />
           </summary>
           <p>
             {t(
               "Start with your family doctor or Maternal & Child Health Centre. They can discuss your observations and whether a referral is needed.",
-              "可先與家庭醫生或母嬰健康院討論你的觀察及轉介需要。",
+              "可以先同家庭醫生或母嬰健康院傾吓你嘅觀察，同埋需唔需要轉介。",
             )}
           </p>
           <a
@@ -117,36 +117,36 @@ export function Community({ language }: { language: Language }) {
           <summary role="button">
             {t(
               "Does this questionnaire assess my child?",
-              "這份問卷會評估孩子嗎？",
+              "呢份問卷會評估小朋友嗎？",
             )}
             <ChevronDown size={17} aria-hidden="true" />
           </summary>
           <p>
             {t(
               "No. It records your observations without scores, diagnosis or a suggested clinical level. Only you choose your journey stage.",
-              "不會。問卷只記錄你的觀察，不評分、不作診斷，亦不建議臨床程度。旅程階段只由你選擇。",
+              "唔會。問卷只記錄你嘅觀察，唔會評分、診斷或建議臨床程度。你而家嘅階段只會由你揀。",
             )}
           </p>
         </details>
         <details>
           <summary role="button">
-            {t("What can I prepare while waiting?", "輪候期間可以準備甚麼？")}
+            {t("What can I prepare while waiting?", "等候期間可以準備啲咩？")}
             <ChevronDown size={17} aria-hidden="true" />
           </summary>
           <p>
             {t(
               "Keep your observations and questions together. Use your personal checklist and bring a report to your next professional appointment. Confirm service arrangements with your referring professional.",
-              "整理日常觀察及問題，使用個人清單，並於會面時帶同記錄報告。服務安排請向轉介專業人士確認。",
+              "整理日常觀察同問題，用個人清單記低，見面時帶埋記錄報告。服務安排記得同轉介專業人士確認。",
             )}
           </p>
         </details>
       </div>
       <details className="community-about">
-        <summary role="button"><ShieldCheck size={15} aria-hidden="true" />{t("About these resources", "關於這些資源")}<ChevronDown size={15} aria-hidden="true" /></summary>
+        <summary role="button"><ShieldCheck size={15} aria-hidden="true" />{t("About these resources", "關於呢啲資源")}<ChevronDown size={15} aria-hidden="true" /></summary>
         <p className="fine-print">
         {t(
           "Official links reviewed 15 October 2026. Service providers confirm eligibility and arrangements. External links open in your browser.",
-          "官方連結於 2026 年 10 月 15 日核對。服務資格及安排由機構確認，外部連結在瀏覽器開啟。",
+          "官方連結已喺 2026 年 10 月 15 日核對。服務資格同安排由機構確認，外部連結會喺瀏覽器開啟。",
         )}
         </p>
         <p className="fine-print">{t("Sources: Department of Health and Social Welfare Department.", "資料來源：衛生署及社會福利署。")}</p>

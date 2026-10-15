@@ -111,7 +111,7 @@ function App() {
       return {
         data: emptyData(),
         error:
-          "Saved data could not be read. It has not been overwritten. Download a copy before resetting. / 未能讀取資料，原有資料並未被覆寫。請先下載備份。",
+          "Saved data could not be read. It has not been overwritten. Download a copy before resetting. / 讀唔到已儲存嘅資料，原有資料冇被覆蓋。重設之前，請先下載備份。",
       };
     }
   });
@@ -149,7 +149,7 @@ function App() {
       setError(
         t(
           "Could not save. Your last saved records are preserved. Free some browser storage and try again.",
-          "未能儲存。上次儲存的記錄已保留。請釋放瀏覽器儲存空間後重試。",
+          "儲存唔到，上次儲存嘅記錄仲喺度。請騰出瀏覽器儲存空間，再試一次。",
         ),
       );
     }
@@ -190,7 +190,7 @@ function App() {
     <aside className="notice" role="alert">
       <Heart size={20} />
       <div>
-        <strong>{t("A change worth discussing", "值得跟進的變化")}</strong>
+        <strong>{t("A change worth discussing", "值得跟進嘅變化")}</strong>
         <p>
           {t(
             "You answered Yes or Not sure about a loss of skills. Discuss this observation promptly with a qualified professional.",
@@ -215,7 +215,7 @@ function App() {
         <small>
           {t(
             "Source checked 15 October 2026",
-            "資料於 2026 年 10 月 15 日核對",
+            "資料已喺 2026 年 10 月 15 日核對",
           )}
         </small>
       </div>
@@ -241,7 +241,7 @@ function App() {
         !window.confirm(
           t(
             "Replace this device’s CareVoice data with this backup?",
-            "以此備份取代本裝置的 CareVoice 資料？",
+            "要用呢份備份取代呢部裝置嘅 CareVoice 資料？",
           ),
         )
       )
@@ -255,7 +255,7 @@ function App() {
       setError(
         t(
           "Could not import this backup. Current data was kept. Choose a valid CareVoice JSON backup.",
-          "未能匯入備份，現有資料已保留。請選擇有效的 CareVoice JSON 備份。",
+          "匯入唔到備份，現有資料仲喺度。請揀一份有效嘅 CareVoice JSON 備份。",
         ),
       );
     } finally {
@@ -339,11 +339,11 @@ function App() {
         {page === "journey" && (
           <>
             <Back onClick={() => go("home")} label={t("Home", "首頁")} />
-            <PageHeading title={t("Waiting-period navigator", "等待期導航")} />
+            <PageHeading title={t("Waiting-period navigator", "等候期間嘅下一步")} />
             {!data.profile ? (
               <Empty
                 icon={<Compass />}
-                title={t("Where are you now?", "你目前在哪個階段？")}
+                title={t("Where are you now?", "你而家去到邊個階段？")}
 
                 action={
                   <button className="primary" onClick={openProfile}>
@@ -363,7 +363,7 @@ function App() {
                   </button>
                 </div>
                 <h2 className="subheading">
-                  {t("Your personal checklist", "你的個人清單")}
+                  {t("Your personal checklist", "你嘅個人清單")}
                 </h2>
                 <div className="checklist">
                   {nextSteps(data.profile.stage).map((s, i) => {
@@ -395,7 +395,7 @@ function App() {
                 <p className="fine-print">
                   {t(
                     "This is your checklist. Completing a step does not register you for a service or change an official waiting list.",
-                    "這是你的個人清單。勾選項目不代表已登記服務，亦不會更改官方輪候狀況。",
+                    "呢份係你嘅個人清單。剔選項目唔代表已登記服務，亦唔會改變官方輪候狀況。",
                   )}
                 </p>
                 <button
@@ -416,16 +416,16 @@ function App() {
             {warning}
             {review ? (
               <>
-                <PageHeading title={t("Your responses", "你的回答")} />
+                <PageHeading title={t("Your responses", "你嘅回答")} />
                 <aside className="review-boundary">
                   <ShieldCheck size={20} />
                   {t(
                     "Caregiver observations only. No score, diagnosis or inferred stage.",
-                    "只整理照顧者的觀察，不作評分、診斷或推斷階段。",
+                    "只整理照顧者嘅觀察，唔會評分、診斷或推斷階段。",
                   )}
                 </aside>
                 <button className="primary full" onClick={() => go("home")}>
-                  {t("Enter Home", "進入首頁")}
+                  {t("Enter Home", "返首頁")}
                   <ArrowRight size={18} />
                 </button>
                 <div className="review-count">
@@ -449,7 +449,7 @@ function App() {
                       <strong>
                         {data.answers[q.id]
                           ? pair(answers[data.answers[q.id]])
-                          : t("Unanswered", "未回答")}
+                          : t("Unanswered", "未答")}
                       </strong>
                       <Pencil size={14} />
                     </button>
@@ -586,7 +586,7 @@ function App() {
                   <LockKeyhole size={12} />
                   {t(
                     "Answers save automatically on this device.",
-                    "答案自動儲存在此裝置。",
+                    "答案會自動儲存喺呢部裝置。",
                   )}
                 </p>
               </>
@@ -606,7 +606,7 @@ function App() {
                 {data.profile?.nickname ||
                   t(
                     data.profile ? "Your child" : "Create your profile",
-                    data.profile ? "你的孩子" : "建立你的檔案",
+                    data.profile ? "你嘅小朋友" : "建立你嘅檔案",
                   )}
               </h2>
               <span className="profile-age">
@@ -653,7 +653,7 @@ function App() {
               </button>
               <button onClick={() => go("report")}>
                 <FileText size={20} />
-                {t("Reports & sharing", "報告與分享")}
+                {t("Reports & sharing", "報告同分享")}
                 <ChevronRight size={17} />
               </button>
             </div>
@@ -684,27 +684,27 @@ function App() {
                 onClick={() => setResetOpen(true)}
               >
                 <Trash2 size={20} />
-                {t("Delete all local data", "刪除所有本機資料")}
+                {t("Delete all local data", "刪除呢部裝置嘅所有資料")}
                 <ChevronRight size={17} />
               </button>
             </div>
             <details className="profile-privacy">
-              <summary role="button"><ShieldCheck size={17} />{t("Privacy & storage", "私隱與儲存")}<ChevronDown size={16} /></summary>
+              <summary role="button"><ShieldCheck size={17} />{t("Privacy & storage", "私隱同儲存")}<ChevronDown size={16} /></summary>
               <div>
                 <h3>
-                  {t("Your notebook stays with you", "你的記錄，由你保管")}
+                  {t("Your notebook stays with you", "你嘅記錄，由你保管")}
                 </h3>
                 <p>
                   {t(
                     "Records stay in this browser. No account, analytics, or cloud sync. Clearing browser data can erase them; keep a backup. Browser storage is not encrypted by CareVoice.",
-                    "記錄儲存在此瀏覽器，沒有帳戶、分析追蹤或雲端同步。清除瀏覽器資料會刪除記錄，請保留備份。CareVoice 並未加密瀏覽器儲存資料。",
+                    "記錄儲存喺呢個瀏覽器，冇帳戶、分析追蹤或雲端同步。清除瀏覽器資料會刪埋記錄，記得保留備份。CareVoice 冇加密瀏覽器入面儲存嘅資料。",
                   )}
                 </p>
               </div>
             <p className="fine-print">
               {t(
                 "CareVoice organises caregiver observations. It does not provide a diagnosis, score, or clinical assessment.",
-                "CareVoice 協助整理照顧者的觀察，不提供診斷、評分或臨床評估。",
+                "CareVoice 幫你整理照顧者嘅觀察，唔會提供診斷、評分或臨床評估。",
               )}
             </p>
             </details>
@@ -761,7 +761,7 @@ function App() {
             <p className="fine-print">
               {t(
                 "Review before sharing. Exported reports are independent copies; deleting app data won’t remove them.",
-                "分享前請先檢視。匯出的報告是獨立副本，刪除應用程式資料不會刪除這些副本。",
+                "分享之前記得睇清楚。匯出嘅報告係獨立副本，刪除應用程式資料唔會刪埋呢啲副本。",
               )}
             </p>
           </>
@@ -839,7 +839,7 @@ function App() {
                 setError(
                   t(
                     "Profile could not be saved. Please try again.",
-                    "未能儲存檔案，請重試。",
+                    "儲存唔到檔案，請再試一次。",
                   ),
                 );
               }
@@ -906,7 +906,7 @@ function App() {
                 setError(
                   t(
                     "Observation could not be saved. Please try again.",
-                    "未能儲存觀察，請重試。",
+                    "儲存唔到觀察記錄，請再試一次。",
                   ),
                 );
               }
@@ -919,8 +919,8 @@ function App() {
                     ? "Your observation"
                     : "A moment worth keeping",
                   data.records.some((r) => r.id === record.id)
-                    ? "你的觀察"
-                    : "值得記下的一刻",
+                    ? "你嘅觀察"
+                    : "值得記低嘅一刻",
                 )}
               </h2>
               <button
@@ -938,24 +938,24 @@ function App() {
                 <div className="voice-entry-help">
                   <Mic size={22} />
                   <strong>
-                    {t("Use your keyboard microphone", "使用鍵盤的麥克風")}
+                    {t("Use your keyboard microphone", "用鍵盤嘅咪輸入")}
                   </strong>
                   <p>
                     {t(
                       "Tap the observation field, then your phone keyboard’s microphone. Check the transcript before saving. CareVoice does not record or upload audio.",
-                      "點選觀察欄位，再點手機鍵盤的麥克風。儲存前請核對文字，CareVoice 不會錄音或上傳音訊。",
+                      "撳觀察欄位，再撳手機鍵盤嘅咪。儲存之前記得核對文字，CareVoice 唔會錄音或上傳聲音。",
                     )}
                   </p>
                 </div>
               )}
               <label>
-                {t("What happened?", "發生了甚麼？")}
+                {t("What happened?", "發生咗咩事？")}
                 <textarea
                   className="observation-input"
                   required
                   maxLength={10000}
                   value={record.text}
-                  placeholder={t("Today, I noticed…", "今天，我留意到……")}
+                  placeholder={t("Today, I noticed…", "今日，我留意到……")}
                   onChange={(e) =>
                     setRecord({ ...record, text: e.target.value })
                   }
@@ -1030,10 +1030,10 @@ function App() {
               </div>
               <details>
                 <summary>
-                  {t("Add context & what helped", "補充情境及有幫助的方法")}
+                  {t("Add context & what helped", "補充當時情況同有幫助嘅方法")}
                 </summary>
                 <label>
-                  {t("What happened before?", "之前發生了甚麼？")}
+                  {t("What happened before?", "之前發生咗咩事？")}
                   <textarea
                     value={record.context}
                     onChange={(e) =>
@@ -1042,7 +1042,7 @@ function App() {
                   />
                 </label>
                 <label>
-                  {t("What helped?", "有甚麼幫助？")}
+                  {t("What helped?", "有咩幫到手？")}
                   <textarea
                     value={record.helped}
                     onChange={(e) =>
@@ -1055,7 +1055,7 @@ function App() {
                 <AudioLines size={14} />
                 {t(
                   "Prefer speaking? Use the microphone on your phone’s keyboard.",
-                  "喜歡用說話記錄？可使用手機鍵盤的語音輸入。",
+                  "想用講嘅嚟記錄？可以用手機鍵盤嘅語音輸入。",
                 )}
               </p>
             </div>
@@ -1093,12 +1093,12 @@ function App() {
           onCancel={() => setDeleteId(null)}
         >
           <h2 id="delete-title">
-            {t("Delete this observation?", "刪除此觀察？")}
+            {t("Delete this observation?", "要刪除呢條觀察記錄？")}
           </h2>
           <p>
             {t(
               "This removes it from this browser. Exported copies won’t be affected.",
-              "這會從此瀏覽器刪除觀察，已匯出的副本不受影響。",
+              "呢條觀察記錄會喺呢個瀏覽器刪除，已匯出嘅副本唔受影響。",
             )}
           </p>
           <button
@@ -1125,12 +1125,12 @@ function App() {
           onCancel={() => setResetOpen(false)}
         >
           <h2 id="reset-title">
-            {t("Delete all local data?", "刪除所有本機資料？")}
+            {t("Delete all local data?", "刪除呢部裝置嘅所有資料？")}
           </h2>
           <p>
             {t(
               "Your profile, observations and answers will be removed from this browser. Download a backup first if you want to keep them.",
-              "你的檔案、觀察和回答將從此瀏覽器刪除。如需保留，請先下載備份。",
+              "你嘅檔案、觀察同答案會喺呢個瀏覽器刪除。如果想保留，請先下載備份。",
             )}
           </p>
           <button
@@ -1159,7 +1159,7 @@ function App() {
                 setError(
                   t(
                     "Could not delete data. Please try again.",
-                    "未能刪除資料，請重試。",
+                    "刪除唔到資料，請再試一次。",
                   ),
                 );
               }

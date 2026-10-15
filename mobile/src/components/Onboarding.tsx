@@ -30,7 +30,7 @@ export function SetupProgress({
       </li>
       <li className={questionnaire ? "current" : ""}>
         <span>2</span>
-        {zh ? "情況問卷" : "Questionnaire"}
+        {zh ? "觀察問卷" : "Questionnaire"}
       </li>
     </ol>
   );
@@ -71,11 +71,11 @@ export function Welcome({
       <aside className="important-notice">
         <ShieldCheck size={22} />
         <div>
-          <h2>{t("Not an assessment tool", "並非評估工具")}</h2>
+          <h2>{t("Not an assessment tool", "唔係評估工具")}</h2>
           <p>
             {t(
               "CareVoice organises caregiver observations. It does not diagnose, score, or infer a support level. Formal assessment belongs with qualified professionals.",
-              "CareVoice 整理照顧者的觀察，不作診斷、評分或推斷支援程度。正式評估由合資格專業人士進行。",
+              "CareVoice 整理照顧者嘅觀察，唔會診斷、評分或推斷支援程度。正式評估由合資格專業人士進行。",
             )}
           </p>
         </div>
@@ -105,10 +105,10 @@ export function QuestionnaireIntro({
     t = (en: string, tc: string) => (zh ? tc : en);
   return (
     <section className="questionnaire-intro">
-      <h1>{t("Observation questionnaire", "情況問卷")}</h1>
+      <h1>{t("Observation questionnaire", "觀察問卷")}</h1>
 
       <div className="questionnaire-meta"><BookOpen size={17} /><span>{t("33 questions · 7 categories", "33 題 · 7 個類別")}</span></div>
-      <div className="questionnaire-rule"><ShieldCheck size={17} /><span>{t("No scores or diagnosis", "不作評分或診斷")}</span></div>
+      <div className="questionnaire-rule"><ShieldCheck size={17} /><span>{t("No scores or diagnosis", "唔會評分或診斷")}</span></div>
       <h2 className="subheading">{t("Question categories", "問卷類別")}</h2>
       <div className="category-grid">
         {groups.map(([en, tc, count, Icon], i) => (
@@ -126,7 +126,7 @@ export function QuestionnaireIntro({
         <ArrowRight size={18} />
       </button>
       <button className="secondary full" onClick={onLater}>
-        {t("Go to Home", "前往首頁")}
+        {t("Go to Home", "返首頁")}
       </button>
     </section>
   );

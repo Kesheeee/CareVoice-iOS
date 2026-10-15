@@ -64,7 +64,7 @@ export function RecordItem({
             <ChevronRight size={14} />
           </summary>
           <p className="related-basis">
-            {t("Grouped by the same category", "按相同分類顯示")}
+            {t("Grouped by the same category", "顯示同一分類嘅記錄")}
           </p>
           {related.map((r) => (
             <button key={r.id} onClick={() => onEdit({ ...r })}>

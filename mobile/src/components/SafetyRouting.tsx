@@ -13,7 +13,7 @@ export function SafetyRouting({ language }: { language: Language }) {
       <p>{t("If there is no immediate danger, contact your child's doctor promptly to discuss what you noticed. You can leave the questionnaire and return later.", "如果冇即時危險，請盡快聯絡小朋友嘅醫生，講返你留意到嘅情況。你可以先離開問卷，之後再返嚟。")}</p>
       <a href={zh ? "https://www.dhcas.gov.hk/tc/faq.html" : "https://www.dhcas.gov.hk/en/faq.html"} target="_blank" rel="noopener noreferrer">{t("Department of Health · discussing concerns", "衛生署 · 向醫生提出關注")}</a>
       <a href="https://www.hkfsd.gov.hk/eng/source/safety/uambu.htm" target="_blank" rel="noopener noreferrer">{t("Fire Services Department · emergency ambulance", "消防處 · 緊急救護服務")}</a>
-      <small>{t("Official sources checked 15 October 2026. Outside Hong Kong, use your local emergency number.", "官方資料於 2026 年 10 月 15 日核對。香港以外地區請致電當地緊急求助電話。")}</small>
+      <small>{t("Official sources checked 15 October 2026. Outside Hong Kong, use your local emergency number.", "官方資料已喺 2026 年 10 月 15 日核對。如果唔喺香港，請致電當地緊急求助電話。")}</small>
     </div>
   </aside>;
 }

@@ -41,13 +41,13 @@ export function Dashboard({
       <h1 className="dashboard-greeting">{t("Home", "首頁")}</h1>
       <section
         className="dashboard-profile home-profile"
-        aria-label={t("Child profile", "孩子檔案")}
+        aria-label={t("Child profile", "小朋友檔案")}
       >
         <span className="home-child-avatar">
           {p?.nickname?.slice(0, 1).toUpperCase() || <UserRound size={22} />}
         </span>
         <div className="home-child-details">
-          <h2>{p?.nickname || t("Your child", "你的孩子")}</h2>
+          <h2>{p?.nickname || t("Your child", "你嘅小朋友")}</h2>
           {p && (
             <span>
               {Math.floor(p.ageMonths / 12)} {t("years", "歲")}{" "}
@@ -82,7 +82,7 @@ export function Dashboard({
       </div>
       <button className="home-questionnaire" onClick={onQuestionnaire}>
         <BookOpen size={20} />
-        <span>{t("Questionnaire", "情況問卷")}</span>
+        <span>{t("Questionnaire", "觀察問卷")}</span>
         <span className="home-question-count">{reviewed}/{QUESTION_COUNT}</span>
         <ChevronRight size={17} />
       </button>
@@ -119,7 +119,7 @@ export function Dashboard({
       ) : (
         <div className="home-empty">
           <BookOpen size={24} />
-          <span>{t("No records yet", "暫無記錄")}</span>
+          <span>{t("No records yet", "仲未有記錄")}</span>
         </div>
       )}
     </div>
