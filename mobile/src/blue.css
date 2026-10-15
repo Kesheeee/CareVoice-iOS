@@ -2,9 +2,11 @@
 /* Hallmark · pre-emit critique: P5 H5 E5 S5 R5 V4 */
 /* Home refinement: compact profile, single capture action, two shortcuts, recent records. */
 /* App header: wordmark and language only; Profile lives in the bottom navigation. */
+/* Global header removed: screen titles and bottom navigation only. */
 .app-shell {
   max-width: 560px;
   background: var(--color-paper);
+  padding-top: env(safe-area-inset-top);
 }
 .topbar {
   height: 68px;

@@ -272,9 +272,6 @@ function App() {
   }
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <span className="brand">CareVoice</span>
-      </header>
       {error && (
         <div role="alert" className="error-banner">
           {error}
