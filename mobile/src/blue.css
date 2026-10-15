@@ -1908,3 +1908,17 @@ main {
 .observation-sheet .sheet-actions .primary { border-radius: 12px; }
 .observation-sheet .sheet-actions .danger-button { border: 0; background: transparent; font-size: 0.8rem; }
 .observation-sheet .voice-entry-help { margin-top: 0; padding: 14px; border-radius: 12px; }
+
+/* Welcome: a quiet app introduction with one clear start action. */
+.welcome-screen { display: flex; flex-direction: column; min-height: min(690px, calc(100dvh - 64px)); padding: clamp(28px, 7dvh, 64px) 0 12px; text-align: center; }
+.welcome-screen .welcome-mark { width: 76px; height: 76px; border-radius: 22px; margin: 0 auto 24px; box-shadow: none; }
+.welcome-screen h1 { max-width: 290px; font-size: 1.85rem; line-height: 1.25; letter-spacing: -0.035em; font-weight: 650; color: var(--color-ink); }
+.welcome-screen .welcome-features { display: flex; flex-direction: column; gap: 0; width: 100%; max-width: 290px; margin: 32px auto 36px; text-align: left; }
+.welcome-screen .welcome-features > div { flex-direction: row; justify-content: flex-start; min-height: 58px; gap: 14px; font-size: 0.93rem; color: var(--color-ink); }
+.welcome-screen .welcome-features svg { width: 36px; height: 36px; padding: 8px; flex: 0 0 36px; border: 0; border-radius: 10px; background: var(--color-blue-soft); color: var(--color-accent); stroke-width: 1.7; }
+.welcome-screen > .primary { margin-top: auto; margin-bottom: 0; min-height: 54px; border-radius: 14px; box-shadow: none; }
+.welcome-about { margin: 12px 0 0; }
+.welcome-about summary { display: flex; justify-content: center; align-items: center; gap: 7px; min-height: 44px; list-style: none; cursor: pointer; color: var(--color-muted); font-size: 0.76rem; font-weight: 400; }
+.welcome-about summary::-webkit-details-marker { display: none; }
+.welcome-about[open] summary > svg:last-child { transform: rotate(180deg); }
+.welcome-about p { margin: 8px 10px; font-size: 0.8rem; line-height: 1.7; color: var(--color-muted); text-align: left; }

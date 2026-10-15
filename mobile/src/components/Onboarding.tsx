@@ -3,6 +3,7 @@ import {
   AudioLines,
   BookOpen,
   Check,
+  ChevronDown,
   Compass,
   FileText,
   Hand,
@@ -47,39 +48,34 @@ export function Welcome({
   return (
     <section className="welcome-screen">
       <div className="welcome-mark" aria-hidden="true">
-        CV
+        <Heart size={38} strokeWidth={1.6} />
       </div>
       <h1>{t("Welcome to CareVoice", "歡迎使用 CareVoice")}</h1>
       <div className="welcome-features">
         <div>
           <Compass />
-          <span>{t("Navigate", "服務導航")}</span>
+          <span>{t("Find your next step", "搵下一步")}</span>
         </div>
         <div>
           <AudioLines />
-          <span>{t("Record", "行為記錄")}</span>
+          <span>{t("Keep observations", "記低日常觀察")}</span>
         </div>
         <div>
           <FileText />
-          <span>{t("Prepare", "準備報告")}</span>
+          <span>{t("Prepare a report", "準備報告")}</span>
         </div>
       </div>
       <button className="primary full" onClick={onStart}>
         {t("Get started", "開始使用")}
         <ArrowRight size={18} />
       </button>
-      <aside className="important-notice">
-        <ShieldCheck size={22} />
-        <div>
-          <h2>{t("Not an assessment tool", "唔係評估工具")}</h2>
-          <p>
-            {t(
-              "CareVoice organises caregiver observations. It does not diagnose, score, or infer a support level. Formal assessment belongs with qualified professionals.",
-              "CareVoice 整理照顧者嘅觀察，唔會診斷、評分或推斷支援程度。正式評估由合資格專業人士進行。",
-            )}
-          </p>
-        </div>
-      </aside>
+      <details className="welcome-about">
+        <summary role="button"><ShieldCheck size={17} aria-hidden="true" />{t("No scores or diagnosis", "唔會評分或診斷")}<ChevronDown size={15} aria-hidden="true" /></summary>
+        <p>{t(
+          "CareVoice organises caregiver observations. It does not diagnose, score, or infer a support level. Formal assessment belongs with qualified professionals.",
+          "CareVoice 整理照顧者嘅觀察，唔會診斷、評分或推斷支援程度。正式評估由合資格專業人士進行。",
+        )}</p>
+      </details>
     </section>
   );
 }
