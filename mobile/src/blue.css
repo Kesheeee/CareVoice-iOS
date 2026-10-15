@@ -1763,3 +1763,32 @@ main {
 .community-screen .community-about summary { min-height: 44px; justify-content: center; font-size: 0.74rem; font-weight: 400; color: var(--color-muted); gap: 6px; }
 .community-screen .community-about summary > svg:last-child { margin-left: 0; }
 .community-screen .community-about p { text-align: center; font-size: 0.72rem; line-height: 1.65; }
+
+/* Profile: familiar grouped settings with one compact child identity row. */
+.profile-screen .page-heading { margin: 0 0 24px; }
+.profile-screen h1 { font-size: 1.75rem; letter-spacing: -0.035em; }
+.profile-screen .profile-summary { display: flex; align-items: center; gap: 14px; width: 100%; padding: 20px 16px; text-align: left; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); box-shadow: none; }
+.profile-screen .large-avatar { display: grid; place-items: center; flex: 0 0 48px; width: 48px; height: 48px; margin: 0; border-radius: 15px; background: var(--color-blue-soft); color: var(--color-accent); }
+.profile-screen .large-avatar svg { width: 24px; height: 24px; }
+.profile-person { flex: 1; min-width: 0; }
+.profile-screen .profile-summary h2 { margin: 0 0 4px; font-size: 1.06rem; font-weight: 600; overflow-wrap: anywhere; color: var(--color-ink); }
+.profile-age { display: block; font-size: 0.8rem; color: var(--color-muted); }
+.profile-edit { display: flex; align-items: center; gap: 6px; font-size: 0; color: var(--color-accent); }
+.profile-edit svg { width: 18px; height: 18px; }
+.profile-section { margin: 26px 4px 10px; font-size: 0.8rem; font-weight: 600; color: var(--color-muted); }
+.profile-screen .settings-list { margin: 0; overflow: hidden; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); box-shadow: none; }
+.profile-screen .settings-list button { display: flex; align-items: center; gap: 12px; min-height: 58px; width: 100%; margin: 0; padding: 14px 16px; border: 0; border-bottom: 1px solid var(--color-line); border-radius: 0; background: transparent; color: var(--color-ink); font-size: 0.9rem; font-weight: 450; text-align: left; }
+.profile-screen .settings-list button:last-child { border-bottom: 0; }
+.profile-screen .settings-list button > svg:first-child { flex-shrink: 0; color: var(--color-accent); stroke-width: 1.7; }
+.profile-screen .settings-list button > span { margin-left: auto; color: var(--color-muted); font-size: 0.76rem; }
+.profile-screen .settings-list button > svg:last-child { margin-left: auto; flex-shrink: 0; color: var(--color-muted); width: 16px; }
+.profile-screen .settings-list button > span + svg { margin-left: 0; }
+.profile-screen .settings-list button:active { background: var(--color-blue-soft); }
+.profile-screen .profile-delete { margin-top: 16px; }
+.profile-screen .settings-list .danger-text, .profile-screen .settings-list .danger-text > svg:first-child { color: var(--color-danger); }
+.profile-privacy { margin: 20px 4px 0; padding: 0; border: 0; background: transparent; }
+.profile-privacy summary { display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 44px; list-style: none; cursor: pointer; font-size: 0.75rem; color: var(--color-muted); }
+.profile-privacy summary::-webkit-details-marker { display: none; }
+.profile-privacy[open] summary > svg:last-child { transform: rotate(180deg); }
+.profile-privacy h3 { font-size: 0.82rem; margin: 14px 0 8px; }
+.profile-privacy p { font-size: 0.76rem; line-height: 1.7; color: var(--color-muted); }

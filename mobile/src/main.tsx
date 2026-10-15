@@ -8,6 +8,7 @@ import {
   BookOpen,
   Check,
   ChevronRight,
+  ChevronDown,
   CircleCheck,
   Compass,
   Download,
@@ -586,12 +587,13 @@ function App() {
         )}
         {page === "resources" && <Community language={data.language} />}
         {page === "profile" && (
-          <>
+          <div className="profile-screen">
             <PageHeading title={t("Profile", "我的")} />
             <button className="profile-summary" onClick={openProfile}>
               <span className="large-avatar">
                 <Leaf size={30} />
               </span>
+              <span className="profile-person">
               <h2>
                 {data.profile?.nickname ||
                   t(
@@ -599,15 +601,16 @@ function App() {
                     data.profile ? "你的孩子" : "建立你的檔案",
                   )}
               </h2>
-              <p>
+              <span className="profile-age">
                 {data.profile
-                  ? `${data.profile.ageMonths} ${t("months", "個月")} · ${pair(stages[data.profile.stage])}`
+                  ? `${data.profile.ageMonths} ${t("months", "個月")}`
                   : t(
-                      "A nickname is all you need to get started.",
-                      "用暱稱即可開始。",
+                      "Get started",
+                      "開始使用",
                     )}
-              </p>
-              <span className="text-button">
+              </span>
+              </span>
+              <span className="profile-edit">
                 {t(
                   data.profile ? "Edit profile" : "Get started",
                   data.profile ? "編輯檔案" : "開始使用",
@@ -615,6 +618,7 @@ function App() {
                 <Pencil size={14} />
               </span>
             </button>
+            <h2 className="profile-section">{t("Preferences", "偏好設定")}</h2>
             <div className="settings-list">
               <button
                 aria-label={t(
@@ -630,6 +634,9 @@ function App() {
                 <span>{zh ? "繁體中文" : "English"}</span>
                 <ChevronRight size={17} />
               </button>
+            </div>
+            <h2 className="profile-section">{t("Care", "照顧工具")}</h2>
+            <div className="settings-list">
               <button onClick={questionnaireStart}>
                 <BookOpen size={20} />
                 {t("Observation questions", "觀察問卷")}
@@ -641,6 +648,9 @@ function App() {
                 {t("Reports & sharing", "報告與分享")}
                 <ChevronRight size={17} />
               </button>
+            </div>
+            <h2 className="profile-section">{t("Data", "資料管理")}</h2>
+            <div className="settings-list">
               <button
                 onClick={() =>
                   download(
@@ -659,6 +669,8 @@ function App() {
                 {t("Restore a backup", "還原備份")}
                 <ChevronRight size={17} />
               </button>
+            </div>
+            <div className="settings-list profile-delete">
               <button
                 className="danger-text"
                 onClick={() => setResetOpen(true)}
@@ -668,8 +680,8 @@ function App() {
                 <ChevronRight size={17} />
               </button>
             </div>
-            <aside className="privacy-card">
-              <ShieldCheck size={23} />
+            <details className="profile-privacy">
+              <summary role="button"><ShieldCheck size={17} />{t("Privacy & storage", "私隱與儲存")}<ChevronDown size={16} /></summary>
               <div>
                 <h3>
                   {t("Your notebook stays with you", "你的記錄，由你保管")}
@@ -681,14 +693,14 @@ function App() {
                   )}
                 </p>
               </div>
-            </aside>
             <p className="fine-print">
               {t(
                 "CareVoice organises caregiver observations. It does not provide a diagnosis, score, or clinical assessment.",
                 "CareVoice 協助整理照顧者的觀察，不提供診斷、評分或臨床評估。",
               )}
             </p>
-          </>
+            </details>
+          </div>
         )}
         {page === "report" && (
           <>
