@@ -5,7 +5,9 @@ export type Stage =
   | "awaitingAssessment"
   | "assessed"
   | "diagnosed"
-  | "registered";
+  | "registered"
+  | "waitingSupport"
+  | "receivingServices";
 export type Category =
   | "observation"
   | "distress"
@@ -28,12 +30,14 @@ export type Answer =
 export interface Profile {
   nickname: string;
   ageMonths: number;
+  birthDate?: string;
   stage: Stage;
   concernNotes: string;
   firstConcernDate: string;
   diagnosingBody?: string;
   diagnosisDate?: string;
   reportedSupportLevel?: string;
+  supportGoals?: string[];
 }
 export interface Observation {
   id: string;
@@ -75,13 +79,25 @@ export const emptyData = (): AppData => ({
 export const stages: Record<Stage, [string, string]> = {
   noticed: ["Just noticing differences", "我只是覺得有啲唔對路"],
   professionalFollowUp: [
-    "A professional suggested follow-up",
-    "母嬰健康院/醫生提過要跟進",
+    "Seeking a professional referral",
+    "搵專業人士安排轉介",
   ],
-  awaitingAssessment: ["Referred / awaiting assessment", "已轉介/等緊評估"],
-  assessed: ["Assessed, with a report", "已評估，有報告"],
+  awaitingAssessment: ["Referred / awaiting assessment", "已轉介／登記或等緊評估"],
+  assessed: ["Assessment completed / discussing referral", "已完成評估／商討服務轉介"],
   diagnosed: ["Already diagnosed", "已確診 ASD"],
-  registered: ["Registered for services", "已經喺中央轉介系統輪候"],
+  registered: ["Registered in the central referral system", "已喺中央轉介系統登記輪候"],
+  waitingSupport: ["Arranging support while waiting", "輪候期間安排過渡支援"],
+  receivingServices: ["Allocated a service / changing services", "已獲編配服務／更改服務選擇"],
+};
+// Phase 1 pathway_steps.json, steps 1–7; snapshot 0ae157aa8e0a22c8.
+// Keep diagnosed for existing profiles; diagnosis alone is not a queue stage.
+export const onboardingStages: Stage[] = ["noticed", "professionalFollowUp", "awaitingAssessment", "assessed", "registered", "waitingSupport", "receivingServices"];
+export const supportGoals: Record<string, [string, string]> = {
+  nextSteps: ["Understanding next steps", "了解下一步"],
+  documents: ["Preparing documents", "準備所需文件"],
+  services: ["Finding services", "尋找服務"],
+  waiting: ["Support while waiting", "輪候期間嘅支援"],
+  observations: ["Recording observations", "記錄日常觀察"],
 };
 export const categories: Record<Category, [string, string]> = {
   observation: ["Observation", "日常觀察"],
@@ -142,7 +158,13 @@ export function nextSteps(stage: Stage): [string, string][] {
       ["Check which documents to bring", "問清楚要帶咩文件"],
       ["Prepare an observation report", "準備觀察記錄報告"],
     ];
-  if (stage === "registered")
+  if (stage === "receivingServices")
+    return [
+      ["Keep your service contact details", "記低服務單位嘅聯絡資料"],
+      ["Record questions for your service team", "記低想問服務團隊嘅問題"],
+      ["Keep recording everyday observations", "繼續記錄日常觀察"],
+    ];
+  if (stage === "registered" || stage === "waitingSupport")
     return [
       [
         "Keep your referring professional’s details",

@@ -1922,3 +1922,8 @@ main {
 .welcome-about summary::-webkit-details-marker { display: none; }
 .welcome-about[open] summary > svg:last-child { transform: rotate(180deg); }
 .welcome-about p { margin: 8px 10px; font-size: 0.8rem; line-height: 1.7; color: var(--color-muted); text-align: left; }
+/* Settings begins with the editable child profile; navigation is icon-only. */
+.profile-screen .profile-summary { margin-bottom: 28px; background: var(--color-blue-soft); border-color: var(--color-blue-soft); padding: 24px 20px; }
+.profile-screen .large-avatar { background: var(--color-surface); }
+.bottom-nav button { min-height: 52px; justify-content: center; gap: 0; }
+.bottom-nav button svg { width: 25px; height: 25px; }

@@ -3,6 +3,7 @@ const nav = (page: Page, name: string) =>
   page.locator(".bottom-nav").getByRole("button", { name, exact: true });
 async function profile(page: Page, stage = "Just noticing differences") {
   await page.getByRole("button", { name: "Get started", exact: true }).click();
+  await page.getByRole("button", { name: "Continue on this device", exact: true }).click();
   await page.getByLabel("Nickname (optional)").fill("Alex");
   await page.getByRole("radio", { name: stage, exact: true }).check();
   await page.getByRole("button", { name: "Save profile", exact: true }).click();
@@ -12,7 +13,7 @@ test("Queenie onboarding, skip/autosave, regression follow-up and bilingual repo
 }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Welcome to CareVoice" }),
+    page.getByRole("heading", { name: /Every little moment/ }),
   ).toBeVisible();
   await profile(page);
   await expect(

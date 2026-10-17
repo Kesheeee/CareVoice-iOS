@@ -4,6 +4,7 @@ import {
   stages,
   categories,
   answers,
+  supportGoals,
 } from "../domain.ts";
 // Keep platform persistence behind this interface. Native secure storage can replace it without UI changes.
 export interface DataStore {
@@ -37,6 +38,8 @@ export function validateData(raw: unknown): AppData {
       !Number.isFinite(Date.parse(d.profile.firstConcernDate)))
   )
     throw new Error("Invalid profile");
+  if (d.profile?.supportGoals !== undefined && (!Array.isArray(d.profile.supportGoals) || d.profile.supportGoals.some(goal => typeof goal !== "string" || !Object.hasOwn(supportGoals, goal))))
+    throw new Error("Invalid support goals");
   if (
     d.records.some(
       (r) =>

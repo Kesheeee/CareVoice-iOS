@@ -45,6 +45,20 @@ Before a native release, replace `src/platform/storage.ts` with a native protect
 
 ## Data
 
+New visitors see a full-screen video welcome. Get started opens account provider
+choices; the existing-account action opens the sign-in form. Authentication is
+currently a UI preview, with no credentials sent or stored. Local survey setup
+is available at `/#onboarding`: nickname, birthday, seven Phase 1 journey stages,
+support goals, and optional notes. Returning local profiles open Home.
+Settings contains profile editing, language, care tools, backups, and privacy.
+Bottom navigation uses icons with accessible labels.
+
+The welcome and sign-in background uses an eight-second portrait Higgsfield-generated
+parent-and-child video (`carevoice-family-hd.mp4`, original 720 × 1280 quality) and matching poster, served locally from
+`public/media/`. It loops without playback controls and shows the poster instead
+when reduced motion is requested or video playback fails. The login form does
+not depend on video playback or a Higgsfield connection at runtime.
+
 Data is local to this browser and origin, schema version 1, with no analytics, login or cloud sync. CareVoice does not encrypt browser storage. Clearing browser data can erase records. Download a JSON backup to transfer between devices or future native builds. Restore validates the schema before replacing current data. A failed/corrupt read blocks writes to preserve the saved copy. Reports are independent copies once exported.
 
 The original Swift app's persisted JSON uses a different date/enum representation; automatic Swift-to-web data migration is not implemented.

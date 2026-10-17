@@ -128,3 +128,7 @@ Storage version 1 is retained. Newly added report fields and regression timing n
   --radius: 12px;
 }
 ```
+
+## Survey onboarding
+
+Onboarding now asks one question per page: optional nickname, age, caregiver-selected Phase 1 stage, optional multiple support goals, and optional notes. The five-step progress bar and bottom action remain visible. Seven stage cards fit compact phones; assessment and central queue registration remain distinct. Back preserves draft answers. Support goals are stored as optional profile data; they do not infer a diagnosis or change the selected stage. First-noticing profiles continue to the optional observation questionnaire; other stages open Home. This supersedes the earlier six-stage welcome flow above.

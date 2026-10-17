@@ -31,6 +31,7 @@ import {
   Sun,
   Trash2,
   UserRound,
+  Settings,
   X,
 } from "lucide-react";
 import {
@@ -62,7 +63,6 @@ import { SafetyRouting } from "./components/SafetyRouting";
 import "./styles.css";
 import "./blue.css";
 import {
-  Welcome,
   QuestionnaireIntro,
   ProfileFields,
   SetupProgress,
@@ -71,8 +71,11 @@ import { Dashboard } from "./components/Dashboard";
 import { RecordsScreen } from "./components/RecordsScreen";
 import { ReportPreview } from "./components/ReportPreview";
 import { Community } from "./components/Community";
+import { LaunchScreen } from "./components/LaunchScreen";
+import { GuidedOnboarding } from "./components/GuidedOnboarding";
 const questions: Question[] = questionsJson;
 type Page =
+  | "signIn"
   | "welcome"
   | "questionnaireIntro"
   | "home"
@@ -120,10 +123,10 @@ function App() {
     [error, setError] = useState(initial.error),
     [locked, setLocked] = useState(!!initial.error);
   const [page, setPage] = useState<Page>(
-      initial.data.profile ? "home" : "welcome",
+      window.location.hash === "#sign-in" ? "signIn" : initial.data.profile ? "home" : "welcome",
     ),
-    [profileOpen, setProfileOpen] = useState(false),
-    [draftProfile, setDraftProfile] = useState<Profile>(blankProfile),
+    [profileOpen, setProfileOpen] = useState(window.location.hash === "#onboarding"),
+    [draftProfile, setDraftProfile] = useState<Profile>(() => initial.data.profile ?? blankProfile()),
     [record, setRecord] = useState<Observation | null>(null),
     [deleteId, setDeleteId] = useState<string | null>(null),
     [resetOpen, setResetOpen] = useState(false);
@@ -156,6 +159,7 @@ function App() {
     }
   }
   function go(p: Page) {
+    window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${p === "signIn" ? "#sign-in" : ""}`);
     setPage(p);
     setSaved(false);
     window.scrollTo({ top: 0 });
@@ -263,8 +267,21 @@ function App() {
       if (importRef.current) importRef.current.value = "";
     }
   }
+  function saveChildProfile() {
+    if (locked) return;
+    const next = { ...data, profile: { ...draftProfile, nickname: draftProfile.nickname.trim() } };
+    try {
+      browserStore.save(next);
+      setData(next);
+      setError("");
+      setProfileOpen(false);
+      if (!data.profile) go(onboardingDestination(next.profile.stage));
+    } catch {
+      setError(t("Profile could not be saved. Please try again.", "儲存唔到檔案，請再試一次。"));
+    }
+  }
   return (
-    <div className="app-shell">
+    <div className={`app-shell${page === "signIn" || page === "welcome" ? " sign-in-shell launch-shell" : ""}`}>
       {error && (
         <div role="alert" className="error-banner">
           {error}
@@ -282,8 +299,10 @@ function App() {
         </div>
       )}
       <main ref={mainRef} tabIndex={-1}>
-        {page === "welcome" && (
-          <Welcome language={data.language} onStart={openProfile} />
+        {(page === "signIn" || page === "welcome") && (
+          <LaunchScreen key={page} language={data.language} initialSignIn={page === "signIn"}
+            onCloseSignIn={() => go(data.profile ? "profile" : "welcome")}
+            onContinue={() => { if (data.profile) go("home"); else openProfile(); }} />
         )}
         {page === "questionnaireIntro" && (
           <QuestionnaireIntro
@@ -597,7 +616,7 @@ function App() {
         {page === "resources" && <Community language={data.language} />}
         {page === "profile" && (
           <div className="profile-screen">
-            <PageHeading title={t("Profile", "我的")} />
+
             <button className="profile-summary" onClick={openProfile}>
               <span className="large-avatar">
                 <Leaf size={30} />
@@ -627,8 +646,13 @@ function App() {
                 <Pencil size={14} />
               </span>
             </button>
+            <PageHeading title={t("Settings", "設定")} />
             <h2 className="profile-section">{t("Preferences", "偏好設定")}</h2>
             <div className="settings-list">
+              <button onClick={() => go("signIn")}>
+                <UserRound size={20} />{t("Sign in", "登入")}
+                <ChevronRight size={17} />
+              </button>
               <button
                 aria-label={t(
                   "Switch to Traditional Chinese",
@@ -766,7 +790,7 @@ function App() {
           </div>
         )}
       </main>
-      {!["welcome", "questionnaireIntro"].includes(page) && (
+      {!["welcome", "signIn", "questionnaireIntro"].includes(page) && (
         <nav
           className="bottom-nav"
           aria-label={t("Main navigation", "主要導覽")}
@@ -776,7 +800,7 @@ function App() {
               ["home", House, "Home", "首頁"],
               ["records", BookOpen, "Records", "記錄"],
               ["resources", UsersRound, "Community", "社區"],
-              ["profile", UserRound, "Profile", "我的"],
+              ["profile", Settings, "Settings", "設定"],
             ] as const
           ).map(([p, Icon, en, cn]) => (
             <button
@@ -798,7 +822,7 @@ function App() {
               onClick={() => go(p)}
             >
               <Icon size={23} strokeWidth={1.8} aria-hidden="true" />
-              <span>{t(en, cn)}</span>
+              <span className="sr-only">{t(en, cn)}</span>
             </button>
           ))}
         </nav>
@@ -812,11 +836,12 @@ function App() {
       />
       {profileOpen && (
         <dialog
-          className="sheet"
+          className={data.profile ? "sheet" : "guided-onboarding-dialog"}
           aria-labelledby="profile-title"
           onCancel={() => setProfileOpen(false)}
         >
-          <form
+          {!data.profile ? <GuidedOnboarding profile={draftProfile} onChange={setDraftProfile} language={data.language}
+            locked={locked} onClose={() => setProfileOpen(false)} onSave={saveChildProfile} /> : <form
             onSubmit={(e) => {
               e.preventDefault();
               if (locked) return;
@@ -875,7 +900,7 @@ function App() {
                 <Check size={18} />
               </button>
             </div>
-          </form>
+          </form>}
         </dialog>
       )}
       {record && (

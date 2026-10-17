@@ -14,7 +14,7 @@ import {
   Volume2,
 } from "lucide-react";
 import type { Language, Profile } from "../domain";
-import { stages } from "../domain";
+import { stages, onboardingStages } from "../domain";
 export function SetupProgress({
   language,
   questionnaire = false,
@@ -39,9 +39,11 @@ export function SetupProgress({
 export function Welcome({
   language,
   onStart,
+  onSignIn,
 }: {
   language: Language;
   onStart: () => void;
+  onSignIn: () => void;
 }) {
   const zh = language === "zh",
     t = (en: string, tc: string) => (zh ? tc : en);
@@ -68,6 +70,9 @@ export function Welcome({
       <button className="primary full" onClick={onStart}>
         {t("Get started", "開始使用")}
         <ArrowRight size={18} />
+      </button>
+      <button className="secondary full" onClick={onSignIn}>
+        {t("Sign in", "登入")}
       </button>
       <details className="welcome-about">
         <summary role="button"><ShieldCheck size={17} aria-hidden="true" />{t("No scores or diagnosis", "唔會評分或診斷")}<ChevronDown size={15} aria-hidden="true" /></summary>
@@ -131,7 +136,9 @@ export function ProfileFields({
   profile,
   onChange,
   language,
+  section = "all",
 }: {
+  section?: "all" | "basics" | "context";
   profile: Profile;
   onChange: (p: Profile) => void;
   language: Language;
@@ -140,6 +147,7 @@ export function ProfileFields({
     t = (en: string, tc: string) => (zh ? tc : en);
   return (
     <>
+      {section !== "context" && <>
       <label>
         {t("Nickname (optional)", "小朋友嘅暱稱（選填）")}
         <input
@@ -187,9 +195,11 @@ export function ProfileFields({
           />
         </label>
       </fieldset>
+      </>}
+      {section === "all" && <>
       <fieldset className="stage-options">
         <legend>{t("Where are you now?", "你而家去到邊個階段？")}</legend>
-        {Object.entries(stages).map(([value, label]) => (
+        {(profile.stage === "diagnosed" ? [...onboardingStages, "diagnosed" as const] : onboardingStages).map(value => (
           <label
             key={value}
             className={profile.stage === value ? "chosen" : ""}
@@ -203,7 +213,7 @@ export function ProfileFields({
                 onChange({ ...profile, stage: value as Profile["stage"] })
               }
             />
-            <span>{label[zh ? 1 : 0]}</span>
+            <span>{stages[value][zh ? 1 : 0]}</span>
           </label>
         ))}
       </fieldset>
@@ -213,6 +223,8 @@ export function ProfileFields({
           "呢個階段由你揀，問卷答案唔會改變你嘅選擇。",
         )}
       </p>
+      </>}
+      {section !== "basics" && <>
       <label>
         {t("First noticed", "你幾時開始留意到？")}
         <input
@@ -234,7 +246,7 @@ export function ProfileFields({
           }
         />
       </label>
-      {profile.stage === "diagnosed" && (
+      {["diagnosed", "assessed", "registered", "waitingSupport", "receivingServices"].includes(profile.stage) && (
         <fieldset className="report-details">
           <legend>
             {t(
@@ -281,6 +293,7 @@ export function ProfileFields({
           </label>
         </fieldset>
       )}
+      </>}
     </>
   );
 }
