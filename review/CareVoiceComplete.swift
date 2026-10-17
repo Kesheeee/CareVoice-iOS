@@ -9,7 +9,7 @@
 // Includes local protected JSON storage, records, questionnaire, reports/PDF sharing,
 // official-resource community, journey checklist, settings, backup/restore and survey.
 // Auth is an explicit preview. No account service, cloud sync or community backend.
-// Review scope: native adaptation, not a pixel-identical web transpilation. Retains
+// Review scope: native adaptation of the approved phone design; simulator visual QA pending. Retains
 // the native 30-question questionnaire (embedded below), not the web's revised 33.
 // No Xcode compiler is available on the Windows authoring host; build on macOS.
 // No asset catalog, external package, or external questionnaire JSON is required.
@@ -369,9 +369,9 @@ struct CareVoiceApp: App {
 }
 
 enum Brand {
-    static let blue = Color(red: 0.08, green: 0.36, blue: 0.72)
+    static let blue = Color(red: 0.082, green: 0.396, blue: 0.753)
     static let teal = Color(red: 0.04, green: 0.52, blue: 0.48)
-    static let background = Color(uiColor: .systemGroupedBackground)
+    static let background = Color(red: 0.965, green: 0.973, blue: 0.985)
 }
 
 struct Card<Content: View>: View {
@@ -380,7 +380,7 @@ struct Card<Content: View>: View {
         VStack(alignment: .leading, spacing: 14) { content }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
-            .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24))
+            .background(Color(uiColor: .systemBackground), in: RoundedRectangle(cornerRadius: 16))
     }
 }
 
@@ -531,15 +531,8 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(store.t("ONE MOMENT AT A TIME", "每天一點一滴")).font(.caption.weight(.semibold)).tracking(1.8).foregroundStyle(Brand.teal)
-                        Text(store.t("You’re doing this\ntogether.", "陪伴成長\n一起向前。"))
-                            .font(.system(.largeTitle, design: .rounded).bold())
-                    }
-                    Spacer()
-                    Image(systemName: "sun.max.fill").font(.system(size: 38)).foregroundStyle(.orange.opacity(0.75)).padding(.top, 18).accessibilityHidden(true)
-                }
+                Text(store.t("Hello, \(store.data.profile?.displayName(store.language) ?? "there")", "你好，\(store.data.profile?.displayName(store.language) ?? "")"))
+                    .font(.title.bold())
                 if let p = store.data.profile {
                     Card {
                         HStack(spacing: 14) {
@@ -554,25 +547,22 @@ struct HomeView: View {
                         }
                         Divider()
                         Text(p.stage.title(store.language)).font(.subheadline.weight(.medium))
-                        Text(store.t("Your stage, chosen by you", "由你選擇的目前階段")).font(.caption).foregroundStyle(.secondary)
+
                     }
                 }
-                HStack(spacing: 14) {
-                    stat("\(store.data.records.filter { Calendar.current.isDate($0.date, equalTo: Date(), toGranularity: .month) }.count)", store.t("Moments this month", "本月記錄"), "text.bubble", Brand.blue)
-                    stat("\(store.data.answeredCount)/\(store.questions.count)", store.t("Questions answered", "已回答題目"), "list.clipboard", Brand.teal)
-                }
-                PrimaryButton(title: store.t("Capture a moment", "記下這一刻"), symbol: "plus") { recording = true }.accessibilityIdentifier("captureMoment")
-                SectionHeading(title: store.t("A little guidance", "給你一點指引"))
-                NavigationLink { NavigatorView() } label: {
-                    feature("safari", store.t("Your next step", "下一步"), store.t("Find your way through local services", "了解本地服務與輪候安排"), Brand.blue)
-                }.buttonStyle(.plain)
-                if store.data.profile?.stage == .noticed || !store.data.answers.isEmpty {
-                    NavigationLink { QuestionnaireView() } label: {
-                        feature("list.clipboard", store.t("Get to know their world", "了解孩子的日常"), store.t("30 gentle observation prompts · save as you go", "30 道觀察題目・隨時儲存進度"), Brand.teal)
-                    }.buttonStyle(.plain).accessibilityIdentifier("openQuestionnaire")
-                }
-                NavigationLink { ReportsView() } label: {
-                    feature("doc.text", store.t("Prepare for a conversation", "為會面做好準備"), store.t("Bring your observations together in a report", "將你的觀察整理成報告"), .purple)
+                PrimaryButton(title: store.t("Record a moment", "記錄這一刻"), symbol: "plus") { recording = true }
+                HStack(spacing: 12) {
+                    NavigationLink { NavigatorView() } label: {
+                        VStack(spacing: 12) { Image(systemName: "safari"); Text(store.t("Next step", "下一步")) }
+                            .frame(maxWidth: .infinity, minHeight: 96).background(Brand.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                    }
+                    NavigationLink { ReportsView() } label: {
+                        VStack(spacing: 12) { Image(systemName: "doc.text"); Text(store.t("Reports", "報告")) }
+                            .frame(maxWidth: .infinity, minHeight: 96).background(Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                    }
+                }.buttonStyle(.plain).foregroundStyle(Brand.blue)
+                NavigationLink { QuestionnaireView() } label: {
+                    HStack { Image(systemName: "book"); Text(store.t("Observation questions", "觀察問卷")); Spacer(); Text("\(store.data.answeredCount)/\(store.questions.count)"); Image(systemName: "chevron.right") }.font(.subheadline).padding(16).background(.white, in: RoundedRectangle(cornerRadius: 16))
                 }.buttonStyle(.plain)
                 SectionHeading(title: store.t("Recent moments", "最近的點滴"))
                 if store.data.records.isEmpty {
@@ -590,7 +580,7 @@ struct HomeView: View {
             }.padding(20).frame(maxWidth: 680)
                 .frame(maxWidth: .infinity)
         }.background(Brand.background)
-            .navigationTitle("CareVoice").navigationBarTitleDisplayMode(.inline)
+            .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $recording) { NavigationStack { RecordEditor() } }
     }
     private func stat(_ value: String, _ title: String, _ symbol: String, _ color: Color) -> some View {
@@ -959,8 +949,12 @@ struct ProfileView: View {
                 Section {
                     HStack(spacing: 14) {
                         Image(systemName: "person.crop.circle.fill").font(.system(size: 48)).foregroundStyle(Brand.blue)
-                        VStack(alignment: .leading, spacing: 5) { Text(p.displayName(store.language)).font(.headline); Text(p.age(store.language)).foregroundStyle(.secondary) }
-                    }.padding(.vertical, 10)
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(p.displayName(store.language)).font(.headline)
+                            if let birthday = p.birthDate { Text(birthday, style: .date).font(.subheadline).foregroundStyle(.secondary) }
+                            Text(p.age(store.language)).font(.subheadline).foregroundStyle(.secondary)
+                        }
+                    }.padding(.vertical, 10).listRowBackground(Brand.blue.opacity(0.08))
                     Button(store.t("Edit profile", "編輯檔案")) { editing = true }
                     LabeledContent(store.t("Current stage", "目前階段")) { Text(p.stage.title(store.language)).multilineTextAlignment(.trailing) }
                 }
@@ -1135,6 +1129,9 @@ struct CareVoiceSurveyReview: View {
     @State private var nickname = ""
     @State private var birthday = Calendar.current.date(byAdding: .year, value: -3, to: Date())!
     @State private var birthdayChosen = false
+    @State private var birthDay = 0
+    @State private var birthMonth = 0
+    @State private var birthYear = 0
     @State private var stage: String?
     @State private var goals: Set<String> = []
     @State private var notes = ""
@@ -1221,15 +1218,21 @@ struct CareVoiceSurveyReview: View {
         case 1:
             VStack(alignment: .leading, spacing: 20) {
                 Text(t("Choose their date of birth. We’ll work out their age for you.", "揀出生日期，我哋會自動計算年齡。")).foregroundStyle(.secondary)
-                DatePicker(t("Birthday", "生日"), selection: $birthday, in: dateRange, displayedComponents: .date)
-                    .datePickerStyle(.wheel).labelsHidden()
-                    .onChange(of: birthday) { _ in birthdayChosen = true }
-                // Explicit confirmation supports accepting the initially displayed date.
-                Toggle(t("Use this birthday", "使用呢個生日"), isOn: $birthdayChosen)
-                if birthdayChosen {
-                    Text(birthday, style: .date).font(.headline)
+                HStack(spacing: 10) {
+                    birthdayPart(t("Day", "日"), value: $birthDay, values: Array(1...31), color: pastels[0])
+                    birthdayPart(t("Month", "月"), value: $birthMonth, values: Array(1...12), color: pastels[2])
+                    birthdayPart(t("Year", "年"), value: $birthYear, values: Array(((Calendar.current.component(.year, from: Date()) - 7)...Calendar.current.component(.year, from: Date())).reversed()), color: pastels[4])
                 }
-            }.padding(20).background(pastels[2], in: RoundedRectangle(cornerRadius: 24))
+                VStack(spacing: 8) {
+                    if birthdayChosen {
+                        Text(birthday, style: .date).font(.headline)
+                        let months = Calendar.current.dateComponents([.month], from: birthday, to: Date()).month ?? 0
+                        Text(t("\(months / 12) years · \(months % 12) months old", "\(months / 12) 歲 \(months % 12) 個月")).font(.subheadline).foregroundStyle(.secondary)
+                    } else {
+                        Text(t(birthDay > 0 && birthMonth > 0 && birthYear > 0 ? "Choose a valid birthday for a child under 7, no later than today." : "Their birthday will appear here", "請選擇未滿七歲小朋友嘅有效生日。")).font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }.padding(20).frame(maxWidth: .infinity).overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.secondary.opacity(0.2)))
+            }
         case 2, 3:
             let items = step == 2 ? stages : options
             let count = typeSize.isAccessibilitySize ? 1 : (width >= 400 ? 3 : 2)
@@ -1269,6 +1272,28 @@ struct CareVoiceSurveyReview: View {
                     .onChange(of: notes) { notes = String($0.prefix(4000)) }
             }.padding(20).background(pastels[4], in: RoundedRectangle(cornerRadius: 24))
         }
+    }
+
+    private func birthdayPart(_ label: String, value: Binding<Int>, values: [Int], color: Color) -> some View {
+        VStack(spacing: 12) {
+            Text(label).font(.subheadline.bold())
+            Picker(label, selection: value) {
+                Text("—").tag(0)
+                ForEach(values, id: \.self) { number in Text(String(number)).tag(number) }
+            }.pickerStyle(.menu).labelsHidden().frame(maxWidth: .infinity, minHeight: 56)
+                .background(.white, in: RoundedRectangle(cornerRadius: 12))
+                .onChange(of: value.wrappedValue) { _ in validateBirthday() }
+        }.padding(10).frame(maxWidth: .infinity).background(color, in: RoundedRectangle(cornerRadius: 20))
+    }
+    private func validateBirthday() {
+        let calendar = Calendar.current
+        guard birthDay > 0, birthMonth > 0, birthYear > 0,
+              let date = calendar.date(from: DateComponents(year: birthYear, month: birthMonth, day: birthDay)),
+              calendar.component(.day, from: date) == birthDay,
+              calendar.component(.month, from: date) == birthMonth, dateRange.contains(date) else {
+            birthdayChosen = false; return
+        }
+        birthday = date; birthdayChosen = true
     }
 
     private func finish(notes: String) {
@@ -1547,7 +1572,8 @@ struct CompleteWelcomeView: View {
                     .font(.largeTitle.bold()).multilineTextAlignment(.center)
                     .padding(24).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24))
                 Button(store.t("Get started", "開始使用")) { survey = true }
-                    .buttonStyle(.borderedProminent).controlSize(.large).padding(.top, 24)
+                    .font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 56)
+                    .background(Brand.blue, in: Capsule()).padding(.top, 24)
                 Button(store.t("I already have an account", "我已有帳戶")) { account = true }
                     .padding().background(.thinMaterial, in: Capsule())
             }.padding(24)
@@ -1612,24 +1638,27 @@ struct AccountPreview: View {
     @State private var password = ""
     @State private var message = false
     var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField(store.t("Email", "電郵"), text: $email).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
-                    SecureField(store.t("Password", "密碼"), text: $password)
-                    Button(store.t("Sign in", "登入")) { preview() }
-                    Button(store.t("Forgot password?", "忘記密碼？")) { preview() }
-                }
-                Section {
-                    Button("Continue with Google") { preview() }
-                    Button("Continue with Apple") { preview() }
-                }
-            }.navigationTitle(store.t("Welcome back", "歡迎返嚟"))
-                .toolbar { Button(store.t("Close", "關閉")) { dismiss() } }
-                .alert(store.t("Account preview", "帳戶預覽"), isPresented: $message) {
-                    Button("OK", role: .cancel) {}
-                } message: { Text(store.t("Sign-in is not connected. Nothing was sent or saved.", "登入尚未連接，冇傳送或儲存任何資料。")) }
-        }
+        VStack(alignment: .leading, spacing: 24) {
+            Capsule().fill(Color.secondary.opacity(0.25)).frame(width: 40, height: 5).frame(maxWidth: .infinity).padding(.top, 12)
+            Button { dismiss() } label: { Label(store.t("Back", "返回"), systemImage: "arrow.left") }.frame(minHeight: 44)
+            Text(store.t("Welcome back", "歡迎返嚟")).font(.largeTitle.bold())
+            HStack(spacing: 12) {
+                Image(systemName: "envelope").foregroundStyle(.secondary)
+                TextField(store.t("you@example.com", "電郵地址"), text: $email).keyboardType(.emailAddress).textInputAutocapitalization(.never).autocorrectionDisabled()
+            }.padding(18).background(.white, in: RoundedRectangle(cornerRadius: 24))
+            HStack(spacing: 12) {
+                Image(systemName: "lock").foregroundStyle(.secondary)
+                SecureField(store.t("Your password", "密碼"), text: $password)
+            }.padding(18).background(.white, in: RoundedRectangle(cornerRadius: 24))
+            Button(store.t("Forgot password?", "忘記密碼？")) { preview() }.frame(maxWidth: .infinity, alignment: .trailing)
+            Button(store.t("Sign in", "登入")) { preview() }
+                .font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity, minHeight: 56).background(Brand.blue, in: Capsule())
+            Spacer(minLength: 0)
+        }.padding(.horizontal, 24).padding(.bottom, 24).background(Brand.background)
+            .presentationDetents([.large]).presentationCornerRadius(32)
+            .alert(store.t("Account preview", "帳戶預覽"), isPresented: $message) {
+                Button("OK", role: .cancel) {}
+            } message: { Text(store.t("Sign-in is not connected. Nothing was sent or saved.", "登入尚未連接，冇傳送或儲存任何資料。")) }
     }
     private func preview() { email = ""; password = ""; message = true }
 }
