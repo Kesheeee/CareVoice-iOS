@@ -16,3 +16,5 @@ xcuserdata/
 *.cer
 family-data.json
 ui-test-data.json
+.codegraph
+.serena
