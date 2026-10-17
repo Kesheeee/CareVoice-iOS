@@ -1011,25 +1011,171 @@ struct OfficialResource: Identifiable {
 
 struct ResourcesView: View {
     @EnvironmentObject var store: AppStore
+    @State private var section = 0
+    @State private var topic = "first"
+    @State private var question = ""
+    @State private var submittedQuestion: String?
+    @State private var composing = false
+    @State private var postTitle = ""
+    @State private var postBody = ""
+    @State private var draftSaved = false
+    @FocusState private var typing: Bool
+
+    private var relevantResources: [OfficialResource] {
+        // Explicit topic selection, not AI matching or clinical suitability scoring.
+        let ids: [String]
+        switch topic {
+        case "appointment": ids = ["appointment", "first"]
+        case "referral": ids = ["referral", "support"]
+        default: ids = ["first", "services"]
+        }
+        return OfficialResource.all.filter { ids.contains($0.id) }
+    }
+
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(store.t("Reliable places to turn.", "找到可靠的支援。"))
-                    .font(.system(.title, design: .rounded).bold())
-                Text(store.t("Official information to explore with the people supporting your family.", "與支援你家庭的專業人士一起了解官方資訊。"))
-                    .foregroundStyle(.secondary)
-                ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
-                Card {
-                    Label(store.t("You don’t have to figure it out alone", "不用獨自面對"), systemImage: "heart").font(.headline)
-                    Text(store.t("Ask your social worker or assessment team about family support and available services. Eligibility and arrangements are confirmed by the service provider.", "可向社工或評估團隊了解家庭支援及服務，資格與安排以服務機構確認為準。"))
-                        .font(.subheadline).foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            Picker(store.t("Community section", "社區分類"), selection: $section) {
+                Text(store.t("Ask CareVoice", "問 CareVoice")).tag(0)
+                Text(store.t("Resources", "資源")).tag(1)
+                Text(store.t("Parents", "家長交流")).tag(2)
+            }.pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    if section == 0 { askContent }
+                    else if section == 1 {
+                        Text(store.t("Official resources", "官方資源")).font(.title2.bold())
+                        Text(store.t("Browse service information from the Department of Health and Social Welfare Department.", "瀏覽衛生署及社會福利署嘅服務資料。"))
+                            .font(.subheadline).foregroundStyle(.secondary)
+                        ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
+                        sourceNote
+                    } else { parentsContent }
+                }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
+            }.scrollDismissesKeyboard(.interactively)
+            if section == 0 { composer }
+        }
+        .background(Brand.background)
+        .navigationTitle(store.t("Community", "社區"))
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $composing) { postComposer }
+    }
+
+    private var askContent: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(spacing: 12) {
+                Image(systemName: "bubble.left.and.bubble.right.fill").font(.title2).foregroundStyle(Brand.blue)
+                    .frame(width: 52, height: 52).background(Brand.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 18))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(store.t("A little help, one question at a time.", "一個問題，一齊搵方向。")).font(.headline)
+                    Text(store.t("AI connection pending", "AI 尚未連接")).font(.caption).foregroundStyle(.secondary)
                 }
-                Text(store.t("Links reviewed 15 October 2026. Official pages may be updated. External links open in your browser.", "連結於 2026 年 10 月 15 日核對。官方網頁內容可能更新，外部連結會在瀏覽器開啟。"))
-                    .font(.caption).foregroundStyle(.secondary)
-            }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
-        }.background(Brand.background).navigationTitle(store.t("Community", "社區"))
+            }
+            Text(store.t("What would you like help with today?", "今日想了解邊方面？")).font(.title2.bold())
+            Text(store.t("Choose a topic to browse official links, or try writing your question below. No question is sent while AI is disconnected.", "揀主題瀏覽官方連結，或者喺下面試寫問題。AI 未連接前，問題唔會傳送。"))
+                .font(.subheadline).foregroundStyle(.secondary)
+            VStack(spacing: 10) {
+                topicButton("first", "Understanding my child’s needs", "了解小朋友嘅需要", "heart", .blue)
+                topicButton("appointment", "Finding assessment services", "尋找評估服務", "stethoscope", .purple)
+                topicButton("referral", "Support while waiting", "輪候期間嘅支援", "clock", .orange)
+            }
+            if let submittedQuestion {
+                HStack { Spacer(minLength: 32); Text(submittedQuestion).padding(16).background(Brand.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 20)) }
+                Card {
+                    Label(store.t("Not sent", "未傳送"), systemImage: "wifi.slash").font(.subheadline.bold())
+                    Text(store.t("CareVoice AI is not connected yet. These links are selected by your topic, not an analysis of your situation.", "CareVoice AI 尚未連接。以下連結按你揀嘅主題顯示，並非對你情況嘅分析。"))
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    Button(store.t("Clear question", "清除問題")) { self.submittedQuestion = nil }
+                }
+            }
+            HStack { Text(store.t("Resources for this topic", "呢個主題嘅資源")).font(.headline); Spacer(); Image(systemName: "checkmark.shield").foregroundStyle(Brand.blue) }
+            ForEach(relevantResources) { resource in ResourceCard(resource: resource) }
+            sourceNote
+            Text(store.t("Clinic matching will need verified location, service and referral data. CareVoice does not diagnose or confirm clinic availability.", "配對診所需要已核實嘅地區、服務同轉介資料。CareVoice 唔會診斷或確認診所名額。"))
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+
+    private func topicButton(_ id: String, _ en: String, _ zh: String, _ symbol: String, _ color: Color) -> some View {
+        Button { topic = id } label: {
+            HStack(spacing: 12) {
+                Image(systemName: symbol).frame(width: 24).foregroundStyle(Brand.blue)
+                Text(store.t(en, zh)).font(.subheadline.weight(.medium)).foregroundStyle(.primary)
+                Spacer()
+                Image(systemName: topic == id ? "checkmark.circle.fill" : "circle").foregroundStyle(topic == id ? Brand.blue : Color.secondary)
+            }.padding(16).frame(minHeight: 56).background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(topic == id ? Brand.blue : Color.clear, lineWidth: 2))
+        }.buttonStyle(.plain).accessibilityAddTraits(topic == id ? .isSelected : [])
+    }
+
+    private var composer: some View {
+        HStack(alignment: .bottom, spacing: 12) {
+            TextField(store.t("Describe what’s happening…", "講吓你遇到嘅情況…"), text: $question, axis: .vertical)
+                .lineLimit(1...4).focused($typing).padding(14)
+                .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
+                .onChange(of: question) { question = String($0.prefix(2000)) }
+            Button {
+                submittedQuestion = question.trimmingCharacters(in: .whitespacesAndNewlines)
+                question = ""; typing = false
+            } label: {
+                Image(systemName: "arrow.up").font(.headline).foregroundStyle(.white)
+                    .frame(width: 48, height: 48).background(Brand.blue, in: Circle())
+            }.disabled(question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .accessibilityLabel(store.t("Preview question locally", "本機預覽問題"))
+        }.padding(16).background(.bar)
+    }
+
+    private var parentsContent: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text(store.t("You’re not alone in this.", "照顧路上，唔使一個人。")).font(.title2.bold())
+            Text(store.t("A space to share questions and everyday experiences with other caregivers.", "同其他照顧者分享問題同日常經驗嘅空間。"))
+                .foregroundStyle(.secondary)
+            Card {
+                Image(systemName: "person.2").font(.largeTitle).foregroundStyle(Brand.blue)
+                Text(store.t("Caregiver discussions are coming", "家長交流準備中")).font(.headline)
+                Text(store.t("Shared posts and replies are not connected yet. You can prepare a private draft here; it stays in memory for this app session and is not published.", "貼文同回覆尚未連接。你可以先準備私人草稿，只會暫存喺今次使用期間，唔會發布。"))
+                    .font(.subheadline).foregroundStyle(.secondary)
+                Button(store.t(draftSaved ? "Edit my draft" : "Prepare a question", draftSaved ? "編輯草稿" : "準備一個問題")) { composing = true }
+                    .buttonStyle(.borderedProminent)
+            }
+            if draftSaved {
+                Card {
+                    Label(store.t("Private draft · not published", "私人草稿・未發布"), systemImage: "lock").font(.caption).foregroundStyle(.secondary)
+                    Text(postTitle).font(.headline)
+                    Text(postBody).font(.subheadline)
+                    Button(store.t("Discard draft", "刪除草稿"), role: .destructive) { postTitle = ""; postBody = ""; draftSaved = false }
+                }
+            }
+            Card {
+                Label(store.t("Caregiver experiences · Phase 2", "照顧者經驗・第二階段"), systemImage: "heart.text.square").font(.headline)
+                Text(store.t("Later, CareVoice can surface relevant, consented and anonymised experiences. Peer stories will be labelled separately from official guidance. No experience matching is active yet.", "之後 CareVoice 可展示相關、已獲同意同匿名處理嘅經驗。家長故事會同官方指引分開標示，目前未啟用經驗配對。"))
+                    .font(.subheadline).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private var postComposer: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    TextField(store.t("Question title", "問題標題"), text: $postTitle).onChange(of: postTitle) { postTitle = String($0.prefix(120)) }
+                    TextField(store.t("What would you like to share?", "你想分享啲咩？"), text: $postBody, axis: .vertical).lineLimit(6...12)
+                        .onChange(of: postBody) { postBody = String($0.prefix(3000)) }
+                } footer: { Text(store.t("Leave out names, school details, phone numbers and medical documents. This draft is not published or saved after the app closes.", "請勿加入姓名、學校、電話或醫療文件。草稿唔會發布，關閉程式後亦唔會保留。")) }
+            }.navigationTitle(store.t("Private draft", "私人草稿")).navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) { Button(store.t("Close", "關閉")) { composing = false } }
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button(store.t("Keep draft", "保留草稿")) { draftSaved = true; composing = false }
+                            .disabled(postTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || postBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
+        }
+    }
+    private var sourceNote: some View {
+        Text(store.t("Official links open in your browser. Confirm eligibility, referral requirements and availability with the service provider.", "官方連結會喺瀏覽器開啟。資格、轉介要求同名額請向服務機構確認。"))
+            .font(.caption).foregroundStyle(.secondary)
     }
 }
+
 
 struct ResourceCard: View {
     @EnvironmentObject var store: AppStore
