@@ -26,16 +26,44 @@ struct ResourcesView: View {
                     .font(.system(.title, design: .rounded).bold())
                 Text(store.t("Official information to explore with the people supporting your family.", "與支援你家庭的專業人士一起了解官方資訊。"))
                     .foregroundStyle(.secondary)
+
+                SectionHeading(title: store.t("Understand your options", "了解你的選擇"))
+                NavigationLink { ServiceTypesView() } label: { hubCard("square.grid.2x2", store.t("Service types", "服務種類"), store.t("E位・S位・I位・O位・T位 explained", "認識 E位・S位・I位・O位・T位"), Brand.blue) }.buttonStyle(.plain)
+                NavigationLink { ServiceDirectoryView() } label: { hubCard("mappin.and.ellipse", store.t("Find a centre", "服務機構・輪候"), store.t("Centres with waiting times", "中心與輪候時間"), Brand.teal) }.buttonStyle(.plain)
+                NavigationLink { GlossaryView() } label: { hubCard("character.book.closed", store.t("Glossary", "術語對照"), store.t("Decode the jargon", "解讀行話"), .purple) }.buttonStyle(.plain)
+                NavigationLink { CitableFactsView() } label: { hubCard("checkmark.seal", store.t("Cited information", "可引用資料"), store.t("Official statements with sources", "附出處的官方資料"), .orange) }.buttonStyle(.plain)
+
+                SectionHeading(title: store.t("Official websites", "官方網站"))
                 ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
+
                 Card {
                     Label(store.t("You don’t have to figure it out alone", "不用獨自面對"), systemImage: "heart").font(.headline)
                     Text(store.t("Ask your social worker or assessment team about family support and available services. Eligibility and arrangements are confirmed by the service provider.", "可向社工或評估團隊了解家庭支援及服務，資格與安排以服務機構確認為準。"))
                         .font(.subheadline).foregroundStyle(.secondary)
                 }
+
+                if let fp = store.content.manifest?.contentFingerprint {
+                    Text(store.t("Content data \(fp)", "資料內容 \(fp)"))
+                        .font(.caption2).foregroundStyle(.tertiary)
+                }
                 Text(store.t("Links reviewed 15 October 2026. Official pages may be updated. External links open in your browser.", "連結於 2026 年 10 月 15 日核對。官方網頁內容可能更新，外部連結會在瀏覽器開啟。"))
                     .font(.caption).foregroundStyle(.secondary)
             }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
         }.background(Brand.background).navigationTitle(store.t("Resources", "資源"))
+    }
+
+    private func hubCard(_ icon: String, _ title: String, _ subtitle: String, _ color: Color) -> some View {
+        Card {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.title2).foregroundStyle(color).frame(width: 44, height: 44).background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(title).font(.headline)
+                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
+            }
+        }
     }
 }
 

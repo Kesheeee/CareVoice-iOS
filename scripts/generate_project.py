@@ -10,7 +10,7 @@ def q(s): return json.dumps(str(s))
 def refs(xs): return '(' + ', '.join(xs) + (',)' if xs else ')')
 appfiles=sorted((root/'CareVoice').rglob('*.swift'))
 uitests=sorted((root/'CareVoiceUITests').glob('*.swift'))
-resources=[root/'CareVoice/Resources/questions.json',root/'CareVoice/Resources/Assets.xcassets',root/'CareVoice/Resources/PrivacyInfo.xcprivacy']
+resources=[root/'CareVoice/Resources/Assets.xcassets',root/'CareVoice/Resources/PrivacyInfo.xcprivacy']+sorted(p for p in (root/'CareVoice/Resources').rglob('*.json') if not any(part.endswith('.xcassets') for part in p.parts))
 fileids=[]
 builds={'app':[],'ui':[],'resources':[]}
 for f in appfiles+uitests+resources:
