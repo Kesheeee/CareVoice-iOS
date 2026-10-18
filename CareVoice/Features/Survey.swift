@@ -173,7 +173,7 @@ struct CareVoiceSurveyReview: View {
             Picker(label, selection: value) {
                 Text("—").tag(0)
                 ForEach(values, id: \.self) { number in Text(String(number)).tag(number) }
-            }.pickerStyle(.menu).accessibilityIdentifier("birthday-" + label).labelsHidden().frame(maxWidth: .infinity, minHeight: 56)
+            }.pickerStyle(.wheel).accessibilityIdentifier("birthday-" + label).labelsHidden().frame(maxWidth: .infinity).frame(height: 180).clipped()
                 .background(.white, in: RoundedRectangle(cornerRadius: 12))
                 .onChange(of: value.wrappedValue) { _ in validateBirthday() }
         }.padding(10).frame(maxWidth: .infinity).background(color, in: RoundedRectangle(cornerRadius: 20))
@@ -201,4 +201,3 @@ struct CareVoiceSurveyReview_Previews: PreviewProvider {
         CareVoiceSurveyReview(chinese: true) { _ in }.previewDisplayName("繁體中文")
     }
 }
-

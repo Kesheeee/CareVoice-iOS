@@ -14,6 +14,7 @@ import { type AppData, type Observation } from "../domain";
 export function Dashboard({
   data,
   onProfile,
+  onCommunity,
   onQuestionnaire,
   onJourney,
   onRecords,
@@ -23,6 +24,7 @@ export function Dashboard({
 }: {
   data: AppData;
   onProfile: () => void;
+  onCommunity: () => void;
   onQuestionnaire: () => void;
   onJourney: () => void;
   onRecords: () => void;
@@ -38,53 +40,28 @@ export function Dashboard({
     .slice(0, 3);
   return (
     <div className="home-screen">
-      <h1 className="dashboard-greeting">{t("Home", "首頁")}</h1>
-      <section
-        className="dashboard-profile home-profile"
-        aria-label={t("Child profile", "小朋友檔案")}
-      >
-        <span className="home-child-avatar">
-          {p?.nickname?.slice(0, 1).toUpperCase() || <UserRound size={22} />}
-        </span>
-        <div className="home-child-details">
-          <h2>{p?.nickname || t("Your child", "你嘅小朋友")}</h2>
-          {p && (
-            <span>
-              {Math.floor(p.ageMonths / 12)} {t("years", "歲")}{" "}
-              {p.ageMonths % 12} {t("months", "個月")}
-            </span>
-          )}
-        </div>
-        <button className="home-edit" onClick={onProfile}>
-          <Pencil size={14} />
-          {t("Edit", "編輯")}
-        </button>
-      </section>
-      <button className="primary full home-capture" onClick={onAdd}>
-        <Plus size={21} />
-        {t("Add an observation", "新增觀察")}
-      </button>
-      <div className="home-shortcuts">
-        <button onClick={onJourney}>
-          <span className="home-shortcut-icon">
-            <Compass size={24} />
-          </span>
-          <ArrowUpRight size={17} />
-          <strong>{t("Your next step", "下一步")}</strong>
-        </button>
-        <button onClick={onReport}>
-          <span className="home-shortcut-icon">
-            <FileText size={24} />
-          </span>
-          <ArrowUpRight size={17} />
-          <strong>{t("Reports", "報告")}</strong>
-        </button>
+      <div className="care-home-header"><h1>{t("Hello there", "你好")}</h1><button onClick={onProfile} aria-label={t("Settings", "設定")}><UserRound size={25}/></button></div>
+      <p className="care-home-prompt">{p?.nickname ? t(`How is ${p.nickname} doing today?`, `${p.nickname} 今天過得怎樣？`) : t("How is your child doing today?", "小朋友今天過得怎樣？")}</p>
+      <div className="care-home-circles">
+        {[
+          ["📅", t("Tracker", "追蹤"), onRecords],
+          ["📝", t("Questions", "問卷"), onQuestionnaire],
+          ["🧭", t("Support", "支援"), onJourney],
+          ["📋", t("Reports", "報告"), onReport],
+          ["💬", t("Community", "社區"), onCommunity],
+        ].map(([emoji,label,action])=><button key={String(label)} onClick={action as ()=>void}><span aria-hidden="true">{emoji as string}</span><small>{label as string}</small></button>)}
       </div>
+      <section className="care-home-start">
+        <h2>{t("Start here", "由這裡開始")} <span aria-hidden="true">💛</span></h2>
+        <p>{t("A little support for your everyday care.", "為日常照顧添一點支援。")}</p>
+        <button className="care-home-step" onClick={onCommunity}><span aria-hidden="true">💬</span>{t("Explore questions from parents", "看看家長常見問題")}</button>
+        <button className="care-home-step" onClick={onAdd}><span aria-hidden="true">✍️</span>{t("Capture a moment from today", "記下今天的一刻")}</button>
+        <button className="care-home-step" onClick={onJourney}><span aria-hidden="true">🧭</span>{t("Find your next step", "尋找下一步")}</button>
+        <button className="care-home-start-button" onClick={onAdd}>{t("Add a record", "新增記錄")}<Plus size={18}/></button>
+      </section>
+      <button className="care-home-checkin" onClick={onRecords}><span aria-hidden="true">🌱</span><div><strong>{data.records.length ? t("Your care, one day at a time", "每天一點，記下照顧點滴") : t("Start your care calendar", "開始你的照顧日曆")}</strong><p>{t("Keep everyday moments together in Tracker.", "在追蹤頁整理每天的點滴。")}</p></div><ChevronRight size={20}/></button>
       <button className="home-questionnaire" onClick={onQuestionnaire}>
-        <BookOpen size={20} />
-        <span>{t("Questionnaire", "觀察問卷")}</span>
-        <span className="home-question-count">{reviewed}/{QUESTION_COUNT}</span>
-        <ChevronRight size={17} />
+        <BookOpen size={20}/><span>{t("Observation questions", "觀察問卷")}</span><span className="home-question-count">{reviewed}/{QUESTION_COUNT}</span><ChevronRight size={17}/>
       </button>
       <div className="home-recent-head">
         <h2>{t("Recent records", "最近記錄")}</h2>

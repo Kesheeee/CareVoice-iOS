@@ -148,6 +148,16 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
     [professional, setProfessional] = useState(true),
     [saved, setSaved] = useState(false);
   const [voiceEntry, setVoiceEntry] = useState(false);
+  const [trackerDate, setTrackerDate] = useState(() => new Date());
+  const addTrackerRecord = () => {
+    const date = new Date(trackerDate);
+    const now = new Date();
+    date.setHours(now.getHours(), now.getMinutes(), 0, 0);
+    if (date > now) return;
+    setExpandRecordDetails(false);
+    setVoiceEntry(true);
+    setRecord({ ...newRecord(), date: date.toISOString() });
+  };
   const [expandRecordDetails, setExpandRecordDetails] = useState(false);
   const [voiceBusy, setVoiceBusy] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
@@ -344,7 +354,8 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
             {warning}
             <Dashboard
               data={data}
-              onProfile={openProfile}
+              onProfile={() => go("profile")}
+              onCommunity={() => go("resources")}
               onQuestionnaire={() => go("questionnaireIntro")}
               onJourney={() => go("journey")}
               onRecords={() => go("records")}
@@ -360,6 +371,9 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
         )}
         {page === "records" && (
           <RecordsScreen
+            selectedDate={trackerDate}
+            onDate={setTrackerDate}
+            onAdd={addTrackerRecord}
             records={data.records}
             language={data.language}
             search={search}
@@ -795,14 +809,14 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
           {(
             [
               ["home", House, "Home", "首頁"],
-              ["records", BookOpen, "Records", "記錄"],
+              ["records", BookOpen, "Tracker", "追蹤"],
               ["resources", UsersRound, "Community", "社區"],
               ["profile", Settings, "Settings", "設定"],
             ] as const
           ).map(([p, Icon, en, cn]) => (
             <React.Fragment key={p}>
             {p === "resources" && <button className="nav-record-add" aria-label={t("Add a record", "新增記錄")} aria-haspopup="dialog"
-              onClick={() => { setExpandRecordDetails(false); setVoiceEntry(true); setRecord(newRecord()); }}>
+              onClick={() => { if (page === "records") { addTrackerRecord(); return; } setExpandRecordDetails(false); setVoiceEntry(true); setRecord(newRecord()); }}>
               <Plus size={27} aria-hidden="true" />
             </button>}
             <button

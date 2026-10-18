@@ -4,16 +4,25 @@ struct RecordsView: View {
     @EnvironmentObject var store: AppStore
     @State private var search = ""
     @State private var category: RecordCategory?
+    @State private var selectedDate = Date()
+    @State private var allDates = false
+    @State private var adding = false
     private var filtered: [BehaviorRecord] {
         store.data.records.filter { r in
-            (category == nil || r.category == category) && (search.isEmpty || r.text.localizedCaseInsensitiveContains(search) || r.location.localizedCaseInsensitiveContains(search))
+            (allDates || Calendar.current.isDate(r.date, inSameDayAs: selectedDate)) && (category == nil || r.category == category) && (search.isEmpty || r.text.localizedCaseInsensitiveContains(search) || r.location.localizedCaseInsensitiveContains(search))
         }.sorted { $0.date > $1.date }
     }
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text(store.t("The everyday moments tell a story.", "日常的點滴，訴說成長的故事。"))
-                    .foregroundStyle(.secondary)
+                DatePicker(store.t("Choose a day", "選擇日期"), selection: $selectedDate, in: ...Date(), displayedComponents: .date)
+                    .datePickerStyle(.graphical).tint(Brand.blue)
+                HStack {
+                    Text(selectedDate, format: .dateTime.month().day()).font(.headline)
+                    Spacer()
+                    Button { adding = true } label: { Label(store.t("Add record", "新增記錄"), systemImage: "plus") }
+                }
+                Toggle(store.t("Browse all records", "瀏覽全部記錄"), isOn: $allDates)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         filterButton(store.t("All", "全部"), value: nil)
@@ -28,7 +37,8 @@ struct RecordsView: View {
                 }
             }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
         }.background(Brand.background)
-            .navigationTitle(store.t("Records", "記錄"))
+            .navigationTitle(store.t("Tracker", "追蹤"))
+            .sheet(isPresented: $adding) { NavigationStack { RecordEditor(initialDate: selectedDate) } }
             .toolbar { NavigationLink { ReportsView() } label: { Label(store.t("Reports", "報告"), systemImage: "doc.text").labelStyle(.titleAndIcon) } }
             .searchable(text: $search, prompt: store.t("Search observations", "搜尋記錄"))
     }
@@ -116,6 +126,7 @@ struct RecordEditor: View {
     @Environment(\.scenePhase) private var scenePhase
     var existing: BehaviorRecord?
     var expandDetails = false
+    var initialDate: Date = Date()
     var onSaved: (BehaviorRecord) -> Void = { _ in }
     @State private var record = BehaviorRecord(text: "")
     @StateObject private var speech = SpeechRecorder()
@@ -183,7 +194,7 @@ struct RecordEditor: View {
                 Button(store.t("Discard", "放棄"), role: .destructive) { dismiss() }
                 Button(store.t("Keep editing", "繼續編輯"), role: .cancel) {}
             }
-            .onAppear { moreDetails = expandDetails; if let existing { record = existing; duration = existing.durationMinutes.map(String.init) ?? ""; voice = false } }
+            .onAppear { moreDetails = expandDetails; if let existing { record = existing; duration = existing.durationMinutes.map(String.init) ?? ""; voice = false } else { record.date = initialDate } }
             .onChange(of: speech.transcript) { _, value in
                 if !value.isEmpty { record.text = beforeSpeech + (beforeSpeech.isEmpty ? "" : "\n") + value }
             }

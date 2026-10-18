@@ -1,3 +1,6 @@
+import { CareChat } from "./CareChat";
+import { useState } from "react";
+import { MessageCircle, Bookmark, X, Send, Heart } from "lucide-react";
 import { translator } from "../i18n";
 import { ArrowUpRight, ShieldCheck, ChevronDown, CalendarDays, Stethoscope, Route, Building2, Baby, School } from "lucide-react";
 import type { Language } from "../domain";
@@ -32,8 +35,19 @@ const resources = [
   ],
 ];
 export function Community({ language }: { language: Language }) {
+  const [compose, setCompose] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [drafts, setDrafts] = useState<string[]>([]);
+  const [saved, setSaved] = useState<number[]>([]);
+  const [view, setView] = useState<"questions" | "drafts" | "saved">("questions");
+  const [expanded, setExpanded] = useState<number | null>(null);
   const zh = language !== "en",
     t = translator(language);
+  const questions = [
+    [t("Getting started", "開始了解"), t("Where can I discuss my concerns?", "有疑問可以找誰？"), t("You can bring your observations to your family doctor or Maternal & Child Health Centre to discuss next steps.", "你可以帶同日常觀察，與家庭醫生或母嬰健康院討論下一步。")],
+    [t("Daily care", "日常照顧"), t("What can I record each day?", "每天可以記錄甚麼？"), t("Record what you noticed, where it happened, what came before and what seemed to help. Your Tracker keeps these moments together.", "記下你留意到的事情、地點、之前發生的事，以及似乎有幫助的方法。追蹤頁會整理這些點滴。")],
+    [t("Appointments", "預約準備"), t("What can I prepare while waiting?", "等候期間可以準備甚麼？"), t("Keep observations and questions together, then prepare a report for your appointment. Confirm service arrangements with your referring professional.", "整理日常觀察和問題，並準備預約時使用的報告。請向轉介專業人士確認服務安排。")],
+  ];
   const link = (en: string, tc: string, url: string, source: string, Icon = ShieldCheck) => (
     <a
       className="community-link"
@@ -53,7 +67,25 @@ export function Community({ language }: { language: Language }) {
       <div className="page-heading">
         <h1>{t("Community", "社區")}</h1>
       </div>
-      <h2 className="community-section">
+      <section className="ask-hero">
+        <div className="ask-hero-icons" aria-hidden="true"><Heart size={30}/><MessageCircle size={38}/></div>
+        <h2>{t("Ask CareVoice", "問問 CareVoice")}</h2>
+        <p>{t("What’s on your mind today?", "今天有甚麼想聊聊？")}</p>
+        <button className="primary" onClick={() => setCompose(!compose)}><MessageCircle size={18}/>{t("Ask a question", "提出問題")}</button>
+      </section>
+      <CareChat open={compose} language={language} onClose={() => setCompose(false)} onPreview={text => {setDrafts([...drafts,text]);setView("drafts");}} />
+      <section className="ask-browser">
+        <div className="ask-section-heading"><h2>{view === "drafts" ? t("My post previews", "我的貼文預覽") : view === "saved" ? t("Saved questions", "已收藏問題") : t("Questions you may have", "你可能想問")}</h2>{view !== "questions" && <button onClick={() => setView("questions")}>{t("View all", "查看全部")}</button>}</div>
+        {view === "drafts" ? (drafts.length ? drafts.map((draft,i)=><article className="ask-question-card" key={i}><span className="ask-topic">{t("Private preview · Not published", "私人預覽 · 未發佈")}</span><p>{draft}</p><button onClick={()=>{setDrafts(drafts.filter((_,j)=>i!==j));}}>{t("Remove preview", "移除預覽")}</button></article>) : <p>{t("Your question drafts will appear here.", "你的問題草稿會顯示於此。")}</p>) : <>
+        {view === "saved" && saved.length === 0 && <p>{t("Tap the bookmark on a question to keep it here for this visit.", "點按問題的書籤，在這次瀏覽期間收藏。")}</p>}
+        {questions.map(([topic,title,answer],i) => view === "saved" && !saved.includes(i) ? null : <article className="ask-question-card" key={title}>
+          <div className="ask-section-heading"><span className="ask-topic">{topic}</span><button aria-label={t("Save question", "收藏問題")} aria-pressed={saved.includes(i)} onClick={()=>setSaved(saved.includes(i)?saved.filter(n=>n!==i):[...saved,i])}><Bookmark size={22} fill={saved.includes(i)?"currentColor":"none"}/></button></div>
+          <button className="ask-question-title" aria-expanded={expanded===i} onClick={()=>setExpanded(expanded===i?null:i)}>{title}<ChevronDown size={20}/></button>
+          {expanded===i && <p>{answer}</p>}
+        </article>)}
+        </>}
+      </section>
+      <h2 id="community-resources" className="community-section">
         {t("Official resources & support", "官方資源與支援")}
       </h2>
       <div className="community-group">

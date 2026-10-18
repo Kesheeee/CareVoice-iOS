@@ -1,3 +1,4 @@
+import { BirthdayWheel } from "./BirthdayWheel";
 import { translator, languageLocale } from "../i18n";
 import { useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, Baby, Check, ClipboardCheck, Clock3, Compass, FileText, Heart, MessageCircle, Search, UsersRound } from "lucide-react";
@@ -64,11 +65,12 @@ export function GuidedOnboarding({ profile, onChange, language, onClose, onSave,
       {step === 0 && <div className="survey-answer stage-tone-0"><label htmlFor="survey-name">{t("Nickname (optional)", "暱稱（選填）")}</label><input id="survey-name" autoComplete="nickname" maxLength={40} placeholder={t("Your child’s nickname", "小朋友嘅暱稱")} value={profile.nickname} onChange={e => onChange({ ...profile, nickname: e.target.value })} /></div>}
       {step === 1 && <section className="birthday-panel">
         <p className="survey-hint">{t("Choose their date of birth. We’ll work out their age for you.", "揀小朋友嘅出生日期，我哋會自動計算年齡。")}</p>
-        <fieldset className="birthday-fields"><legend className="sr-only">{t("Date of birth", "出生日期")}</legend>
-          <label>{t("Day", "日")}<select aria-label={t("Day", "日")} required value={day} onChange={e => changeBirthday(2, e.target.value)}><option value="">—</option>{Array.from({length:31},(_,i)=>i+1).map(n=><option key={n} value={String(n).padStart(2,"0")}>{n}</option>)}</select></label>
-          <label>{t("Month", "月")}<select aria-label={t("Month", "月")} required value={month} onChange={e => changeBirthday(1, e.target.value)}><option value="">—</option>{Array.from({length:12},(_,i)=>i).map(n=><option key={n} value={String(n+1).padStart(2,"0")}>{new Intl.DateTimeFormat(languageLocale(language), {month:"short"}).format(new Date(2020,n,1))}</option>)}</select></label>
-          <label>{t("Year", "年")}<select aria-label={t("Year", "年")} required value={year} onChange={e => changeBirthday(0, e.target.value)}><option value="">—</option>{Array.from({length:8},(_,i)=>today.getFullYear()-i).map(n=><option key={n} value={n}>{n}</option>)}</select></label>
-        </fieldset>
+        <div className="birthday-cake" aria-hidden="true">🎂</div>
+        <div className="birthday-wheels">
+          <BirthdayWheel label={t("Day", "日")} value={day} onChange={v=>changeBirthday(2,v)} options={Array.from({length:31},(_,i)=>({value:String(i+1).padStart(2,"0"),label:String(i+1)}))}/>
+          <BirthdayWheel label={t("Month", "月")} value={month} onChange={v=>changeBirthday(1,v)} options={Array.from({length:12},(_,i)=>({value:String(i+1).padStart(2,"0"),label:new Intl.DateTimeFormat(languageLocale(language),{month:"short"}).format(new Date(2020,i,1))}))}/>
+          <BirthdayWheel label={t("Year", "年")} value={year} onChange={v=>changeBirthday(0,v)} options={Array.from({length:8},(_,i)=>({value:String(today.getFullYear()-i),label:String(today.getFullYear()-i)}))}/>
+        </div>
         <div className="birthday-summary" aria-live="polite">{birthdayValid ? <><strong>{new Intl.DateTimeFormat(languageLocale(language), {day:"numeric",month:"long",year:"numeric"}).format(selectedDate)}</strong><span>{t(`${Math.floor(profile.ageMonths / 12)} years · ${profile.ageMonths % 12} months old`, `${Math.floor(profile.ageMonths / 12)} 歲 ${profile.ageMonths % 12} 個月`)}</span></> : <span>{birthdayComplete ? t("Choose a valid birthday for a child under 7, no later than today.", "請選擇未滿七歲小朋友嘅有效生日，日期不可遲於今日。") : t("Their birthday will appear here", "揀好後，生日會顯示喺呢度")}</span>}</div>
       </section>}
       {step === 2 && <fieldset className="onboarding-stages"><legend className="sr-only">{heading}</legend>

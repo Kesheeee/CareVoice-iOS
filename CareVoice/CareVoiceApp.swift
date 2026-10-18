@@ -91,7 +91,7 @@ struct MainView: View {
             }.safeAreaInset(edge: .bottom, spacing: 0) {
                 HStack {
                     tab(0, "house", store.t("Home", "首頁"))
-                    tab(1, "book", store.t("Records", "記錄"))
+                    tab(1, "book", store.t("Tracker", "追蹤"))
                     Button { addingRecord = true } label: {
                         Image(systemName: "plus").font(.system(size: 25, weight: .semibold))
                             .foregroundStyle(.white).frame(width: 50, height: 50).background(Brand.blue, in: Circle())
