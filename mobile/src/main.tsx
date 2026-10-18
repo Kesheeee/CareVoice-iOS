@@ -879,7 +879,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
       />
       {profileOpen && (
         <dialog
-          className={data.profile ? "sheet" : "guided-onboarding-dialog"}
+          className={data.profile ? "sheet profile-sheet" : "guided-onboarding-dialog"}
           aria-labelledby="profile-title"
           onCancel={() => setProfileOpen(false)}
         >

@@ -2108,3 +2108,16 @@ main {
 .voice-recorder .voice-upload { margin-top: 10px; }
 .voice-recorder .voice-upload-limit { display: block; margin-top: 8px; color: var(--color-muted); }
 .voice-recorder .voice-file-name { overflow-wrap: anywhere; font-size: 0.875rem; }
+
+/* Let profile fields shrink below their intrinsic desktop widths, including Safari dates. */
+.profile-sheet form, .profile-sheet .sheet-body { min-width: 0; width: 100%; }
+.profile-sheet .sheet-body { overflow-x: hidden; }
+.profile-sheet fieldset { min-inline-size: 0; min-width: 0; max-width: 100%; margin-inline: 0; }
+.profile-sheet legend { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+.profile-sheet label { min-width: 0; overflow-wrap: anywhere; }
+.profile-sheet input:not([type="radio"]), .profile-sheet textarea, .profile-sheet select {
+  box-sizing: border-box; min-width: 0; width: 100%; max-width: 100%;
+}
+.profile-sheet input[type="date"] { display: block; appearance: none; -webkit-appearance: none; }
+.profile-sheet input[type="date"]::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+.profile-sheet .age-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
