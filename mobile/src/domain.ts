@@ -238,6 +238,8 @@ export function reportText(
     t("Questionnaire responses", "問卷回答"),
   );
   let legacyHeading = false;
+  if (!qs.some(q => data.answers[q.id] && data.answers[q.id] !== "skipped"))
+    lines.push(t("No questionnaire responses recorded.", "尚未記錄問卷回答。", "尚未记录问卷回答。"));
   for (const [index, q] of qs.entries()) {
     if (q.id <= 30 && !legacyHeading) { lines.push("", t("Earlier questionnaire responses (original wording)", "舊版問卷回答（原有題目）")); legacyHeading = true; }
     const a = data.answers[q.id];

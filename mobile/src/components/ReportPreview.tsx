@@ -1,11 +1,15 @@
 import { answers } from "../domain";
+import { translator } from "../i18n";
+
+const simplified = translator("zh-Hans");
+const reportHeadings = ["Questionnaire responses", "問卷回答", "Earlier questionnaire responses (original wording)", "舊版問卷回答（原有題目）", "Observations", "觀察記錄", "Questions for the appointment", "見面時想問嘅問題"];
+const headings = new Set(reportHeadings.flatMap(label => [label, simplified(label, label)]));
+const answerLabels = new Set(Object.values(answers).flatMap(([en, traditional]) => [en, traditional, simplified(en, traditional)]));
 
 // Format the same report text used for sharing so preview and export stay aligned.
 export function ReportPreview({ text }: { text: string }) {
   const [header, ...blocks] = text.split(/\n\n/);
   const [, title, date] = header.split("\n");
-  const headings = new Set(["Questionnaire responses", "問卷回答", "Earlier questionnaire responses (original wording)", "舊版問卷回答（原有題目）", "Observations", "觀察記錄", "Questions for the appointment", "見面時想問嘅問題"]);
-  const answerLabels = new Set(Object.values(answers).flat());
   return <article className="report-paper">
     <header className="report-document-head"><h2>{title}</h2><span>{date}</span></header>
     {blocks.filter(Boolean).map((block, index) => {
