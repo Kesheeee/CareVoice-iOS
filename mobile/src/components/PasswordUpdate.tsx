@@ -2,6 +2,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { authClient, authErrorMessage } from "../platform/auth";
 import { translator } from "../i18n";
 import type { Language } from "../domain";
+import { PasswordRequirements } from "./PasswordRequirements";
+import { isValidNewPassword } from "../platform/password";
 import "../sign-in.css";
 
 export function PasswordUpdate({
@@ -24,6 +26,10 @@ export function PasswordUpdate({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (inFlight.current) return;
+    if (!isValidNewPassword(password)) {
+      setError(t("Please meet all five password requirements below.", "請符合下方全部五項密碼要求。", "请满足下方全部五项密码要求。"));
+      return;
+    }
     if (password !== confirmation) {
       setError(
         t(
@@ -68,6 +74,7 @@ export function PasswordUpdate({
             autoComplete="new-password"
             required
             minLength={8}
+            aria-describedby="password-hint"
             placeholder={t(
               "At least 8 characters",
               "最少 8 個字元",
@@ -78,6 +85,7 @@ export function PasswordUpdate({
             onChange={(event) => setPassword(event.target.value)}
           />
         </div>
+        <PasswordRequirements password={password} language={language} />
         <label htmlFor="confirm-new-password">
           {t("Confirm password", "確認密碼", "确认密码")}
         </label>

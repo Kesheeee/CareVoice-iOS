@@ -50,10 +50,10 @@ async function openSignup(page: import("@playwright/test").Page) {
   await page.getByLabel("Email", { exact: true }).fill(user.email);
   await page
     .getByLabel("Password", { exact: true })
-    .fill("test-password-not-real");
+    .fill("Test-password-9!");
   await page
     .getByLabel("Confirm password", { exact: true })
-    .fill("test-password-not-real");
+    .fill("Test-password-9!");
 }
 
 test("Signup checks password confirmation and waits for verification", async ({
@@ -64,7 +64,7 @@ test("Signup checks password confirmation and waits for verification", async ({
     sends++;
     expect(route.request().postDataJSON()).toMatchObject({
       email: user.email,
-      password: "test-password-not-real",
+      password: "Test-password-9!",
     });
     expect(new URL(route.request().url()).searchParams.get("redirect_to")).toBe(
       "http://127.0.0.1:5173/",
@@ -72,6 +72,15 @@ test("Signup checks password confirmation and waits for verification", async ({
     await route.fulfill({ json: { ...user, identities: [] } });
   });
   await openSignup(page);
+  for (const weak of ["lowercase9!", "UPPERCASE9!", "NoNumber!", "NoSymbol99"]) {
+    await page.getByLabel("Password", { exact: true }).fill(weak);
+    await page.getByLabel("Confirm password", { exact: true }).fill(weak);
+    await page.getByRole("button", { name: "Create account", exact: true }).click();
+    await expect(page.getByRole("alert")).toContainText("five password requirements");
+    expect(sends).toBe(0);
+  }
+  await page.getByLabel("Password", { exact: true }).fill("Test-password-9!");
+  await expect(page.locator('.password-requirements li[data-met="true"]')).toHaveCount(5);
   await page
     .getByLabel("Confirm password", { exact: true })
     .fill("different-password");
@@ -82,7 +91,7 @@ test("Signup checks password confirmation and waits for verification", async ({
   expect(sends).toBe(0);
   await page
     .getByLabel("Confirm password", { exact: true })
-    .fill("test-password-not-real");
+    .fill("Test-password-9!");
   await page
     .getByRole("button", { name: "Create account", exact: true })
     .click();
@@ -95,7 +104,7 @@ test("Signup checks password confirmation and waits for verification", async ({
     await page.evaluate(() =>
       JSON.stringify({ ...localStorage, ...sessionStorage }),
     ),
-  ).not.toContain("test-password-not-real");
+  ).not.toContain("Test-password-9!");
   await page.getByRole("button", { name: "Back to sign in" }).click();
   await expect(page.getByLabel("Email", { exact: true })).toHaveValue(
     user.email,
@@ -156,7 +165,7 @@ test("Invalid and unconfirmed logins do not grant access", async ({ page }) => {
     await page.getByLabel("Email", { exact: true }).fill(user.email);
     await page
       .getByLabel("Password", { exact: true })
-      .fill("test-password-not-real");
+      .fill("Test-password-9!");
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
     await expect(page.getByRole("alert")).toContainText(message);
     await expect(
@@ -238,7 +247,7 @@ test("Password login restores only this account's notebook, survives reload, and
   await page.getByLabel("Email", { exact: true }).fill(user.email);
   await page
     .getByLabel("Password", { exact: true })
-    .fill("test-password-not-real");
+    .fill("Test-password-9!");
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Home", exact: true }),
@@ -333,7 +342,7 @@ test("Existing email-link accounts can request and complete a password reset", a
   await page.route("**/auth/v1/user", async (route) => {
     if (route.request().method() === "PUT") {
       updates++;
-      expect(route.request().postDataJSON().password).toBe("new-test-password");
+      expect(route.request().postDataJSON().password).toBe("New-test-password-9!");
     }
     await route.fulfill({ json: user });
   });
@@ -347,9 +356,14 @@ test("Existing email-link accounts can request and complete a password reset", a
   await expect(
     page.getByRole("heading", { name: "Choose a new password" }),
   ).toBeVisible();
+  await page.getByLabel("New password", { exact: true }).fill("weakpassword");
+  await page.getByLabel("Confirm password", { exact: true }).fill("weakpassword");
+  await page.getByRole("button", { name: "Save password and continue" }).click();
+  await expect(page.getByRole("alert")).toContainText("five password requirements");
+  expect(updates).toBe(0);
   await page
     .getByLabel("New password", { exact: true })
-    .fill("new-test-password");
+    .fill("New-test-password-9!");
   await page
     .getByLabel("Confirm password", { exact: true })
     .fill("does-not-match");
@@ -360,7 +374,7 @@ test("Existing email-link accounts can request and complete a password reset", a
   expect(updates).toBe(0);
   await page
     .getByLabel("Confirm password", { exact: true })
-    .fill("new-test-password");
+    .fill("New-test-password-9!");
   await page
     .getByRole("button", { name: "Save password and continue" })
     .click();
@@ -372,5 +386,5 @@ test("Existing email-link accounts can request and complete a password reset", a
     await page.evaluate(() =>
       JSON.stringify({ ...localStorage, ...sessionStorage }),
     ),
-  ).not.toContain("new-test-password");
+  ).not.toContain("New-test-password-9!");
 });

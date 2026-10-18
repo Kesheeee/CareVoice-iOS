@@ -56,7 +56,8 @@ Before a native release, replace `src/platform/storage.ts` with a native protect
 New visitors see a full-screen video welcome. Get started opens account provider
 choices; the existing-account action opens the sign-in form. Email sign-in is
 connected to the CareVoice Supabase project: password signup and password login.
-New accounts enter email once and confirm a password of at least 8 characters.
+New accounts enter email once and confirm a password of at least 8 characters, including uppercase and lowercase
+letters, a number and a symbol. The same policy is enforced by Supabase Auth.
 Passwords are sent only to Supabase Auth and are never stored in the notebook.
 Signup without a session shows an email-verification screen; it does not grant
 access. Set or reset password sends a recovery link and opens a password form

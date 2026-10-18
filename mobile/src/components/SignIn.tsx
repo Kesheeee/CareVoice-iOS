@@ -2,6 +2,8 @@ import { translator } from "../i18n";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, Eye, EyeOff, Mail, LockKeyhole } from "lucide-react";
 import { SignInVideo } from "./SignInVideo";
+import { PasswordRequirements } from "./PasswordRequirements";
+import { isValidNewPassword } from "../platform/password";
 import { authClient, authErrorMessage } from "../platform/auth";
 import type { Language } from "../domain";
 import "../sign-in.css";
@@ -54,6 +56,10 @@ export function SignIn({
     event.preventDefault();
     if (requestInFlight.current) return;
     setError("");
+    if (creating && !isValidNewPassword(password)) {
+      setError(t("Please meet all five password requirements below.", "請符合下方全部五項密碼要求。", "请满足下方全部五项密码要求。"));
+      return;
+    }
     if (creating && password !== repeatPassword) {
       setError(
         t(
@@ -229,13 +235,7 @@ export function SignIn({
                 </div>
                 {creating && (
                   <>
-                    <p className="password-hint" id="password-hint">
-                      {t(
-                        "Use at least 8 characters.",
-                        "請使用最少 8 個字元。",
-                        "请使用至少 8 个字符。",
-                      )}
-                    </p>
+                    <PasswordRequirements password={password} language={language} />
                     <label htmlFor="sign-in-repeat-password">
                       {t("Confirm password", "確認密碼", "确认密码")}
                     </label>
