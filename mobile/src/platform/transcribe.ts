@@ -1,21 +1,30 @@
+import { authClient } from "./auth";
+import { recordingToWav } from "./wav";
 export type TranscribeResult = { text: string; language: string; status?: string };
 
-// Dev default points at the local FastAPI backend. Override at build time with
-// VITE_BACKEND_URL (e.g. the deployed backend for the demo).
-const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || "http://localhost:8000";
+// Credentials remain in Supabase; the browser sends only its user session.
+export class TranscriptionError extends Error {
+  code: string;
+  constructor(code: string) { super(code); this.code = code; }
+}
 
 export async function transcribe(
   audio: Blob,
   language: string,
-  filename = "recording.webm",
+  signal?: AbortSignal,
 ): Promise<TranscribeResult> {
-  const form = new FormData();
-  form.append("audio", audio, filename);
-  form.append("language", language);
-  const res = await fetch(`${BACKEND_URL}/transcribe`, { method: "POST", body: form });
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`Transcription failed (${res.status})${detail ? ": " + detail : ""}`);
+  const { data: { session } } = await authClient.auth.getSession();
+  if (!session) throw new TranscriptionError("auth");
+  const wav = await recordingToWav(audio);
+  signal?.throwIfAborted();
+  const { data, error } = await authClient.functions.invoke("transcribe", {
+    body: wav, headers: { "Content-Type": "audio/wav", "x-speech-language": language }, signal,
+  });
+  if (error) {
+    const response = (error as { context?: Response }).context;
+    const body = response instanceof Response ? await response.json().catch(() => null) : null;
+    throw new TranscriptionError(body?.code || (response?.status === 401 ? "auth" : "network"));
   }
-  return (await res.json()) as TranscribeResult;
+  if (!data || typeof data.text !== "string") throw new TranscriptionError("network");
+  return data as TranscribeResult;
 }

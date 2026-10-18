@@ -39,7 +39,7 @@ export function Dashboard({
     .slice(0, 3);
   return (
     <div className="home-screen">
-      <div className="care-home-header"><h1>{t("Hello there", "你好")}</h1><button onClick={onProfile} aria-label={t("Settings", "設定")}><UserRound size={25}/></button></div>
+      <div className="care-home-header"><h1>{t("Hello", "你好")}</h1><button onClick={onProfile} aria-label={t("Settings", "設定")}><UserRound size={25}/></button></div>
       <p className="care-home-prompt">{p?.nickname ? t(`How is ${p.nickname} doing today?`, `${p.nickname} 今天過得怎樣？`) : t("How is your child doing today?", "小朋友今天過得怎樣？")}</p>
       <div className="care-home-circles">
         {[

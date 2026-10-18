@@ -1,0 +1,4 @@
+project_id = "carevoice"
+
+[functions.transcribe]
+verify_jwt = true
