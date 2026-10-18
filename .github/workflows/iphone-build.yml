@@ -18,7 +18,7 @@ jobs:
           import json, subprocess
           devices = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', 'available', '-j']))['devices']
           phone = next(d for runtime, group in devices.items() if 'iOS' in runtime for d in group if 'iPhone' in d['name'])
-          subprocess.run(['xcodebuild', '-project', 'CareVoice.xcodeproj', '-scheme', 'CareVoice', '-destination', 'platform=iOS Simulator,id=' + phone['udid'], '-only-testing:CareVoiceUITests/CareVoiceUITests/testSettingsNavigationAndPreferences', '-resultBundlePath', 'SettingsTests.xcresult', 'CODE_SIGNING_ALLOWED=NO', 'test'], check=True)
+          subprocess.run(['xcodebuild', '-project', 'CareVoice.xcodeproj', '-scheme', 'CareVoice', '-destination', 'platform=iOS Simulator,id=' + phone['udid'], '-only-testing:CareVoiceUITests/CareVoiceUITests/testSettingsNavigationAndPreferences', '-only-testing:CareVoiceUITests/CareVoiceUITests/testLanguageSelectionAndPersistence', '-resultBundlePath', 'SettingsTests.xcresult', 'CODE_SIGNING_ALLOWED=NO', 'test'], check=True)
           PY
       - uses: actions/upload-artifact@v4
         if: always()

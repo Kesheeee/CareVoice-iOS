@@ -1,10 +1,42 @@
 import Foundation
 
 enum AppLanguage: String, Codable, CaseIterable, Identifiable {
-    case english, traditionalChinese
+    case english, traditionalChinese, simplifiedChinese
     var id: String { rawValue }
-    var locale: Locale { Locale(identifier: self == .english ? "en_HK" : "zh_Hant_HK") }
-    func text(_ en: String, _ zh: String) -> String { self == .english ? en : zh }
+    var displayName: String {
+        switch self {
+        case .english: return "English"
+        case .traditionalChinese: return "繁體中文"
+        case .simplifiedChinese: return "简体中文"
+        }
+    }
+    var shortName: String {
+        switch self {
+        case .english: return "EN"
+        case .traditionalChinese: return "繁"
+        case .simplifiedChinese: return "简"
+        }
+    }
+    var locale: Locale {
+        switch self {
+        case .english: return Locale(identifier: "en_HK")
+        case .traditionalChinese: return Locale(identifier: "zh_Hant_HK")
+        case .simplifiedChinese: return Locale(identifier: "zh_Hans_CN")
+        }
+    }
+    var speechLocale: Locale {
+        switch self {
+        case .english: return Locale(identifier: "en-US")
+        case .traditionalChinese: return Locale(identifier: "zh-HK")
+        case .simplifiedChinese: return Locale(identifier: "zh-CN")
+        }
+    }
+    // Convert app-owned copy at display time, never saved user text or source quotations.
+    func chineseText(_ traditional: String) -> String {
+        guard self == .simplifiedChinese else { return traditional }
+        return traditional.applyingTransform(StringTransform("Traditional-Simplified"), reverse: false) ?? traditional
+    }
+    func text(_ en: String, _ zh: String) -> String { self == .english ? en : chineseText(zh) }
 }
 
 enum JourneyStage: String, Codable, CaseIterable, Identifiable {

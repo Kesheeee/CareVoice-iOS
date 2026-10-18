@@ -10,8 +10,8 @@ struct WelcomeView: View {
                     HStack {
                         Label("CareVoice", systemImage: "bubble.left.and.bubble.right.fill").font(.headline).foregroundStyle(Brand.blue)
                         Spacer()
-                        Menu { ForEach(AppLanguage.allCases) { l in Button(l == .english ? "English" : "繁體中文") { store.setLanguage(l) } } } label: {
-                            Label(store.language == .english ? "EN" : "繁", systemImage: "globe")
+                        Menu { ForEach(AppLanguage.allCases) { l in Button(l.displayName) { store.setLanguage(l) } } } label: {
+                            Label(store.language.shortName, systemImage: "globe")
                         }
                     }
                     ZStack {

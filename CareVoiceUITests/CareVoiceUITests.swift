@@ -1,6 +1,26 @@
 import XCTest
 
 final class CareVoiceUITests: XCTestCase {
+    func testLanguageSelectionAndPersistence() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
+        app.buttons["getStarted"].tap(); app.buttons["saveProfile"].tap()
+        app.tabBars.buttons.element(boundBy: 3).tap(); app.buttons["openSettings"].tap()
+        app.buttons["settings-preferences"].tap()
+        for (language, title) in [("繁體中文", "帳戶偏好"), ("English", "Account preferences"), ("简体中文", "账户偏好")] {
+            app.buttons["languagePicker"].tap()
+            XCTAssertTrue(app.buttons[language].waitForExistence(timeout: 5))
+            app.buttons[language].tap()
+            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 5))
+        }
+        snapshot(app, "Settings-SimplifiedChinese")
+        app.terminate(); app.launchArguments = ["--ui-testing", "--preserve-ui-data"]; app.launch()
+        app.tabBars.buttons.element(boundBy: 3).tap(); app.buttons["openSettings"].tap()
+        XCTAssertTrue(app.buttons["settings-preferences"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["账户偏好"].exists)
+        app.buttons["settings-preferences"].tap()
+        XCTAssertTrue(app.navigationBars["账户偏好"].waitForExistence(timeout: 5))
+    }
     func testSettingsNavigationAndPreferences() throws {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))

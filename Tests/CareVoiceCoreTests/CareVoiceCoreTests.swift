@@ -2,6 +2,30 @@ import XCTest
 @testable import CareVoiceCore
 
 final class CareVoiceCoreTests: XCTestCase {
+    func testThreeLanguagesAndPersistence() throws {
+        XCTAssertEqual(AppLanguage.allCases.map(\.displayName), ["English", "繁體中文", "简体中文"])
+        XCTAssertEqual(AppLanguage.english.text("Account preferences", "帳戶偏好"), "Account preferences")
+        XCTAssertEqual(AppLanguage.traditionalChinese.text("Account preferences", "帳戶偏好"), "帳戶偏好")
+        XCTAssertEqual(AppLanguage.simplifiedChinese.text("Account preferences", "帳戶偏好"), "账户偏好")
+        XCTAssertEqual(AppLanguage.simplifiedChinese.locale.identifier, "zh_Hans_CN")
+        XCTAssertEqual(AppLanguage.simplifiedChinese.speechLocale, Locale(identifier: "zh-CN"))
+        for language in AppLanguage.allCases {
+            var data = AppData(); data.language = language
+            XCTAssertEqual(try JSONDecoder().decode(AppData.self, from: JSONEncoder().encode(data)).language, language)
+        }
+    }
+    func testSimplifiedResourcesAndReportsPreserveUserWriting() {
+        XCTAssertEqual(localized("Records", "記錄", .simplifiedChinese), "记录")
+        XCTAssertEqual(localized(nil, "機構", .simplifiedChinese), "机构")
+        XCTAssertEqual(localized("Fallback", nil, .simplifiedChinese), "Fallback")
+        var data = AppData(); data.language = .simplifiedChinese
+        data.profile = ChildProfile(nickname: "樂樂")
+        data.records = [BehaviorRecord(text: "今天與媽媽一起玩遊戲。", category: .progress)]
+        let report = ReportBuilder.text(data: data, questions: [], professional: false)
+        XCTAssertTrue(report.contains("行为记录"))
+        XCTAssertTrue(report.contains("樂樂"))
+        XCTAssertTrue(report.contains("今天與媽媽一起玩遊戲。"))
+    }
     func testCaregiverNameRemainsCompatibleWithExistingData() throws {
         var data = AppData()
         data.profile = ChildProfile(nickname: "Sam")

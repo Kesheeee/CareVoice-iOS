@@ -133,8 +133,9 @@ struct AccountPreferencesView: View {
             }
             Section(store.t("Language", "語言")) {
                 Picker(store.t("App language", "應用程式語言"), selection: Binding(get: { store.language }, set: { store.setLanguage($0) })) {
-                    Text("English").tag(AppLanguage.english)
-                    Text("繁體中文").tag(AppLanguage.traditionalChinese)
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.displayName).tag(language)
+                    }
                 }.accessibilityIdentifier("languagePicker")
             }
         }.onAppear { name = store.data.caregiverName ?? "" }

@@ -26,10 +26,42 @@ import UniformTypeIdentifiers
 // MARK: - CareVoice/Core/Models.swift
 
 enum AppLanguage: String, Codable, CaseIterable, Identifiable {
-    case english, traditionalChinese
+    case english, traditionalChinese, simplifiedChinese
     var id: String { rawValue }
-    var locale: Locale { Locale(identifier: self == .english ? "en_HK" : "zh_Hant_HK") }
-    func text(_ en: String, _ zh: String) -> String { self == .english ? en : zh }
+    var displayName: String {
+        switch self {
+        case .english: return "English"
+        case .traditionalChinese: return "繁體中文"
+        case .simplifiedChinese: return "简体中文"
+        }
+    }
+    var shortName: String {
+        switch self {
+        case .english: return "EN"
+        case .traditionalChinese: return "繁"
+        case .simplifiedChinese: return "简"
+        }
+    }
+    var locale: Locale {
+        switch self {
+        case .english: return Locale(identifier: "en_HK")
+        case .traditionalChinese: return Locale(identifier: "zh_Hant_HK")
+        case .simplifiedChinese: return Locale(identifier: "zh_Hans_CN")
+        }
+    }
+    var speechLocale: Locale {
+        switch self {
+        case .english: return Locale(identifier: "en-US")
+        case .traditionalChinese: return Locale(identifier: "zh-HK")
+        case .simplifiedChinese: return Locale(identifier: "zh-CN")
+        }
+    }
+    // Convert app-owned copy at display time, never saved user text or source quotations.
+    func chineseText(_ traditional: String) -> String {
+        guard self == .simplifiedChinese else { return traditional }
+        return traditional.applyingTransform(StringTransform("Traditional-Simplified"), reverse: false) ?? traditional
+    }
+    func text(_ en: String, _ zh: String) -> String { self == .english ? en : chineseText(zh) }
 }
 
 enum JourneyStage: String, Codable, CaseIterable, Identifiable {
@@ -277,7 +309,7 @@ final class SpeechRecorder: ObservableObject {
         defer { isStarting = false }
         error = nil
         let sessionID = UUID(); generation = sessionID
-        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: language == .english ? "en-US" : "zh-HK")), recognizer.isAvailable, recognizer.supportsOnDeviceRecognition else {
+        guard let recognizer = SFSpeechRecognizer(locale: language.speechLocale), recognizer.isAvailable, recognizer.supportsOnDeviceRecognition else {
             error = language.text("On-device speech recognition is unavailable for this language on this device. Please type your observation.", "此裝置暫不支援這個語言的裝置端語音辨識，請使用文字輸入。")
             return
         }
@@ -445,8 +477,8 @@ struct WelcomeView: View {
                     HStack {
                         Label("CareVoice", systemImage: "bubble.left.and.bubble.right.fill").font(.headline).foregroundStyle(Brand.blue)
                         Spacer()
-                        Menu { ForEach(AppLanguage.allCases) { l in Button(l == .english ? "English" : "繁體中文") { store.setLanguage(l) } } } label: {
-                            Label(store.language == .english ? "EN" : "繁", systemImage: "globe")
+                        Menu { ForEach(AppLanguage.allCases) { l in Button(l.displayName) { store.setLanguage(l) } } } label: {
+                            Label(store.language.shortName, systemImage: "globe")
                         }
                     }
                     ZStack {
@@ -1116,8 +1148,9 @@ struct AccountPreferencesView: View {
             }
             Section(store.t("Language", "語言")) {
                 Picker(store.t("App language", "應用程式語言"), selection: Binding(get: { store.language }, set: { store.setLanguage($0) })) {
-                    Text("English").tag(AppLanguage.english)
-                    Text("繁體中文").tag(AppLanguage.traditionalChinese)
+                    ForEach(AppLanguage.allCases) { language in
+                        Text(language.displayName).tag(language)
+                    }
                 }.accessibilityIdentifier("languagePicker")
             }
         }.onAppear { name = store.data.caregiverName ?? "" }
@@ -1507,6 +1540,7 @@ struct CareVoiceSurveyAnswer: Codable {
 
 struct CareVoiceSurveyReview: View {
     var chinese = false
+    var simplifiedChinese = false
     var onClose: () -> Void = {}
     var onComplete: (CareVoiceSurveyAnswer) -> Void
     @State private var step = 0
@@ -1539,7 +1573,8 @@ struct CareVoiceSurveyReview: View {
         ("waiting", "Support while waiting", "輪候期間嘅支援", "heart"),
         ("observations", "Recording observations", "記錄日常觀察", "magnifyingglass")
     ]
-    private func t(_ en: String, _ zh: String) -> String { chinese ? zh : en }
+    private var language: AppLanguage { simplifiedChinese ? .simplifiedChinese : (chinese ? .traditionalChinese : .english) }
+    private func t(_ en: String, _ zh: String) -> String { language.text(en, zh) }
     private var heading: String {
         [t("What should we call your child?", "點稱呼你嘅小朋友？"),
          t("When is your child’s birthday?", "小朋友嘅生日係幾時？"),
@@ -1587,7 +1622,7 @@ struct CareVoiceSurveyReview: View {
                     .disabled(!canContinue)
                 }.padding(.horizontal, 24).padding(.bottom, 12)
             }.background(Color(uiColor: .systemBackground)).tint(blue)
-        }.environment(\.locale, Locale(identifier: chinese ? "zh_Hant_HK" : "en_HK"))
+        }.environment(\.locale, language.locale)
     }
 
     @ViewBuilder private func question(width: CGFloat, height: CGFloat) -> some View {
@@ -1964,7 +1999,7 @@ struct CompleteWelcomeView: View {
         }
         .sheet(isPresented: $account) { AccountPreview() }
         .fullScreenCover(isPresented: $survey, onDismiss: { if pending != nil { questionnaire = true } }) {
-            CareVoiceSurveyReview(chinese: store.language == .traditionalChinese, onClose: { survey = false }) { answer in
+            CareVoiceSurveyReview(chinese: store.language == .traditionalChinese, simplifiedChinese: store.language == .simplifiedChinese, onClose: { survey = false }) { answer in
                 if answer.shouldOfferQuestionnaire { pending = answer; survey = false }
                 else { save(answer) }
             }
@@ -2088,10 +2123,11 @@ struct NativeBackupControls: View {
 
 // MARK: - Merged Phase 1: CareVoice/Core/ContentModels.swift
 
-/// Pick the English text when the language is English, else fall back to TC.
+/// Localize app resource descriptions without modifying bundled source data.
 func localized(_ en: String?, _ tc: String?, _ language: AppLanguage) -> String {
     if language == .english, let en, !en.isEmpty { return en }
-    return tc ?? en ?? ""
+    if let tc, !tc.isEmpty { return language.chineseText(tc) }
+    return en ?? ""
 }
 
 struct CitableAssertion: Codable, Identifiable {
@@ -2553,7 +2589,7 @@ struct ServiceDirectoryView: View {
                             }
                         }
                         if let d = unit.district { Text(localized(unit.districtEn, d, store.language)).font(.caption).foregroundStyle(.secondary) }
-                        if let address = unit.address, !address.isEmpty { Text(address).font(.subheadline) }
+                        if let address = unit.address, !address.isEmpty { Text(store.language.chineseText(address)).font(.subheadline) }
                         HStack(spacing: 16) {
                             if let phone = unit.phone, !phone.isEmpty {
                                 Link(destination: URL(string: "tel:\(phone.replacingOccurrences(of: " ", with: ""))")!) {
@@ -2584,7 +2620,7 @@ struct ServiceDirectoryView: View {
         if store.language == .english {
             if let unit = store.content.serviceUnits.first(where: { $0.district == d }), let en = unit.districtEn, !en.isEmpty { return en }
         }
-        return d
+        return store.language.chineseText(d)
     }
 }
 
@@ -2616,6 +2652,10 @@ struct CitableFactsView: View {
                 if store.language == .english {
                     Text(store.t("English text is a translation, not an official quote.", "英文內容為翻譯，並非官方原文。"))
                         .font(.caption).foregroundStyle(.orange)
+                }
+                if store.language == .simplifiedChinese {
+                    Text(store.t("Source quotations retain their original Traditional Chinese wording.", "來源引文保留繁體中文原文。"))
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 if search.isEmpty {
                     ForEach(topics, id: \.self) { topic in
@@ -2650,7 +2690,7 @@ struct CitableFactsView: View {
             }
             Text(localized(a.plainEn, a.plainTc, store.language)).font(.subheadline).fixedSize(horizontal: false, vertical: true)
             Divider()
-            Text("「\(localized(a.quoteEn, a.quote, store.language))」").font(.footnote).foregroundStyle(.secondary)
+            Text("「\(store.language == .english ? localized(a.quoteEn, a.quote, .english) : a.quote)」").font(.footnote).foregroundStyle(.secondary)
             HStack(spacing: 6) {
                 Text(localized(a.orgEn, a.org, store.language)).font(.caption.bold()).foregroundStyle(Brand.teal)
                 Text(localized(a.titleEn, a.titleTc, store.language)).font(.caption).foregroundStyle(.secondary)

@@ -138,7 +138,7 @@ struct ServiceDirectoryView: View {
                             }
                         }
                         if let d = unit.district { Text(localized(unit.districtEn, d, store.language)).font(.caption).foregroundStyle(.secondary) }
-                        if let address = unit.address, !address.isEmpty { Text(address).font(.subheadline) }
+                        if let address = unit.address, !address.isEmpty { Text(store.language.chineseText(address)).font(.subheadline) }
                         HStack(spacing: 16) {
                             if let phone = unit.phone, !phone.isEmpty {
                                 Link(destination: URL(string: "tel:\(phone.replacingOccurrences(of: " ", with: ""))")!) {
@@ -169,7 +169,7 @@ struct ServiceDirectoryView: View {
         if store.language == .english {
             if let unit = store.content.serviceUnits.first(where: { $0.district == d }), let en = unit.districtEn, !en.isEmpty { return en }
         }
-        return d
+        return store.language.chineseText(d)
     }
 }
 
@@ -201,6 +201,10 @@ struct CitableFactsView: View {
                 if store.language == .english {
                     Text(store.t("English text is a translation, not an official quote.", "英文內容為翻譯，並非官方原文。"))
                         .font(.caption).foregroundStyle(.orange)
+                }
+                if store.language == .simplifiedChinese {
+                    Text(store.t("Source quotations retain their original Traditional Chinese wording.", "來源引文保留繁體中文原文。"))
+                        .font(.caption).foregroundStyle(.secondary)
                 }
                 if search.isEmpty {
                     ForEach(topics, id: \.self) { topic in
@@ -235,7 +239,7 @@ struct CitableFactsView: View {
             }
             Text(localized(a.plainEn, a.plainTc, store.language)).font(.subheadline).fixedSize(horizontal: false, vertical: true)
             Divider()
-            Text("「\(localized(a.quoteEn, a.quote, store.language))」").font(.footnote).foregroundStyle(.secondary)
+            Text("「\(store.language == .english ? localized(a.quoteEn, a.quote, .english) : a.quote)」").font(.footnote).foregroundStyle(.secondary)
             HStack(spacing: 6) {
                 Text(localized(a.orgEn, a.org, store.language)).font(.caption.bold()).foregroundStyle(Brand.teal)
                 Text(localized(a.titleEn, a.titleTc, store.language)).font(.caption).foregroundStyle(.secondary)
