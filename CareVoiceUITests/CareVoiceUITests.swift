@@ -89,7 +89,7 @@ final class CareVoiceUITests: XCTestCase {
         let app = launch(); app.buttons["tab-1"].tap(); app.buttons["addRecord"].tap()
         XCTAssertTrue(app.buttons["Start recording"].waitForExistence(timeout: 5))
         app.buttons["Text record"].tap()
-        let text = app.textViews["recordText"].exists ? app.textViews["recordText"] : app.textFields["recordText"]
+        let text = app.textViews["recordText"].waitForExistence(timeout: 5) ? app.textViews["recordText"] : app.textFields["recordText"]
         XCTAssertTrue(text.waitForExistence(timeout: 5)); text.tap(); text.typeText("Waved hello at the park.")
         app.buttons["saveRecord"].tap()
         XCTAssertTrue(app.staticTexts["Waved hello at the park."].waitForExistence(timeout: 5))
