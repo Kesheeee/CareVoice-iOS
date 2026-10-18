@@ -8,6 +8,15 @@ CareVoice helps parents and caregivers of young children with special educationa
 
 Track: **Smart Living, Culture & Belonging**
 
+## Try the demo
+
+Open [CareVoice](https://carevoice-preview-zeta.vercel.app) and sign in with:
+
+- **Email:** `demo@carevoice.example`
+- **Password:** `!Democare1`
+
+This is a shared public demo account. Use sample information only; do not enter real family or child details.
+
 ## What you can do
 
 | Feature | What it does |
