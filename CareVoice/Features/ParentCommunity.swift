@@ -293,6 +293,7 @@ struct CommunityDiscussionView: View {
             }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
         }.background(Brand.background).navigationTitle(store.t("Discussion", "討論")).navigationBarTitleDisplayMode(.inline)
             .task { await load() }.refreshable { await load() }
+            .onChange(of: community.user?.id) { _, _ in post = nil; replies = []; more = false }
             .safeAreaInset(edge: .bottom) {
                 if let post, !post.removed, community.profile != nil {
                     HStack(alignment: .bottom) {
@@ -417,6 +418,7 @@ struct CommunityBlockedView: View {
             }
         }.navigationTitle(store.t("Blocked accounts", "已封鎖帳戶")).navigationBarTitleDisplayMode(.inline)
             .task { await load() }.refreshable { await load() }
+            .onChange(of: community.user?.id) { _, _ in people = [] }
     }
     private func load() async {
         await community.perform { api in
@@ -445,6 +447,7 @@ struct CommunityModerationView: View {
             }
         }.navigationTitle(store.t("Moderation queue", "待審核舉報")).navigationBarTitleDisplayMode(.inline)
             .task { await load() }.refreshable { await load() }
+            .onChange(of: community.moderator) { _, value in if !value { reports = [] } }
     }
     private func load() async {
         await community.perform { api in
@@ -481,6 +484,7 @@ struct CommunityModerationDetail: View {
                     content = rows.first?["body"] ?? store.t("The author has deleted this content.", "作者已刪除此內容。")
                 }
             }
+            .onChange(of: community.moderator) { _, value in if !value { content = "" } }
             .confirmationDialog(store.t("Confirm this moderation decision?", "確認此審核決定？"), isPresented: Binding(get: { action != nil }, set: { if !$0 { action = nil } }), titleVisibility: .visible) {
                 if let action {
                     Button(store.t("Confirm", "確認"), role: action == "removed" ? .destructive : nil) { Task {
