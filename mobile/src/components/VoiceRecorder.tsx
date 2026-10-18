@@ -9,9 +9,10 @@ import { AudioFileError } from "../platform/wav";
 
 const VOICE_LIMIT_SECONDS = 60;
 type Status = "idle" | "requesting" | "listening" | "transcribing" | "review" | "error";
-type ErrorKey = "unsupported" | "permission" | "microphone" | "network" | "no-speech" | "timeout" | "unknown" | "auth" | "unconfigured" | "rate-limit" | "file-size" | "file-duration" | "file-format";
+type ErrorKey = "unsupported" | "permission" | "microphone" | "network" | "no-speech" | "timeout" | "unknown" | "auth" | "unconfigured" | "rate-limit" | "file-size" | "file-duration" | "file-format" | "file-type";
 
 const errors: Record<ErrorKey, [string, string]> = {
+  "file-type": ["Choose an audio file: MP3, M4A, WAV, AAC or FLAC. Photos and videos aren’t supported.", "請選擇 MP3、M4A、WAV、AAC 或 FLAC 音訊檔案，不支援相片及影片。"],
   "file-size": ["Choose an audio file smaller than 20 MB.", "請選擇小於 20 MB 嘅音訊檔案。"],
   "file-duration": ["Choose a clip up to 60 seconds. Trim longer recordings first.", "請選擇不超過 60 秒嘅錄音，較長錄音請先剪輯。"],
   "file-format": ["This file couldn’t be read. Try an MP3, M4A or WAV audio file.", "未能讀取檔案，請試用 MP3、M4A 或 WAV 音訊檔案。"],
@@ -189,7 +190,7 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
     </button> : <button type="button" className="primary full" onClick={start}>
       <Mic size={18} aria-hidden="true" />{error ? t("Try again", "再試一次") : status === "review" ? t("Record more", "繼續錄音") : t("Start recording", "開始錄音")}
     </button>)}
-    <input ref={fileInputRef} type="file" hidden accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.webm,.flac" aria-label={t("Choose audio file", "選擇音訊檔案")} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; upload(file); }}/>
+    <input ref={fileInputRef} type="file" hidden accept=".mp3,.m4a,.wav,.aac,.flac" aria-label={t("Choose audio file", "選擇音訊檔案")} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; upload(file); }}/>
     {!busy && <button type="button" className="secondary full voice-upload" onClick={() => fileInputRef.current?.click()}><Upload size={18} aria-hidden="true" />{t("Upload audio", "上傳錄音")}</button>}
     {!busy && <small className="voice-upload-limit">{t("Up to 60 seconds · 20 MB", "最長 60 秒 · 20 MB")}</small>}
   </div>;

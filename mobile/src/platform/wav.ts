@@ -19,9 +19,53 @@ export class AudioFileError extends Error {
   constructor(code: string) { super(code); this.code = code; }
 }
 
+export async function validateAudioUpload(file: File): Promise<void> {
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (!ext || !["mp3", "m4a", "wav", "aac", "flac"].includes(ext)
+    || (file.type && !file.type.startsWith("audio/") && file.type !== "application/octet-stream")) {
+    throw new AudioFileError("file-type");
+  }
+  if (file.size > 20 * 1024 * 1024) throw new AudioFileError("file-size");
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const text = (a: number, b: number) => new TextDecoder().decode(bytes.subarray(a, b));
+  const view = new DataView(bytes.buffer);
+  let valid = false;
+  if (ext === "wav") valid = text(0, 4) === "RIFF" && text(8, 12) === "WAVE";
+  if (ext === "flac") valid = text(0, 4) === "fLaC";
+  if (ext === "mp3") valid = text(0, 3) === "ID3" || (bytes[0] === 255 && (bytes[1] & 224) === 224);
+  if (ext === "aac") valid = bytes[0] === 255 && (bytes[1] & 246) === 240;
+  if (ext === "m4a") {
+    let audio = false, video = false, malformed = false;
+    const walk = (start: number, end: number, depth: number) => {
+      if (depth > 8) { malformed = true; return; }
+      let i = start;
+      while (i + 8 <= end) {
+        let size = view.getUint32(i), header = 8;
+        const kind = text(i + 4, i + 8);
+        if (size === 1) {
+          if (i + 16 > end) { malformed = true; return; }
+          size = Number(view.getBigUint64(i + 8)); header = 16;
+        } else if (size === 0) size = end - i;
+        if (size < header || i + size > end) { malformed = true; return; }
+        if (["moov", "trak", "mdia"].includes(kind)) walk(i + header, i + size, depth + 1);
+        if (kind === "hdlr" && size >= header + 12) {
+          const handler = text(i + header + 8, i + header + 12);
+          audio ||= handler === "soun"; video ||= handler === "vide";
+        }
+        i += size;
+      }
+      if (i !== end) malformed = true;
+    };
+    if (text(4, 8) === "ftyp") walk(0, bytes.length, 0);
+    valid = audio && !video && !malformed;
+  }
+  if (!valid) throw new AudioFileError("file-type");
+}
+
 export async function recordingToWav(audio: Blob, uploaded = false): Promise<Blob> {
   if (!audio.size) throw new AudioFileError("file-format");
   if (audio.size > 20 * 1024 * 1024) throw new AudioFileError("file-size");
+  if (uploaded) await validateAudioUpload(audio as File);
   const context = new AudioContext();
   try {
     let decoded: AudioBuffer;

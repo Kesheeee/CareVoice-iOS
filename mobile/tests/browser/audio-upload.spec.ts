@@ -34,7 +34,9 @@ test('audio upload transcribes, appends text, and rejects long or unreadable fil
   await file.setInputFiles({name:'long.wav',mimeType:'audio/wav',buffer:long});
   await expect(dialog.getByRole('alert')).toContainText('up to 60 seconds');
   await file.setInputFiles({name:'broken.mp3',mimeType:'audio/mpeg',buffer:Buffer.from('not audio')});
-  await expect(dialog.getByRole('alert')).toContainText('couldn’t be read');
+  await expect(dialog.getByRole('alert')).toContainText('Photos and videos aren’t supported');
+  await file.setInputFiles({name:'movie.mp4',mimeType:'video/mp4',buffer:wav});
+  await expect(dialog.getByRole('alert')).toContainText('Photos and videos aren’t supported');
   expect(await page.evaluate(() => (window as any).uploadCalls)).toBe(1);
   await expect(field).toHaveValue('Earlier note.\nToday we played together.');
   await page.screenshot({path:'test-results/audio-upload.png'});
