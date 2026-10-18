@@ -26,15 +26,17 @@ export function authErrorMessage(error: unknown, language: Language): string {
   const t = translator(language);
   const code = (error as { code?: string })?.code;
   const status = (error as { status?: number })?.status;
-  if (
-    code === "over_email_send_rate_limit" ||
-    code === "over_request_rate_limit" ||
-    status === 429
-  )
+  if (code === "over_email_send_rate_limit")
     return t(
-      "Too many requests. Please wait a few minutes before trying again.",
-      "請求次數過多，請等幾分鐘後再試。",
-      "请求次数过多，请等几分钟后重试。",
+      "Email delivery has reached its sending limit. This request could not be completed. Please try later or contact CareVoice support.",
+      "電郵發送次數已達上限，未能完成此請求。請稍後再試或聯絡 CareVoice 支援。",
+      "邮件发送次数已达上限，无法完成此请求。请稍后重试或联系 CareVoice 支持。",
+    );
+  if (code === "over_request_rate_limit" || status === 429)
+    return t(
+      "Too many requests. Please wait before trying again.",
+      "請求次數過多，請稍後再試。",
+      "请求次数过多，请稍后重试。",
     );
   if (
     code === "email_address_not_authorized" ||

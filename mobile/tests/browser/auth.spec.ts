@@ -388,3 +388,13 @@ test("Existing email-link accounts can request and complete a password reset", a
     ),
   ).not.toContain("New-test-password-9!");
 });
+
+
+test("Email rate limits explain the failed request without reporting signup success", async ({ page }) => {
+  await page.route("**/auth/v1/signup**", route => route.fulfill({ status: 429, headers: { "x-supabase-api-version": "2024-01-01", "access-control-expose-headers": "X-Supabase-Api-Version" }, json: { code: "over_email_send_rate_limit", msg: "email rate limit exceeded" } }));
+  await openSignup(page);
+  await page.getByRole("button", { name: "Create account", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Email delivery has reached its sending limit");
+  await expect(page.getByRole("heading", { name: "Check your email" })).toHaveCount(0);
+  await expect(page.getByLabel("Email", { exact: true })).toHaveValue(user.email);
+});
