@@ -1,8 +1,9 @@
+import { translator } from "../i18n";
 import { ShieldCheck, Phone, ArrowUpRight } from "lucide-react";
 import type { Language } from "../domain";
 export function SafetyRouting({ language }: { language: Language }) {
-  const zh = language === "zh";
-  const t = (en: string, tc: string) => zh ? tc : en;
+  const zh = language !== "en";
+  const t = translator(language);
   return <aside className="notice safety-routing" role="alert" aria-label={t("Safety guidance", "安全指引")}>
     <ShieldCheck size={20} />
     <div>

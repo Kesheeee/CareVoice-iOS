@@ -13,6 +13,7 @@
   "dependencies": {
     "@capacitor/core": "^8.0.0",
     "lucide-react": "^0.468.0",
+    "opencc-js": "^1.4.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

@@ -1,3 +1,4 @@
+import { translator } from "../i18n";
 import {
   ArrowRight,
   AudioLines,
@@ -22,16 +23,16 @@ export function SetupProgress({
   language: Language;
   questionnaire?: boolean;
 }) {
-  const zh = language === "zh";
+  const t = translator(language);
   return (
-    <ol className="setup-progress" aria-label={zh ? "設定步驟" : "Setup steps"}>
+    <ol className="setup-progress" aria-label={t("Setup steps", "設定步驟")}>
       <li className={questionnaire ? "complete" : "current"}>
         <span>{questionnaire ? <Check size={13} /> : 1}</span>
-        {zh ? "建立檔案" : "Profile"}
+        {t("Profile", "建立檔案")}
       </li>
       <li className={questionnaire ? "current" : ""}>
         <span>2</span>
-        {zh ? "觀察問卷" : "Questionnaire"}
+        {t("Questionnaire", "觀察問卷")}
       </li>
     </ol>
   );
@@ -45,8 +46,8 @@ export function Welcome({
   onStart: () => void;
   onSignIn: () => void;
 }) {
-  const zh = language === "zh",
-    t = (en: string, tc: string) => (zh ? tc : en);
+  const zh = language !== "en",
+    t = translator(language);
   return (
     <section className="welcome-screen">
       <div className="welcome-mark" aria-hidden="true">
@@ -102,8 +103,8 @@ export function QuestionnaireIntro({
   onStart: () => void;
   onLater: () => void;
 }) {
-  const zh = language === "zh",
-    t = (en: string, tc: string) => (zh ? tc : en);
+  const zh = language !== "en",
+    t = translator(language);
   return (
     <section className="questionnaire-intro">
       <h1>{t("Observation questionnaire", "觀察問卷")}</h1>
@@ -143,8 +144,8 @@ export function ProfileFields({
   onChange: (p: Profile) => void;
   language: Language;
 }) {
-  const zh = language === "zh",
-    t = (en: string, tc: string) => (zh ? tc : en);
+  const zh = language !== "en",
+    t = translator(language);
   return (
     <>
       {section !== "context" && <>
@@ -213,7 +214,7 @@ export function ProfileFields({
                 onChange({ ...profile, stage: value as Profile["stage"] })
               }
             />
-            <span>{stages[value][zh ? 1 : 0]}</span>
+            <span>{t(...stages[value])}</span>
           </label>
         ))}
       </fieldset>

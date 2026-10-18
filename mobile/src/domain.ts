@@ -1,4 +1,5 @@
-export type Language = "en" | "zh";
+import { translator, languageLocale } from "./i18n.ts";
+export type Language = "en" | "zh" | "zh-Hans";
 export type Stage =
   | "noticed"
   | "professionalFollowUp"
@@ -184,8 +185,8 @@ export function reportText(
   qs: Question[],
   professional: boolean,
 ): string {
-  const zh = data.language === "zh",
-    t = (a: string, b: string) => (zh ? b : a),
+  const zh = data.language !== "en",
+    t = translator(data.language),
     p = data.profile;
   const lines = [
     "CareVoice",
@@ -195,7 +196,7 @@ export function reportText(
         : "Family observation summary",
       professional ? "會面準備報告" : "家庭觀察摘要",
     ),
-    new Date().toLocaleString(zh ? "zh-HK" : "en-HK"),
+    new Date().toLocaleString(languageLocale(data.language)),
     "",
   ];
   if (p) {
@@ -203,7 +204,7 @@ export function reportText(
       p.nickname || t("Your child", "你嘅小朋友"),
       `${p.ageMonths} ${t("months", "個月")}`,
       t("Parent-selected stage: ", "家長揀嘅階段：") +
-        stages[p.stage][zh ? 1 : 0],
+        t(...stages[p.stage]),
     );
     if (professional) {
       lines.push(p.firstConcernDate, p.concernNotes);
@@ -241,7 +242,7 @@ export function reportText(
     if (q.id <= 30 && !legacyHeading) { lines.push("", t("Earlier questionnaire responses (original wording)", "舊版問卷回答（原有題目）")); legacyHeading = true; }
     const a = data.answers[q.id];
     if (a && a !== "skipped")
-      lines.push(`${q.id <= 30 ? q.id : index + 1}. ${zh ? q.zh : q.en}`, answers[a][zh ? 1 : 0]);
+      lines.push(`${q.id <= 30 ? q.id : index + 1}. ${t(q.en, q.zh)}`, t(...answers[a]));
   }
   if (needsSafetyRouting(data.answers)) lines.push(t("A seizure or self-injury response was Yes or Not sure. Seek medical advice promptly; for immediate danger in Hong Kong call 999 or attend A&E.", "抽搐或傷害自己嘅題目揀咗「有」或「唔肯定」。請盡快求醫；如果喺香港有即時危險，請致電 999 或去急症室。"));
   if (needsFollowUp(data.answers))
@@ -266,8 +267,8 @@ export function reportText(
   ))
     lines.push(
       "",
-      new Date(r.date).toLocaleString(zh ? "zh-HK" : "en-HK"),
-      categories[r.category][zh ? 1 : 0],
+      new Date(r.date).toLocaleString(languageLocale(data.language)),
+      t(...categories[r.category]),
       r.text,
       ...[
         [t("Place", "地點"), r.location],

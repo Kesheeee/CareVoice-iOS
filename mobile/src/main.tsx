@@ -1,3 +1,5 @@
+import { translator, languageLocale, languageNames } from "./i18n";
+import { LanguageSettings } from "./components/LanguageSettings";
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -139,19 +141,22 @@ function App() {
     [saved, setSaved] = useState(false);
   const [voiceEntry, setVoiceEntry] = useState(false);
   const [voiceBusy, setVoiceBusy] = useState(false);
+  const [languageOpen, setLanguageOpen] = useState(false);
+  const [languageSaved, setLanguageSaved] = useState(false);
   const quickRecord = !!record && !data.records.some(r => r.id === record.id);
   const mainRef = useRef<HTMLElement>(null),
     importRef = useRef<HTMLInputElement>(null);
-  const zh = data.language === "zh",
-    t = (a: string, b: string) => (zh ? b : a),
-    pair = (v: [string, string]) => v[zh ? 1 : 0];
+  const zh = data.language !== "en",
+    t = translator(data.language),
+    pair = (v: [string, string]) => t(...v);
   function update(fn: (d: AppData) => AppData) {
-    if (locked) return;
+    if (locked) return false;
     const next = fn(data);
     try {
       browserStore.save(next);
       setData(next);
       setError("");
+      return true;
     } catch {
       setError(
         t(
@@ -159,6 +164,7 @@ function App() {
           "儲存唔到，上次儲存嘅記錄仲喺度。請騰出瀏覽器儲存空間，再試一次。",
         ),
       );
+      return false;
     }
   }
   function go(p: Page) {
@@ -169,8 +175,8 @@ function App() {
     requestAnimationFrame(() => mainRef.current?.focus());
   }
   useEffect(() => {
-    document.documentElement.lang = zh ? "zh-Hant" : "en";
-  }, [zh]);
+    document.documentElement.lang = data.language === "zh" ? "zh-Hant" : data.language;
+  }, [data.language]);
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [qIndex, review]);
@@ -233,7 +239,7 @@ function App() {
     </aside>
   ) : null;
   const dateLabel = (d: string) =>
-    new Date(d).toLocaleDateString(zh ? "zh-HK" : "en-HK", {
+    new Date(d).toLocaleDateString(languageLocale(data.language), {
       month: "short",
       day: "numeric",
     });
@@ -466,7 +472,7 @@ function App() {
                       }}
                     >
                       <span>
-                        {i + 1}. {zh ? q.zh : q.en}
+                        {i + 1}. {t(q.en, q.zh)}
                       </span>
                       <strong>
                         {data.answers[q.id]
@@ -500,12 +506,10 @@ function App() {
                   <span>{qIndex + 1} / {QUESTION_COUNT}</span>
                 </div>
                 <p className="question-category">
-                  {zh
-                    ? questions[qIndex].categoryZH
-                    : questions[qIndex].categoryEN}
+                  {t(questions[qIndex].categoryEN, questions[qIndex].categoryZH)}
                 </p>
                 <h1 className="question-title">
-                  {zh ? questions[qIndex].zh : questions[qIndex].en}
+                  {t(questions[qIndex].en, questions[qIndex].zh)}
                 </h1>
 
                 <div className="answer-options">
@@ -626,20 +630,17 @@ function App() {
                 <ChevronRight size={17} />
               </button>
               <button
-                aria-label={t(
-                  "Switch to Traditional Chinese",
-                  "Switch to English",
-                )}
-                onClick={() =>
-                  update((d) => ({ ...d, language: zh ? "en" : "zh" }))
-                }
+                aria-label={t("Language", "語言", "语言")}
+                aria-haspopup="dialog"
+                onClick={() => { setLanguageSaved(false); setLanguageOpen(true); }}
               >
                 <Globe2 size={20} />
                 {t("Language", "語言")}
-                <span>{zh ? "繁體中文" : "English"}</span>
+                <span>{languageNames[data.language]}</span>
                 <ChevronRight size={17} />
               </button>
             </div>
+            {languageSaved && <p className="language-saved" role="status"><Check size={16} />{t("Language updated", "語言設定已更新", "语言设置已更新")}</p>}
             <h2 className="profile-section">{t("Care", "照顧工具")}</h2>
             <div className="settings-list">
               <button onClick={questionnaireStart}>
@@ -1082,6 +1083,11 @@ function App() {
           </form>
         </dialog>
       )}
+      {languageOpen && <LanguageSettings language={data.language} onClose={() => setLanguageOpen(false)} onSave={language => {
+        const success = update(d => ({ ...d, language }));
+        if (success) setLanguageSaved(true);
+        return success;
+      }} />}
       {deleteId && (
         <dialog
           className="sheet compact"

@@ -33,3 +33,10 @@ The score/severity/inferred-stage results in the reference mockups were delibera
 - Home screen screenshot reviewed at 375px; corrected hidden file input styling and form accessible naming.
 
 Not yet validated: physical devices, Safari/WebKit, OS share sheets, print-to-PDF output on each OS, native Android/iOS builds, keyboard dictation. App store delivery and encrypted native storage are future work. There is no service worker/offline shell in this first web build.
+# Language chooser — 18 October 2026
+
+- Settings opens a modal language chooser; selection applies only after Save. Cancel/Escape restore focus and keep the previous language.
+- English, Traditional Chinese, and Simplified Chinese persist through reloads and backups. Simplified interface copy uses OpenCC with explicit wording for the chooser; caregiver notes and names are not converted.
+- Browser tests cover all three selections, persistence, cancellation, and storage failure. Domain tests verify Simplified report labels while preserving original notes.
+- Chromium and WebKit checks at 320, 375, and 414 × 667 confirm all three choices and actions fit without horizontal overflow. Physical iPhone testing remains outstanding.
+

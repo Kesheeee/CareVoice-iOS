@@ -1,3 +1,4 @@
+import { translator } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { Mic, Square } from "lucide-react";
 import type { Language } from "../domain";
@@ -20,8 +21,8 @@ export function VoiceRecorder({ language, text, onTranscript, onActiveChange }: 
   onTranscript: (text: string) => void;
   onActiveChange: (active: boolean) => void;
 }) {
-  const zh = language === "zh", t = (en: string, tc: string) => zh ? tc : en;
-  const [locale, setLocale] = useState(zh ? "zh-HK" : "en-US");
+  const zh = language !== "en", t = translator(language);
+  const [locale, setLocale] = useState(language === "zh-Hans" ? "zh-CN" : zh ? "zh-HK" : "en-US");
   const [state, setState] = useState<VoiceState>({ status: "idle", seconds: 0, interim: "" });
   const callbacks = useRef({ onTranscript, onActiveChange, text });
   callbacks.current = { onTranscript, onActiveChange, text };
@@ -63,7 +64,7 @@ export function VoiceRecorder({ language, text, onTranscript, onActiveChange }: 
     <p className="voice-progress" role="status">{state.status === "listening" ? t("Listening…", "聆聽中……") : state.status === "requesting" ? t("Waiting for microphone permission…", "等候咪高峰權限……") : state.status === "stopping" ? t("Finishing transcription…", "正在完成文字轉換……") : state.status === "review" ? t("Ready to review. Check the text below before saving.", "文字已準備好，請核對後再儲存。") : t("Tap Start recording and speak for up to 60 seconds.", "撳開始錄音，最長可以講 60 秒。")}</p>
     {busy && <output className="voice-timer" aria-label={t("Recording time", "錄音時間")}>{`${Math.floor(state.seconds / 60)}:${String(state.seconds % 60).padStart(2, "0")} / 1:00`}</output>}
     {state.interim && <p className="voice-interim">{state.interim}</p>}
-    {state.error && <p className="voice-error" role="alert">{errors[state.error][zh ? 1 : 0]}</p>}
+    {state.error && <p className="voice-error" role="alert">{t(...errors[state.error])}</p>}
     {busy ? <button type="button" className="primary full" disabled={state.status === "stopping"} onClick={() => session.current?.stop()}>
       <Square size={16} aria-hidden="true" />{state.status === "requesting" ? t("Cancel request", "取消請求") : t("Stop recording", "停止錄音")}
     </button> : <button type="button" className="primary full" onClick={start}>

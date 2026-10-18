@@ -1,3 +1,4 @@
+import { translator } from "../i18n";
 import { useRef } from "react";
 import {
   BookOpen,
@@ -35,8 +36,7 @@ export function RecordsScreen({
   onReport: () => void;
   onEdit: (record: Observation) => void;
 }) {
-  const zh = language === "zh",
-    t = (en: string, tc: string) => (zh ? tc : en),
+  const t = translator(language),
     menu = useRef<HTMLDetailsElement>(null);
   const visible = records
     .filter(
@@ -116,7 +116,7 @@ export function RecordsScreen({
             aria-pressed={filter === value}
             onClick={() => onFilter(value as Category)}
           >
-            {label[zh ? 1 : 0]}
+            {t(...label)}
           </button>
         ))}
       </div>

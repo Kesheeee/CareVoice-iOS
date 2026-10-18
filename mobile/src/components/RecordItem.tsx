@@ -1,3 +1,4 @@
+import { translator, languageLocale } from "../i18n";
 import { ChevronRight, Clock3, Link2, MapPin } from "lucide-react";
 import {
   categories,
@@ -16,8 +17,7 @@ export function RecordItem({
   language: Language;
   onEdit: (r: Observation) => void;
 }) {
-  const zh = language === "zh",
-    t = (en: string, tc: string) => (zh ? tc : en),
+  const t = translator(language),
     related = relatedRecords(records, record),
     date = new Date(record.date);
   return (
@@ -25,10 +25,10 @@ export function RecordItem({
       <button className="record-main" onClick={() => onEdit({ ...record })}>
         <span className="record-topline">
           <span className={`record-tag tag-${record.category}`}>
-            {categories[record.category][zh ? 1 : 0]}
+            {t(...categories[record.category])}
           </span>
           <time>
-            {date.toLocaleString(zh ? "zh-HK" : "en-HK", {
+            {date.toLocaleString(languageLocale(language), {
               month: "short",
               day: "numeric",
               hour: "2-digit",
@@ -69,7 +69,7 @@ export function RecordItem({
           {related.map((r) => (
             <button key={r.id} onClick={() => onEdit({ ...r })}>
               <time>
-                {new Date(r.date).toLocaleDateString(zh ? "zh-HK" : "en-HK", {
+                {new Date(r.date).toLocaleDateString(languageLocale(language), {
                   month: "short",
                   day: "numeric",
                 })}

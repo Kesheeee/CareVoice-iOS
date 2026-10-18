@@ -1,3 +1,4 @@
+import { translator, languageLocale } from "../i18n";
 import { QUESTION_COUNT } from "../domain";
 import {
   ArrowUpRight,
@@ -29,8 +30,7 @@ export function Dashboard({
   onAdd: () => void;
   onEdit: (r: Observation) => void;
 }) {
-  const zh = data.language === "zh",
-    t = (en: string, tc: string) => (zh ? tc : en),
+  const t = translator(data.language),
     p = data.profile;
   const reviewed = Object.keys(data.answers).length;
   const recent = [...data.records]
@@ -103,7 +103,7 @@ export function Dashboard({
               <span className="home-record-details">
                 <strong>{r.text}</strong>
                 <time>
-                  {new Date(r.date).toLocaleString(zh ? "zh-HK" : "en-HK", {
+                  {new Date(r.date).toLocaleString(languageLocale(data.language), {
                     month: "short",
                     day: "numeric",
                     hour: "2-digit",

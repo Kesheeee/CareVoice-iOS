@@ -18,7 +18,7 @@ export function validateData(raw: unknown): AppData {
   if (
     !d ||
     d.version !== 1 ||
-    !["en", "zh"].includes(d.language) ||
+    !["en", "zh", "zh-Hans"].includes(d.language) ||
     !Array.isArray(d.records) ||
     !Array.isArray(d.completedSteps) ||
     !d.completedSteps.every((s) => typeof s === "string") ||

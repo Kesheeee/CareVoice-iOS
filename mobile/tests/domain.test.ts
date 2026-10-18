@@ -10,6 +10,19 @@ import {
   relatedRecords,
 } from "../src/domain.ts";
 import { validateData } from "../src/platform/storage.ts";
+import { translator } from "../src/i18n.ts";
+
+test("Simplified Chinese survives backups and localises report labels without rewriting notes", () => {
+  const data = emptyData();
+  data.language = "zh-Hans";
+  data.records = [{ id: "language-record", date: "2026-10-18T02:00:00Z", text: "繁體筆記", category: "observation", location: "學校", durationMinutes: null, context: "", helped: "" }];
+  assert.equal(validateData(JSON.parse(JSON.stringify(data))).language, "zh-Hans");
+  assert.equal(translator("zh-Hans")("Language", "語言"), "语言");
+  const report = reportText(data, [], false);
+  assert.ok(report.includes("观察记录"));
+  assert.ok(report.includes("繁體筆記"));
+  assert.ok(report.includes("學校"));
+});
 
 test("Only the just-noticing stage enters the automatic questionnaire", () => {
   assert.equal(onboardingDestination("noticed"), "questionnaireIntro");

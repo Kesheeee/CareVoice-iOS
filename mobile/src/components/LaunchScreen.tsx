@@ -1,3 +1,4 @@
+import { translator } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import type { Language } from "../domain";
@@ -11,7 +12,7 @@ export function LaunchScreen({ language, initialSignIn = false, onContinue, onCl
   onContinue: () => void;
   onCloseSignIn: () => void;
 }) {
-  const t = (en: string, zh: string) => language === "zh" ? zh : en;
+  const t = translator(language);
   const [sheet, setSheet] = useState<"choices" | "email" | "emailEntry" | null>(initialSignIn ? "email" : null);
   const [existing, setExisting] = useState(initialSignIn);
   const [message, setMessage] = useState("");

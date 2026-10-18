@@ -1,3 +1,4 @@
+import { translator } from "../i18n";
 import { useState, type FormEvent } from "react";
 import { ArrowLeft, Eye, EyeOff, Mail, LockKeyhole } from "lucide-react";
 import { SignInVideo } from "./SignInVideo";
@@ -11,7 +12,7 @@ export function SignIn({ language, onBack, onContinue, embedded = false, emailOn
   onBack: () => void;
   onContinue: () => void;
 }) {
-  const t = (en: string, zh: string) => language === "zh" ? zh : en;
+  const t = translator(language);
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState("");
   function submit(event: FormEvent<HTMLFormElement>) {

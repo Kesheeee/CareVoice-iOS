@@ -1,3 +1,4 @@
+import { translator } from "../i18n";
 import { ArrowUpRight, ShieldCheck, ChevronDown, CalendarDays, Stethoscope, Route, Building2, Baby, School } from "lucide-react";
 import type { Language } from "../domain";
 const resources = [
@@ -31,8 +32,8 @@ const resources = [
   ],
 ];
 export function Community({ language }: { language: Language }) {
-  const zh = language === "zh",
-    t = (en: string, tc: string) => (zh ? tc : en);
+  const zh = language !== "en",
+    t = translator(language);
   const link = (en: string, tc: string, url: string, source: string, Icon = ShieldCheck) => (
     <a
       className="community-link"
