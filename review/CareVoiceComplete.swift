@@ -1895,6 +1895,7 @@ struct QuestionnaireView: View {
                     NavigationLink(store.t("Explore next steps", "查看下一步")) { NavigatorView() }.buttonStyle(.borderedProminent)
                 } else {
                     let q = store.questions[index]
+                    if store.data.needsSafetyRouting { SafetyGuidance() }
                     HStack {
                         Text(store.t("Question \(index + 1) of \(store.questions.count)", "第 \(index + 1) 題，共 \(store.questions.count) 題")).font(.subheadline.weight(.semibold))
                         Spacer()
@@ -1920,7 +1921,6 @@ struct QuestionnaireView: View {
                             }.accessibilityIdentifier("answer-\(answer.rawValue)")
                         }
                     }
-                    if (q.id == 132 || q.id == 133), store.data.answers[q.id] == .yes || store.data.answers[q.id] == .unsure { SafetyGuidance() }
                     if q.id == 131, store.data.answers[q.id] == .yes || store.data.answers[q.id] == .unsure {
                         TextField(store.t("When did you notice this? (optional)", "何時留意到？（選填）"), text: Binding(get: { store.data.regressionWhen?[q.id] ?? "" }, set: { value in store.update { if $0.regressionWhen == nil { $0.regressionWhen = [:] }; $0.regressionWhen?[q.id] = value } })).textFieldStyle(.roundedBorder)
                     }
@@ -1942,6 +1942,7 @@ struct QuestionnaireView: View {
         .sheet(isPresented: $followUp) { NavigationStack { ScrollView { FollowUpCard().padding(24) }.toolbar { Button(store.t("Done", "完成")) { followUp = false } } }.presentationDetents([.medium, .large]) }
         .onChange(of: index) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
         .onChange(of: summary) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
+        .onChange(of: store.data.needsSafetyRouting) { _, value in if value { scroll.scrollTo("questionTop", anchor: .top) } }
         }
     }
     private func advance() { if index < store.questions.count - 1 { index += 1 } else { summary = true } }
@@ -1984,6 +1985,13 @@ struct ProfileEditor: View {
                 }
             } header: { Text(store.t("Where are you now?", "你目前在哪個階段？")) }
             footer: { Text(store.t("Choose your current situation. You can change it any time. This is not a clinical level.", "選擇目前的情況，之後可隨時更改。這不是臨床嚴重程度。")) }
+            if profile.stage == .diagnosed {
+                Section(store.t("Details from your report (optional)", "報告資料（選填）")) {
+                    TextField(store.t("Diagnosing organisation", "診斷機構"), text: Binding(get: { profile.diagnosingBody ?? "" }, set: { profile.diagnosingBody = $0 }))
+                    TextField(store.t("Report date", "報告日期"), text: Binding(get: { profile.diagnosisDate ?? "" }, set: { profile.diagnosisDate = $0 }))
+                    TextField(store.t("Support level (copied from report)", "支援程度（照報告填寫）"), text: Binding(get: { profile.reportedSupportLevel ?? "" }, set: { profile.reportedSupportLevel = $0 }))
+                }
+            }
             Section(store.t("Your first observations", "最初的觀察")) {
                 DatePicker(store.t("First noticed", "首次留意日期"), selection: $profile.firstConcernDate, in: ...Date(), displayedComponents: .date)
                 TextField(store.t("What prompted you? (optional)", "甚麼令你開始留意？（選填）"), text: $profile.concernNotes, axis: .vertical).lineLimit(3...6)
@@ -2828,7 +2836,7 @@ struct ResourcesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 0) {
                     resource("Child Assessment Service (CAS)", "兒童體能智力測驗服務（CAS）", "stethoscope", "https://www.dhcas.gov.hk/en/faq.html", chinese: "https://www.dhcas.gov.hk/tc/faq.html")
                     Divider()
@@ -2838,13 +2846,13 @@ struct ResourcesView: View {
                     Divider()
                     resource("Central referral system (CRSRS)", "康復服務中央轉介系統", "building.2", "https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/", chinese: "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_crsrehab/centralref/", health: false)
                 }.background(.white, in: RoundedRectangle(cornerRadius: 22))
-                Text(store.t("Support for parents", "家長資源")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Text(store.t("Support for parents", "家長資源")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 0) {
                     resource("Maternal & Child Health Centres", "母嬰健康院", "figure.and.child.holdinghands", "https://www.dh.gov.hk/english/main/main_fhs/main_fhs.html")
                     Divider()
                     resource("On-site pre-school support", "到校學前支援", "building.2", "https://www.swd.gov.hk/oprs/index_en.htm", health: false)
                 }.background(.white, in: RoundedRectangle(cornerRadius: 22))
-                Text(store.t("Common questions", "常見問題")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Text(store.t("Common questions", "常見問題")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 20) {
                     DisclosureGroup(store.t("Where can I discuss my concerns?", "有疑問可以搵邊個？")) {
                         Text(store.t("Start with your family doctor or Maternal & Child Health Centre. They can discuss your observations and whether a referral is needed.", "可以先同家庭醫生或母嬰健康院傾吓你的觀察，以及是否需要轉介。")).padding(.top, 12)
@@ -2868,7 +2876,7 @@ struct ResourcesView: View {
                 Image(systemName: icon).font(.title3).foregroundStyle(Brand.blue).frame(width: 26)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(store.t(en, zh)).font(.subheadline.weight(.semibold)).foregroundStyle(Color.primary)
-                    Text(health ? store.t("Department of Health", "衛生署") : store.t("Social Welfare Department", "社會福利署")).font(.caption).foregroundStyle(.secondary)
+                    Text(health ? store.t("Department of Health", "衛生署") : store.t("Social Welfare Department", "社會福利署")).font(.caption).foregroundStyle(Color.secondary)
                 }
                 Spacer(minLength: 4)
                 Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(Brand.blue)
@@ -2886,10 +2894,10 @@ struct ResourceCard: View {
                 HStack {
                     Image(systemName: resource.icon).foregroundStyle(Brand.blue).font(.title2)
                     Spacer()
-                    Image(systemName: "arrow.up.right").foregroundStyle(.secondary)
+                    Image(systemName: "arrow.up.right").foregroundStyle(Color.secondary)
                 }
                 Text(store.t(resource.titleEN, resource.titleZH)).font(.headline).foregroundStyle(.primary)
-                Text(store.t(resource.detailEN, resource.detailZH)).font(.subheadline).foregroundStyle(.secondary)
+                Text(store.t(resource.detailEN, resource.detailZH)).font(.subheadline).foregroundStyle(Color.secondary)
                 Text(resource.url.contains("dhcas") ? store.t("DEPARTMENT OF HEALTH", "衛生署") : store.t("SOCIAL WELFARE DEPARTMENT", "社會福利署"))
                     .font(.caption2.weight(.semibold)).tracking(0.7).foregroundStyle(Brand.teal)
             }
@@ -2907,7 +2915,7 @@ struct NavigatorView: View {
                     Card {
                         Label(store.t("YOUR CURRENT STAGE", "目前階段"), systemImage: "safari").font(.caption.weight(.bold)).foregroundStyle(Brand.teal)
                         Text(profile.stage.title(store.language)).font(.title2.bold())
-                        Text(profile.stage.nextStep(store.language)).foregroundStyle(.secondary)
+                        Text(profile.stage.nextStep(store.language)).foregroundStyle(Color.secondary)
                         Button(store.t("Update my stage", "更新目前階段")) { editing = true }
                     }
                     SectionHeading(title: store.t("A manageable next step", "一步一步來"))
@@ -2924,7 +2932,7 @@ struct NavigatorView: View {
                         }.buttonStyle(.plain).accessibilityValue(done ? store.t("Completed", "已完成") : store.t("Not completed", "尚未完成"))
                     }
                     Text(store.t("This is your personal checklist. Ticking a step does not register you for a service or change an official waiting list.", "這是你的個人清單。勾選項目不代表已登記服務，亦不會更改官方輪候狀況。"))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(Color.secondary)
                     SectionHeading(title: store.t("Official guidance", "官方指引"))
                     ResourceCard(resource: OfficialResource.all[profile.stage == .noticed || profile.stage == .professionalFollowUp ? 0 : profile.stage == .awaitingAssessment ? 1 : 3])
                     NavigationLink(store.t("See all resources", "查看所有資源")) { ResourcesView() }
@@ -3022,7 +3030,7 @@ struct SettingsView: View {
             }
             Section {
                 DisclosureGroup(store.t("Privacy & storage", "私隱同儲存")) {
-                    Text(store.t("Your child’s records stay on this device, protected by iOS. They are not synced to your account or included in device backups. Export a backup before changing devices or deleting the app.", "孩子的記錄受 iOS 保護並保留於此裝置，不會同步至帳戶或包括在裝置備份內。更換裝置或刪除應用程式前請匯出備份。")).font(.subheadline).foregroundStyle(.secondary)
+                    Text(store.t("Your child’s records stay on this device, protected by iOS. They are not synced to your account or included in device backups. Export a backup before changing devices or deleting the app.", "孩子的記錄受 iOS 保護並保留於此裝置，不會同步至帳戶或包括在裝置備份內。更換裝置或刪除應用程式前請匯出備份。")).font(.subheadline).foregroundStyle(Color.secondary)
                 }
             }
         }.scrollContentBackground(.hidden).background(Brand.background)
@@ -3046,8 +3054,8 @@ struct SettingsRow: View {
             Image(systemName: icon).font(.title3).foregroundStyle(Brand.blue).frame(width: 24)
             Text(title).foregroundStyle(Color.primary)
             Spacer(minLength: 8)
-            if !value.isEmpty { Text(value).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.trailing) }
-            if chevron { Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary) }
+            if !value.isEmpty { Text(value).font(.subheadline).foregroundStyle(Color.secondary).multilineTextAlignment(.trailing) }
+            if chevron { Image(systemName: "chevron.right").font(.caption).foregroundStyle(Color.secondary) }
         }.frame(minHeight: 48).contentShape(Rectangle())
     }
 }
@@ -3057,10 +3065,10 @@ struct AccountSettingsRow: View {
     @ObservedObject var community: CommunityStore
     var body: some View {
         if let user = community.user {
-            Text(user.email ?? "").font(.subheadline).foregroundStyle(.secondary)
+            Text(user.email ?? "").font(.subheadline).foregroundStyle(Color.secondary)
             Button { Task { _ = await community.signOut() } } label: { SettingsRow(title: store.t("Sign out", "登出"), icon: "rectangle.portrait.and.arrow.right") }.disabled(community.busy)
         } else {
-            Text(store.t("Local preview", "本機預覽")).foregroundStyle(.secondary)
+            Text(store.t("Local preview", "本機預覽")).foregroundStyle(Color.secondary)
         }
     }
 }
@@ -3073,7 +3081,7 @@ struct LanguageSettingsView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 24) {
                 Text(store.t("Choose your language", "選擇語言")).font(.title2.bold())
-                Text(store.t("Changes the app’s text. Your notes stay as you wrote them.", "更改應用程式文字，你的記錄會保留原文。")).foregroundStyle(.secondary)
+                Text(store.t("Changes the app’s text. Your notes stay as you wrote them.", "更改應用程式文字，你的記錄會保留原文。")).foregroundStyle(Color.secondary)
                 VStack(spacing: 12) {
                     ForEach(AppLanguage.allCases) { language in
                         Button { selected = language } label: {
@@ -3145,17 +3153,17 @@ struct SettingsDataView: View {
                 Button(store.t("Export all local data", "匯出所有本機資料")) { exportData() }
                     .accessibilityIdentifier("exportLocalData")
                 Text(store.t("The export includes your profile, observations and questionnaire answers. Choose where to save or share it.", "匯出內容包含檔案、觀察及問卷答案。請自行選擇儲存或分享位置。"))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(Color.secondary)
             }
             NativeBackupControls()
             Section(store.t("AI sharing", "與 AI 分享")) {
                 Label(store.t("AI is not connected", "AI 尚未連接"), systemImage: "lock.shield")
                 Text(store.t("Questions and records are not sent to an AI service. Sharing controls will be available when the service is connected.", "問題及記錄不會傳送至 AI 服務。連接服務後才會提供分享控制。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Color.secondary)
             }
             Section(store.t("Device storage", "裝置儲存")) {
                 Text(store.t("Records use iOS file protection and are excluded from device backups. Deleting the app or losing this device may lose your records. Export a copy you want to keep.", "記錄使用 iOS 檔案保護，並不包含於裝置備份。刪除應用程式或遺失裝置可能導致記錄遺失。請匯出需要保留的副本。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Color.secondary)
                 Button(store.t("Delete all local data", "刪除所有本機資料"), role: .destructive) { deleting = true }
                     .accessibilityIdentifier("deleteLocalData")
             }
@@ -3189,7 +3197,7 @@ struct SettingsInformationView: View {
     private func paragraph(_ title: String, _ zhTitle: String, _ body: String, _ zhBody: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(store.t(title, zhTitle)).font(.headline).accessibilityAddTraits(.isHeader)
-            Text(store.t(body, zhBody)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(store.t(body, zhBody)).foregroundStyle(Color.secondary).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
     var body: some View {
@@ -3223,7 +3231,7 @@ struct SettingsInformationView: View {
                     paragraph("CareVoice", "CareVoice", "A place to record everyday observations, prepare for conversations and find service information while caring for your child.", "照顧孩子時，記錄日常觀察、準備溝通內容及尋找服務資訊的地方。")
                     paragraph("Our role", "我們的角色", "CareVoice does not diagnose, screen for ASD, infer severity or replace professional advice.", "CareVoice 不提供診斷、自閉症篩查或嚴重程度判斷，亦不取代專業意見。")
                     Text(store.t("Version", "版本") + " " + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"))
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(Color.secondary)
                 default: EmptyView()
                 }
             }.padding(24).frame(maxWidth: 600).frame(maxWidth: .infinity)
@@ -3269,7 +3277,7 @@ struct CareVoiceSurveyReview: View {
         ("professionalFollowUp", "Seeking a referral", "尋求專業轉介", "bubble.left"),
         ("awaitingAssessment", "Awaiting assessment", "等候評估", "clock"),
         ("assessed", "Assessment completed", "已完成評估", "doc.text"),
-        ("registered", "Registered in the queue", "已登記中央輪候", "checkmark.clipboard"),
+        ("registered", "Registered in the queue", "已登記中央輪候", "checklist"),
         ("waitingSupport", "Support while waiting", "輪候期間支援", "heart"),
         ("receivingServices", "Allocated a service", "已獲編配服務", "person.2")
     ]

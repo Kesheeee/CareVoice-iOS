@@ -85,6 +85,7 @@ struct QuestionnaireView: View {
                     NavigationLink(store.t("Explore next steps", "查看下一步")) { NavigatorView() }.buttonStyle(.borderedProminent)
                 } else {
                     let q = store.questions[index]
+                    if store.data.needsSafetyRouting { SafetyGuidance() }
                     HStack {
                         Text(store.t("Question \(index + 1) of \(store.questions.count)", "第 \(index + 1) 題，共 \(store.questions.count) 題")).font(.subheadline.weight(.semibold))
                         Spacer()
@@ -110,7 +111,6 @@ struct QuestionnaireView: View {
                             }.accessibilityIdentifier("answer-\(answer.rawValue)")
                         }
                     }
-                    if (q.id == 132 || q.id == 133), store.data.answers[q.id] == .yes || store.data.answers[q.id] == .unsure { SafetyGuidance() }
                     if q.id == 131, store.data.answers[q.id] == .yes || store.data.answers[q.id] == .unsure {
                         TextField(store.t("When did you notice this? (optional)", "何時留意到？（選填）"), text: Binding(get: { store.data.regressionWhen?[q.id] ?? "" }, set: { value in store.update { if $0.regressionWhen == nil { $0.regressionWhen = [:] }; $0.regressionWhen?[q.id] = value } })).textFieldStyle(.roundedBorder)
                     }
@@ -132,6 +132,7 @@ struct QuestionnaireView: View {
         .sheet(isPresented: $followUp) { NavigationStack { ScrollView { FollowUpCard().padding(24) }.toolbar { Button(store.t("Done", "完成")) { followUp = false } } }.presentationDetents([.medium, .large]) }
         .onChange(of: index) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
         .onChange(of: summary) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
+        .onChange(of: store.data.needsSafetyRouting) { _, value in if value { scroll.scrollTo("questionTop", anchor: .top) } }
         }
     }
     private func advance() { if index < store.questions.count - 1 { index += 1 } else { summary = true } }

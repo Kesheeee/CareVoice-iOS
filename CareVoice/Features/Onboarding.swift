@@ -24,6 +24,13 @@ struct ProfileEditor: View {
                 }
             } header: { Text(store.t("Where are you now?", "你目前在哪個階段？")) }
             footer: { Text(store.t("Choose your current situation. You can change it any time. This is not a clinical level.", "選擇目前的情況，之後可隨時更改。這不是臨床嚴重程度。")) }
+            if profile.stage == .diagnosed {
+                Section(store.t("Details from your report (optional)", "報告資料（選填）")) {
+                    TextField(store.t("Diagnosing organisation", "診斷機構"), text: Binding(get: { profile.diagnosingBody ?? "" }, set: { profile.diagnosingBody = $0 }))
+                    TextField(store.t("Report date", "報告日期"), text: Binding(get: { profile.diagnosisDate ?? "" }, set: { profile.diagnosisDate = $0 }))
+                    TextField(store.t("Support level (copied from report)", "支援程度（照報告填寫）"), text: Binding(get: { profile.reportedSupportLevel ?? "" }, set: { profile.reportedSupportLevel = $0 }))
+                }
+            }
             Section(store.t("Your first observations", "最初的觀察")) {
                 DatePicker(store.t("First noticed", "首次留意日期"), selection: $profile.firstConcernDate, in: ...Date(), displayedComponents: .date)
                 TextField(store.t("What prompted you? (optional)", "甚麼令你開始留意？（選填）"), text: $profile.concernNotes, axis: .vertical).lineLimit(3...6)

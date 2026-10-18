@@ -36,7 +36,7 @@ struct CareVoiceSurveyReview: View {
         ("professionalFollowUp", "Seeking a referral", "尋求專業轉介", "bubble.left"),
         ("awaitingAssessment", "Awaiting assessment", "等候評估", "clock"),
         ("assessed", "Assessment completed", "已完成評估", "doc.text"),
-        ("registered", "Registered in the queue", "已登記中央輪候", "checkmark.clipboard"),
+        ("registered", "Registered in the queue", "已登記中央輪候", "checklist"),
         ("waitingSupport", "Support while waiting", "輪候期間支援", "heart"),
         ("receivingServices", "Allocated a service", "已獲編配服務", "person.2")
     ]

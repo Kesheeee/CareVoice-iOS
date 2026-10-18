@@ -22,7 +22,7 @@ struct ResourcesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 0) {
                     resource("Child Assessment Service (CAS)", "兒童體能智力測驗服務（CAS）", "stethoscope", "https://www.dhcas.gov.hk/en/faq.html", chinese: "https://www.dhcas.gov.hk/tc/faq.html")
                     Divider()
@@ -32,13 +32,13 @@ struct ResourcesView: View {
                     Divider()
                     resource("Central referral system (CRSRS)", "康復服務中央轉介系統", "building.2", "https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/", chinese: "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_crsrehab/centralref/", health: false)
                 }.background(.white, in: RoundedRectangle(cornerRadius: 22))
-                Text(store.t("Support for parents", "家長資源")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Text(store.t("Support for parents", "家長資源")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 0) {
                     resource("Maternal & Child Health Centres", "母嬰健康院", "figure.and.child.holdinghands", "https://www.dh.gov.hk/english/main/main_fhs/main_fhs.html")
                     Divider()
                     resource("On-site pre-school support", "到校學前支援", "building.2", "https://www.swd.gov.hk/oprs/index_en.htm", health: false)
                 }.background(.white, in: RoundedRectangle(cornerRadius: 22))
-                Text(store.t("Common questions", "常見問題")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                Text(store.t("Common questions", "常見問題")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 20) {
                     DisclosureGroup(store.t("Where can I discuss my concerns?", "有疑問可以搵邊個？")) {
                         Text(store.t("Start with your family doctor or Maternal & Child Health Centre. They can discuss your observations and whether a referral is needed.", "可以先同家庭醫生或母嬰健康院傾吓你的觀察，以及是否需要轉介。")).padding(.top, 12)
@@ -62,7 +62,7 @@ struct ResourcesView: View {
                 Image(systemName: icon).font(.title3).foregroundStyle(Brand.blue).frame(width: 26)
                 VStack(alignment: .leading, spacing: 5) {
                     Text(store.t(en, zh)).font(.subheadline.weight(.semibold)).foregroundStyle(Color.primary)
-                    Text(health ? store.t("Department of Health", "衛生署") : store.t("Social Welfare Department", "社會福利署")).font(.caption).foregroundStyle(.secondary)
+                    Text(health ? store.t("Department of Health", "衛生署") : store.t("Social Welfare Department", "社會福利署")).font(.caption).foregroundStyle(Color.secondary)
                 }
                 Spacer(minLength: 4)
                 Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(Brand.blue)
@@ -80,10 +80,10 @@ struct ResourceCard: View {
                 HStack {
                     Image(systemName: resource.icon).foregroundStyle(Brand.blue).font(.title2)
                     Spacer()
-                    Image(systemName: "arrow.up.right").foregroundStyle(.secondary)
+                    Image(systemName: "arrow.up.right").foregroundStyle(Color.secondary)
                 }
                 Text(store.t(resource.titleEN, resource.titleZH)).font(.headline).foregroundStyle(.primary)
-                Text(store.t(resource.detailEN, resource.detailZH)).font(.subheadline).foregroundStyle(.secondary)
+                Text(store.t(resource.detailEN, resource.detailZH)).font(.subheadline).foregroundStyle(Color.secondary)
                 Text(resource.url.contains("dhcas") ? store.t("DEPARTMENT OF HEALTH", "衛生署") : store.t("SOCIAL WELFARE DEPARTMENT", "社會福利署"))
                     .font(.caption2.weight(.semibold)).tracking(0.7).foregroundStyle(Brand.teal)
             }
@@ -101,7 +101,7 @@ struct NavigatorView: View {
                     Card {
                         Label(store.t("YOUR CURRENT STAGE", "目前階段"), systemImage: "safari").font(.caption.weight(.bold)).foregroundStyle(Brand.teal)
                         Text(profile.stage.title(store.language)).font(.title2.bold())
-                        Text(profile.stage.nextStep(store.language)).foregroundStyle(.secondary)
+                        Text(profile.stage.nextStep(store.language)).foregroundStyle(Color.secondary)
                         Button(store.t("Update my stage", "更新目前階段")) { editing = true }
                     }
                     SectionHeading(title: store.t("A manageable next step", "一步一步來"))
@@ -118,7 +118,7 @@ struct NavigatorView: View {
                         }.buttonStyle(.plain).accessibilityValue(done ? store.t("Completed", "已完成") : store.t("Not completed", "尚未完成"))
                     }
                     Text(store.t("This is your personal checklist. Ticking a step does not register you for a service or change an official waiting list.", "這是你的個人清單。勾選項目不代表已登記服務，亦不會更改官方輪候狀況。"))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(Color.secondary)
                     SectionHeading(title: store.t("Official guidance", "官方指引"))
                     ResourceCard(resource: OfficialResource.all[profile.stage == .noticed || profile.stage == .professionalFollowUp ? 0 : profile.stage == .awaitingAssessment ? 1 : 3])
                     NavigationLink(store.t("See all resources", "查看所有資源")) { ResourcesView() }

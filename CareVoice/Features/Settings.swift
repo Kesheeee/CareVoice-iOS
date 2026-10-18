@@ -59,7 +59,7 @@ struct SettingsView: View {
             }
             Section {
                 DisclosureGroup(store.t("Privacy & storage", "私隱同儲存")) {
-                    Text(store.t("Your child’s records stay on this device, protected by iOS. They are not synced to your account or included in device backups. Export a backup before changing devices or deleting the app.", "孩子的記錄受 iOS 保護並保留於此裝置，不會同步至帳戶或包括在裝置備份內。更換裝置或刪除應用程式前請匯出備份。")).font(.subheadline).foregroundStyle(.secondary)
+                    Text(store.t("Your child’s records stay on this device, protected by iOS. They are not synced to your account or included in device backups. Export a backup before changing devices or deleting the app.", "孩子的記錄受 iOS 保護並保留於此裝置，不會同步至帳戶或包括在裝置備份內。更換裝置或刪除應用程式前請匯出備份。")).font(.subheadline).foregroundStyle(Color.secondary)
                 }
             }
         }.scrollContentBackground(.hidden).background(Brand.background)
@@ -83,8 +83,8 @@ struct SettingsRow: View {
             Image(systemName: icon).font(.title3).foregroundStyle(Brand.blue).frame(width: 24)
             Text(title).foregroundStyle(Color.primary)
             Spacer(minLength: 8)
-            if !value.isEmpty { Text(value).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.trailing) }
-            if chevron { Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary) }
+            if !value.isEmpty { Text(value).font(.subheadline).foregroundStyle(Color.secondary).multilineTextAlignment(.trailing) }
+            if chevron { Image(systemName: "chevron.right").font(.caption).foregroundStyle(Color.secondary) }
         }.frame(minHeight: 48).contentShape(Rectangle())
     }
 }
@@ -94,10 +94,10 @@ struct AccountSettingsRow: View {
     @ObservedObject var community: CommunityStore
     var body: some View {
         if let user = community.user {
-            Text(user.email ?? "").font(.subheadline).foregroundStyle(.secondary)
+            Text(user.email ?? "").font(.subheadline).foregroundStyle(Color.secondary)
             Button { Task { _ = await community.signOut() } } label: { SettingsRow(title: store.t("Sign out", "登出"), icon: "rectangle.portrait.and.arrow.right") }.disabled(community.busy)
         } else {
-            Text(store.t("Local preview", "本機預覽")).foregroundStyle(.secondary)
+            Text(store.t("Local preview", "本機預覽")).foregroundStyle(Color.secondary)
         }
     }
 }
@@ -110,7 +110,7 @@ struct LanguageSettingsView: View {
         NavigationStack {
             VStack(alignment: .leading, spacing: 24) {
                 Text(store.t("Choose your language", "選擇語言")).font(.title2.bold())
-                Text(store.t("Changes the app’s text. Your notes stay as you wrote them.", "更改應用程式文字，你的記錄會保留原文。")).foregroundStyle(.secondary)
+                Text(store.t("Changes the app’s text. Your notes stay as you wrote them.", "更改應用程式文字，你的記錄會保留原文。")).foregroundStyle(Color.secondary)
                 VStack(spacing: 12) {
                     ForEach(AppLanguage.allCases) { language in
                         Button { selected = language } label: {
@@ -182,17 +182,17 @@ struct SettingsDataView: View {
                 Button(store.t("Export all local data", "匯出所有本機資料")) { exportData() }
                     .accessibilityIdentifier("exportLocalData")
                 Text(store.t("The export includes your profile, observations and questionnaire answers. Choose where to save or share it.", "匯出內容包含檔案、觀察及問卷答案。請自行選擇儲存或分享位置。"))
-                    .font(.footnote).foregroundStyle(.secondary)
+                    .font(.footnote).foregroundStyle(Color.secondary)
             }
             NativeBackupControls()
             Section(store.t("AI sharing", "與 AI 分享")) {
                 Label(store.t("AI is not connected", "AI 尚未連接"), systemImage: "lock.shield")
                 Text(store.t("Questions and records are not sent to an AI service. Sharing controls will be available when the service is connected.", "問題及記錄不會傳送至 AI 服務。連接服務後才會提供分享控制。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Color.secondary)
             }
             Section(store.t("Device storage", "裝置儲存")) {
                 Text(store.t("Records use iOS file protection and are excluded from device backups. Deleting the app or losing this device may lose your records. Export a copy you want to keep.", "記錄使用 iOS 檔案保護，並不包含於裝置備份。刪除應用程式或遺失裝置可能導致記錄遺失。請匯出需要保留的副本。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.subheadline).foregroundStyle(Color.secondary)
                 Button(store.t("Delete all local data", "刪除所有本機資料"), role: .destructive) { deleting = true }
                     .accessibilityIdentifier("deleteLocalData")
             }
@@ -226,7 +226,7 @@ struct SettingsInformationView: View {
     private func paragraph(_ title: String, _ zhTitle: String, _ body: String, _ zhBody: String) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text(store.t(title, zhTitle)).font(.headline).accessibilityAddTraits(.isHeader)
-            Text(store.t(body, zhBody)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            Text(store.t(body, zhBody)).foregroundStyle(Color.secondary).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
     var body: some View {
@@ -260,7 +260,7 @@ struct SettingsInformationView: View {
                     paragraph("CareVoice", "CareVoice", "A place to record everyday observations, prepare for conversations and find service information while caring for your child.", "照顧孩子時，記錄日常觀察、準備溝通內容及尋找服務資訊的地方。")
                     paragraph("Our role", "我們的角色", "CareVoice does not diagnose, screen for ASD, infer severity or replace professional advice.", "CareVoice 不提供診斷、自閉症篩查或嚴重程度判斷，亦不取代專業意見。")
                     Text(store.t("Version", "版本") + " " + (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"))
-                        .font(.footnote).foregroundStyle(.secondary)
+                        .font(.footnote).foregroundStyle(Color.secondary)
                 default: EmptyView()
                 }
             }.padding(24).frame(maxWidth: 600).frame(maxWidth: .infinity)
