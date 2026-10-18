@@ -31,7 +31,7 @@ def ask(req: AskRequest) -> AskResponse:
         raw = llm.complete(messages)
     except Exception as exc:  # noqa: BLE001 - surface provider errors to the client
         logger.exception("LLM call failed")
-        raise HTTPException(status_code=502, detail=f"LLM error: {exc}") from exc
+        raise HTTPException(status_code=502, detail="AI service temporarily unavailable") from exc
 
     # 4. Validate returned ids against the directory; build cited suggestions.
     suggestions = prompt.parse_suggestions(raw, req.language)

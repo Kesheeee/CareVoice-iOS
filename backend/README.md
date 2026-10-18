@@ -54,3 +54,15 @@ curl -F "audio=@clip.wav" -F "language=en-US" localhost:8000/transcribe
   exports, per the data-layer contract). It never touches `phase1.db`.
 - All fields carry both `*_tc` and `*_en`; language selection is the client's job.
 - `backend/data/` and `backend/.venv/` are gitignored.
+
+## Ask CareVoice
+
+`POST /ask` accepts `message` and `language`. It uses DeepSeek through its
+OpenAI-compatible API and resolves suggestion IDs against the local directory.
+Set `LLM_API_KEY` only on the backend. `LLM_BASE_URL` defaults to
+https://api.deepseek.com and `LLM_MODEL` to deepseek-chat.
+
+For the mobile web build, set `VITE_BACKEND_URL` to the deployed HTTPS backend
+address and rebuild. Local development defaults to localhost:8000; production
+shows an unavailable state when the URL is missing. Provider requests time out
+rather than leaving the composer busy indefinitely.

@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from 'react';
 import {ArrowLeft, Send, Share2, MessageCircle, ExternalLink} from 'lucide-react';
 import {translator} from '../i18n';
 import type {Language} from '../domain';
-import {ask, type AskResponse} from '../platform/ask';
+import {ask, isAskConfigured, type AskResponse} from '../platform/ask';
 
 type Turn = { user: string; response: AskResponse | null; loading: boolean; error: boolean };
 
@@ -22,7 +22,7 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
 
   const submit=async(text:string)=>{
     const message=text.trim();
-    if(!message||busy)return;
+    if(!message||busy||!isAskConfigured)return;
     setInput('');setBusy(true);
     setTurns(prev=>[...prev,{user:message,response:null,loading:true,error:false}]);
     try{
@@ -48,7 +48,8 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
     </div> : <>
       <div className="care-chat-messages" role="log" aria-label={t('Conversation','對話')} aria-live="polite">
         {!turns.length && <div className="care-chat-intro"><span aria-hidden="true">💬</span><h3>{t('What’s on your mind?','今天想聊聊甚麼？')}</h3></div>}
-        {!turns.length && <div className="care-chat-prompts">{prompts.map(prompt=><button key={prompt} onClick={()=>submit(prompt)}>{prompt}</button>)}</div>}
+        {!isAskConfigured && <p role="status">{t('AI chat is not connected yet. You can still ask parents in Community.','AI 對話尚未連接，你仍可在社區向其他家長提問。')}</p>}
+        {!turns.length && <div className="care-chat-prompts">{prompts.map(prompt=><button key={prompt} disabled={!isAskConfigured||busy} onClick={()=>submit(prompt)}>{prompt}</button>)}</div>}
         {turns.map((turn,i)=><div className="care-chat-turn" key={i}>
           <div className="care-chat-user"><small>{t('You','你')}</small><p>{turn.user}</p></div>
           {turn.loading ? <div className="care-chat-reply"><p>{t('Thinking…','思考中……')}</p></div>
@@ -73,7 +74,7 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
       </div>
       <footer className="care-chat-footer">
         {turns.length>0 && <button className="care-chat-share" onClick={()=>{setPost(turns[0]?.user||'');setConsent(false);setSharing(true);}}><Share2 size={17}/>{t('Share a question with parents','與其他家長分享問題')}</button>}
-        <form onSubmit={e=>{e.preventDefault();submit(input);}}><textarea aria-label={t('Message','訊息')} placeholder={t('Describe what happened, what came before, and what helped…','描述發生咗咩事、之前嘅情況，同埋有咩方法幫到手……')} rows={2} maxLength={2000} value={input} disabled={busy} onChange={e=>setInput(e.target.value)}/><button aria-label={t('Send message','傳送訊息')} disabled={!input.trim()||busy}><Send size={22}/></button></form>
+        <form onSubmit={e=>{e.preventDefault();submit(input);}}><textarea aria-label={t('Message','訊息')} placeholder={t('Describe what happened, what came before, and what helped…','描述發生咗咩事、之前嘅情況，同埋有咩方法幫到手……')} rows={2} maxLength={2000} value={input} disabled={busy||!isAskConfigured} onChange={e=>setInput(e.target.value)}/><button aria-label={t('Send message','傳送訊息')} disabled={!input.trim()||busy||!isAskConfigured}><Send size={22}/></button></form>
       </footer>
     </>}
   </dialog>;

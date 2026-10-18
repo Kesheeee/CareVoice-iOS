@@ -69,8 +69,12 @@ def parse_suggestions(raw: str, language: str) -> list[Suggestion]:
     except Exception:
         return []
     items = data.get("suggestions", []) if isinstance(data, dict) else []
+    if not isinstance(items, list):
+        return []
     result: list[Suggestion] = []
     for it in items[:5]:
+        if not isinstance(it, dict):
+            continue
         sid = str(it.get("id", "")).strip()
         why = str(it.get("why", "")).strip()
         entry = _lookup(sid, en)
