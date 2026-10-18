@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic>=2
+httpx
+pydub
+python-multipart
+python-dotenv
+openai

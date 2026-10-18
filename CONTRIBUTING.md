@@ -13,7 +13,7 @@
 | `CareVoice/SpeechRecorder.swift` | Apple on-device speech recognition lifecycle |
 | `CareVoice/Features/Resources.swift` | Official sources and stage-specific checklists |
 | `CareVoice/Features/ReportsAndProfile.swift` | PDF generation, share sheet and settings |
-| `CareVoice/Resources/questions.json` | 30 bilingual observation prompts |
+| `CareVoice/Resources/questions.json` | 33 bilingual observation prompts, copied from mobile/src/questions.json |
 | `Tests/CareVoiceCoreTests` | Domain tests run by `swift test` |
 | `CareVoiceUITests` | Simulator flows run by Xcode Test |
 
@@ -34,7 +34,7 @@ The generator is deterministic. Commit both the new file and project change. If 
 - Run `swift test` for domain changes.
 - Build the app for a simulator after SwiftUI or resource changes.
 - Run `CareVoiceUITests` for user-flow changes. Find device names with `xcrun simctl list devices available`.
-- Check both languages, Dynamic Type, light/dark appearance, VoiceOver labels, empty states and cancel/error flows.
+- Check all three languages, Dynamic Type, light/dark appearance, VoiceOver labels, empty states and cancel/error flows.
 - Voice recognition needs a real-device test for each supported locale. Never silently fall back to server recognition.
 - Every new observation question needs a stable ID; do not renumber stored answers without a migration.
 - Any change to persisted data needs a version/migration strategy and round-trip tests.
@@ -46,8 +46,12 @@ One feature branch per change; pull requests into `main`; review each other's ch
 
 ## Privacy
 
-The checked-in app contains no credentials. Never add a live API key to an iOS client. A future server-backed integration needs explicit data consent, access controls and server-held credentials. The current MVP has no server dependency.
+Never add secret credentials or provider API keys to the iOS client. A future server-backed integration needs explicit data consent, access controls and server-held credentials. The current app uses a public Supabase publishable key for account authentication; no service-role key belongs in either client.
 
 ## Optional GitHub Actions
 
 `docs/ios-ci.yml` is a ready-to-use build/core-test workflow template. To activate it, an owner can copy it to `.github/workflows/ios.yml` using GitHub's file editor or push it with a credential that has workflow permission. It is supplied as a template because the uploader's existing Git credential does not have that scope.
+
+## Keeping the two clients aligned
+
+Read `docs/SWIFT_PARITY.md` before changing shared product behavior. After editing native sources or resources, run `python scripts/generate_project.py` and `python scripts/sync_swift_review.py`. CI rejects stale generated review files and mismatched question/media resources. Do not edit the review Swift files directly.

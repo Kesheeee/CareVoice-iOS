@@ -1,0 +1,10 @@
+project_id = "carevoice"
+
+[functions.transcribe]
+verify_jwt = true
+
+[functions.anonymous-qna]
+verify_jwt = true
+
+[functions.ask-carevoice]
+verify_jwt = true

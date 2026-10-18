@@ -1,59 +1,169 @@
-# CareVoice for iOS
+# CareVoice
 
-A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English and Traditional Chinese. Based on the UI+UX_1013 design pack, with the onboarding guidance taking precedence over the mockup's conflicting score screen.
+**Everyday moments. A clearer care story.**
 
-<img src="docs/screenshots/home-traditional-chinese.png" alt="CareVoice home screen in Traditional Chinese, running on the iPhone simulator" width="300">
+CareVoice helps parents and caregivers of young children with special educational needs record daily observations, prepare for appointments, find Hong Kong service information, and connect with other parents.
 
-## Run it
+**[Open CareVoice](https://carevoice-preview-zeta.vercel.app)** · **[Latest web app source](https://github.com/Kesheeee/CareVoice-iOS/tree/feature/mobile-web)**
 
-1. Clone this **private** repository after accepting your collaborator invitation:
-   ```sh
-   git clone https://github.com/Kesheeee/CareVoice-iOS.git
-   cd CareVoice-iOS
-   ```
-2. Open `CareVoice.xcodeproj` in Xcode 16 or newer.
-3. Select the **CareVoice** scheme and an iPhone simulator, then press **Run**.
-4. For a physical iPhone, choose your Apple development team under **Signing & Capabilities**. Change the bundle identifier if your team needs a unique identifier. An Apple developer account is not needed for the simulator.
+Track: **Smart Living, Culture & Belonging**
 
-Minimum deployment target: **iOS 17**. No package installation, API key, backend, paid service, or secret configuration is required. The checked-in Xcode project is ready to open.
+## What you can do
 
-## What works
+| Feature | What it does |
+| --- | --- |
+| Daily tracker | Add, edit, and search observations; view recorded days and a logging streak. |
+| Voice and audio upload | Record a short note or upload audio, review the transcript, then save it. Supported uploads include MP3, M4A, WAV, AAC, and FLAC, up to 60 seconds and 20 MB. |
+| Observation questionnaire | Answer 33 questions across seven categories, skip questions, and review saved responses without a clinical score. |
+| Ask CareVoice AI | Ask a question and receive a conversational reply with relevant suggestions resolved against the curated Hong Kong service directory. |
+| Anonymous parent Q&A | Publish questions, reply to other parents, report content, and remove your own posts. Your name is hidden from other members. |
+| Appointment reports | Bring observations, questionnaire responses, and questions together for a professional conversation; share text or print to PDF. |
+| Profile and next steps | Update your child profile, choose your care journey stage, and explore relevant checklists and official resources. |
+| Language and backups | Use English, Traditional Chinese, or Simplified Chinese; export and restore local notebook backups. |
 
-- Optional nickname and age, six parent-selected journey stages, first-concern notes.
-- Bilingual home, profile, resources and navigation.
-- All 30 supplied observation questions, autosave, skip, “Not sure”, review and immediate professional-follow-up guidance for reported/uncertain loss of skills.
-- Create/edit/delete timestamped observations; categories, place, duration, context and what helped; search and filters.
-- On-device speech transcription where Apple's recognizer supports the selected locale. Permission and availability failures offer text input. Voice capture stops after 60 seconds or on backgrounding. Audio is not saved.
-- Stage-specific personal checklists linked to official DH/SWD information.
-- Family and appointment report formats, multipage PDF export through the iOS share sheet.
-- Local persistence with iOS complete file protection; no analytics or cloud sync; delete-all control.
+CareVoice is a development MVP. It does not diagnose conditions, calculate clinical risk scores, or replace professional advice. Questionnaire responses do not automatically change a caregiver's selected journey stage.
 
-## Work together
+## Repository and branches
 
-The repository must remain **Private**. The owner can invite your partner at:
-https://github.com/Kesheeee/CareVoice-iOS/settings/access
+This repository is **public**. Anyone can view or clone it; pushing changes requires collaborator access.
 
-Invite their GitHub username as a collaborator with write access. They must accept the invitation before cloning. A repository link alone does not grant access.
-
-Use a branch for each change:
+- **`feature/mobile-web`** contains the current React web app, FastAPI AI backend, Supabase functions, and native iOS sources. Use this branch to work on the deployed web experience.
+- **`main`** contains the earlier native iOS baseline. It does not yet contain the full web/backend implementation.
 
 ```sh
-git switch -c feature/your-feature
-# Edit and test in Xcode
-git add .
-git commit -m "Describe the change"
-git push -u origin feature/your-feature
+git clone --branch feature/mobile-web https://github.com/Kesheeee/CareVoice-iOS.git
+cd CareVoice-iOS
 ```
 
-Open a pull request into `main` and ask your partner to review. See [CONTRIBUTING.md](CONTRIBUTING.md) for the source map and test commands.
+## How it works
 
-## Product boundaries
+```text
+React web app on Vercel
+  ├─ Supabase Auth                       Account sign-in
+  ├─ Local browser storage               Profile, observations, questionnaire
+  ├─ FastAPI on Fly.io → DeepSeek         AI replies and directory suggestions
+  ├─ Supabase transcribe → Azure Speech   Audio-to-text
+  └─ Supabase anonymous-qna → Postgres    Shared questions and replies
+```
 
-This is a working development MVP, not a clinically validated screening tool or an App Store release. It produces no risk score, severity level, diagnosis or automated clinical interpretation. A journey stage comes only from the caregiver's selection. Related records are grouped by the chosen category, not AI inference.
+The current web chat uses **FastAPI**, not the alternative `ask-carevoice` Supabase function retained in this repository. Voice transcription and parent Q&A use Supabase Edge Functions.
 
-The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. Backend accounts, family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
+| Path | Purpose |
+| --- | --- |
+| `mobile/` | React, TypeScript, Vite, and Capacitor configuration |
+| `backend/` | FastAPI routes, curated JSON directory, and AI integration |
+| `supabase/functions/` | Transcription, anonymous Q&A, and alternative AI function |
+| `supabase/migrations/` | Community database schema and access controls |
+| `CareVoice/` | Native SwiftUI app |
+| `CareVoice.xcodeproj` | Xcode project |
+| `Tests/` and `CareVoiceUITests/` | Native domain and UI tests |
+| `docs/` | Setup, validation, and implementation notes |
+| `scripts/` | Native project and review-file generators |
 
-## Verification
+## Run the web app
+
+Use Node.js 22.18+ or Node.js 24 and npm. The current development build uses Node.js 24.
+
+```sh
+cd mobile
+npm ci
+```
+
+Copy `mobile/.env.example` to `mobile/.env.local` and set the public backend address:
+
+```dotenv
+# Local FastAPI server:
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+For an authorized test against the shared deployed backend, use `https://backend-silent-pebble-1702.fly.dev` instead. Never put provider API keys in a `VITE_` variable: these values are included in the browser bundle.
+
+```sh
+npm run dev
+```
+
+Open the URL printed by Vite, normally `http://localhost:5173`. Microphone capture needs localhost or HTTPS; a plain HTTP LAN address on a phone is insufficient.
+
+The web client currently points to the shared CareVoice Supabase project in `mobile/src/platform/auth.ts`. To run an independent installation, replace that public URL and publishable key with your own project configuration, deploy its functions and migrations, and configure Auth redirect URLs. Do not use a service-role key in the client.
+
+See the [web development guide](https://github.com/Kesheeee/CareVoice-iOS/blob/feature/mobile-web/mobile/README.md).
+
+## Run the AI backend
+
+Python 3.12 matches the container configuration.
+
+```sh
+cd backend
+python -m venv .venv
+# macOS/Linux:
+source .venv/bin/activate
+# Windows PowerShell instead:
+# .venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+```
+
+Copy `backend/.env.example` to `backend/.env` and configure `LLM_API_KEY` on the server. The default provider is DeepSeek, with `LLM_BASE_URL=https://api.deepseek.com` and `LLM_MODEL=deepseek-chat`.
+
+```sh
+uvicorn app.main:app --reload --port 8000
+```
+
+- Health: `http://localhost:8000/health`
+- Interactive API docs: `http://localhost:8000/docs`
+- AI endpoint: `POST /ask` with `message` and `language`
+
+The checked-in `backend/data/` JSON files supply the directory and citations. These are snapshots, not a live waiting-list feed. See the [backend guide](https://github.com/Kesheeee/CareVoice-iOS/blob/feature/mobile-web/backend/README.md) for endpoints, data updates, and deployment.
+
+## Supabase services
+
+The web app uses Supabase for accounts, shared Q&A, and the voice transcription gateway. Personal tracker records are still local; signing in on another device does not sync them.
+
+- [Voice transcription setup](https://github.com/Kesheeee/CareVoice-iOS/blob/feature/mobile-web/supabase/functions/transcribe/README.md): keep `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` in Edge Function secrets. Audio goes to Azure Speech through the authenticated function; the function does not save audio or transcripts to a table or bucket.
+- [Anonymous Q&A setup](https://github.com/Kesheeee/CareVoice-iOS/blob/feature/mobile-web/supabase/functions/anonymous-qna/README.md): apply the Q&A migration and deploy the authenticated function. Anonymity is relative to other parents, not administrators. Moderation is manual.
+- [Account and native community notes](https://github.com/Kesheeee/CareVoice-iOS/blob/feature/mobile-web/docs/COMMUNITY_SETUP.md): check the actual project's email confirmation, SMTP, and redirect configuration when setting up an installation.
+
+## Deploy
+
+### Web app → Vercel
+
+Set `VITE_BACKEND_URL` to the deployed HTTPS API address **before building**. Vite embeds it at build time; changing a hosting variable after uploading an existing bundle does not update that bundle.
+
+From `mobile/`:
+
+```sh
+npm run build
+cd dist
+npx vercel link --project carevoice-preview --scope kesheeees-projects
+npx vercel deploy --prod --scope kesheeees-projects
+```
+
+Those project/team names are for authorized CareVoice maintainers. Forks should link their own project. The build output is `mobile/dist`. Keep `.env` files, tokens, and `.vercel` files out of commits.
+
+### AI backend → Fly.io
+
+`backend/fly.toml` targets the existing CareVoice API app. Configure provider secrets in Fly.io, then run `fly deploy` from `backend/` with an authorized account. For your own installation, create your own Fly app and update the app name first. Check `/health` and a synthetic `/ask` request after deployment.
+
+The backend's allowed browser origins are in `backend/app/config.py`. Add a new frontend origin there when changing domains. Frontend and backend are separate deployments; publishing one does not publish the other.
+
+## Native iOS
+
+On macOS, open `CareVoice.xcodeproj` in Xcode 16 or newer, select the **CareVoice** scheme and an iPhone simulator, and run. Minimum target: **iOS 17**. A physical iPhone requires signing with your Apple development team.
+
+The native app uses SwiftUI and Apple's speech recognition. Web and native feature parity is not complete; do not assume the web AI and audio-upload integrations are available in SwiftUI. See the [parity notes](https://github.com/Kesheeee/CareVoice-iOS/blob/feature/mobile-web/docs/SWIFT_PARITY.md).
+
+## Checks
+
+From the repository root:
+
+```sh
+npm --prefix mobile run build
+npm --prefix mobile test
+node --experimental-strip-types --test mobile/tests/audio-upload.test.ts mobile/tests/streak.test.ts mobile/tests/transcribe.test.ts
+```
+
+Browser tests live in `mobile/tests/browser/`. Start the web development server separately, then run `npx playwright test` from `mobile/` after installing Playwright's Chromium browser. Some tests target earlier preview behavior and may need updating as integrations change. Mocked browser tests do not establish that production provider credentials work.
+
+For native changes on macOS:
 
 ```sh
 swift test
@@ -62,16 +172,30 @@ xcodebuild -project CareVoice.xcodeproj -scheme CareVoice \
   CODE_SIGNING_ALLOWED=NO build
 ```
 
-For UI tests, choose an available iPhone simulator and run **Product → Test** in Xcode. The UI tests use a separate local file and synthetic observations. Test results include screenshots. See [docs/VALIDATION.md](docs/VALIDATION.md) for the actual checks run on the initial version.
+Test microphone capture, permissions, uploads, and PDF sharing on real devices before a release.
 
-## Source materials and official links
+## Data and current limitations
 
-The questionnaire content is adapted from the supplied UI+UX_1013 English/Traditional Chinese question lists. The original DOCX, HTML and image pack are not included; the implementation and reconciliation notes are included.
+- Personal web notebooks are stored per account in the current browser and origin. Browser storage is not encrypted by CareVoice; clearing it can remove records. Export a JSON backup before moving devices.
+- AI questions are sent to the FastAPI backend and its model provider. Tracker history is not automatically attached to a question.
+- Shared Q&A content is stored remotely. Publishing is explicit; remove identifying details before posting.
+- Exported reports and backups are independent copies; deleting app data does not revoke them.
+- The current FastAPI `/ask` route does not enforce Supabase authentication or per-user quotas. Add server-side access and usage controls before a broader rollout.
+- Google/Apple sign-in, automatic family-record sync, clinical diagnosis, and live service availability are not implemented.
 
-- [DH CAS FAQ](https://www.dhcas.gov.hk/en/faq.html)
-- [DH registration and appointments](https://www.dhcas.gov.hk/en/registration_appointment.html)
-- [DH follow-up and referrals](https://www.dhcas.gov.hk/en/management_referral.html)
-- [SWD central referral system](https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/)
-- [SWD on-site pre-school services](https://www.swd.gov.hk/oprs/index_en.htm)
+## Contributing
 
-Links reviewed 15 October 2026. Service eligibility and arrangements must be confirmed with the relevant professional or provider.
+Create a feature branch from the branch you intend to change, keep commits focused, and open a pull request against that same development line. Current web/backend changes target `feature/mobile-web`; coordinate any merge into `main` with the team.
+
+The owner can grant write access through **Settings → Collaborators**. Public visibility allows viewing and cloning, not direct write access. Never commit API keys, `.env` files, or real family records. See [CONTRIBUTING.md](https://github.com/Kesheeee/CareVoice-iOS/blob/feature/mobile-web/CONTRIBUTING.md) for native code conventions.
+
+## Team
+
+| Member | University |
+| --- | --- |
+| Rosario Justin Ram Baluyos | Hong Kong University of Science and Technology |
+| Lo Hei Yiu Queenie | The Chinese University of Hong Kong |
+| Tsai Chiu Yu | Hong Kong University of Science and Technology |
+| Xie Siying | The University of Hong Kong |
+| Ng Hon Kit | The University of Hong Kong |
+| Cao Yuecheng | The University of Hong Kong |

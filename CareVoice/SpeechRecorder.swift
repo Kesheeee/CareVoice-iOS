@@ -22,7 +22,7 @@ final class SpeechRecorder: ObservableObject {
         defer { isStarting = false }
         error = nil
         let sessionID = UUID(); generation = sessionID
-        guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: language == .english ? "en-US" : "zh-HK")), recognizer.isAvailable, recognizer.supportsOnDeviceRecognition else {
+        guard let recognizer = SFSpeechRecognizer(locale: language.speechLocale), recognizer.isAvailable, recognizer.supportsOnDeviceRecognition else {
             error = language.text("On-device speech recognition is unavailable for this language on this device. Please type your observation.", "此裝置暫不支援這個語言的裝置端語音辨識，請使用文字輸入。")
             return
         }

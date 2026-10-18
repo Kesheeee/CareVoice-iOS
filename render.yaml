@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: carevoice-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./backend/Dockerfile
+    plan: free
+    envVars:
+      - key: AZURE_SPEECH_KEY
+        sync: false
+      - key: AZURE_SPEECH_REGION
+        value: eastasia
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        value: https://api.deepseek.com
+      - key: LLM_MODEL
+        value: deepseek-chat

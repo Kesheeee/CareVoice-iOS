@@ -21,48 +21,59 @@ struct ResourcesView: View {
     @EnvironmentObject var store: AppStore
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                Text(store.t("Reliable places to turn.", "找到可靠的支援。"))
-                    .font(.system(.title, design: .rounded).bold())
-                Text(store.t("Official information to explore with the people supporting your family.", "與支援你家庭的專業人士一起了解官方資訊。"))
-                    .foregroundStyle(.secondary)
-
-                SectionHeading(title: store.t("Understand your options", "了解你的選擇"))
-                NavigationLink { ServiceTypesView() } label: { hubCard("square.grid.2x2", store.t("Service types", "服務種類"), store.t("E位・S位・I位・O位・T位 explained", "認識 E位・S位・I位・O位・T位"), Brand.blue) }.buttonStyle(.plain)
-                NavigationLink { ServiceDirectoryView() } label: { hubCard("mappin.and.ellipse", store.t("Find a centre", "服務機構・輪候"), store.t("Centres with waiting times", "中心與輪候時間"), Brand.teal) }.buttonStyle(.plain)
-                NavigationLink { GlossaryView() } label: { hubCard("character.book.closed", store.t("Glossary", "術語對照"), store.t("Decode the jargon", "解讀行話"), .purple) }.buttonStyle(.plain)
-                NavigationLink { CitableFactsView() } label: { hubCard("checkmark.seal", store.t("Cited information", "可引用資料"), store.t("Official statements with sources", "附出處的官方資料"), .orange) }.buttonStyle(.plain)
-
-                SectionHeading(title: store.t("Official websites", "官方網站"))
-                ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
-
-                Card {
-                    Label(store.t("You don’t have to figure it out alone", "不用獨自面對"), systemImage: "heart").font(.headline)
-                    Text(store.t("Ask your social worker or assessment team about family support and available services. Eligibility and arrangements are confirmed by the service provider.", "可向社工或評估團隊了解家庭支援及服務，資格與安排以服務機構確認為準。"))
-                        .font(.subheadline).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 24) {
+                NavigationLink { ParentCommunityView(community: store.community) } label: {
+                    Card {
+                        Label(store.t("Parent conversations", "家長交流"), systemImage: "bubble.left.and.bubble.right").font(.headline).foregroundStyle(Brand.blue)
+                        Text(store.t("Ask a question or share an experience with other parents using your CareVoice account.", "使用你的 CareVoice 帳戶，與其他家長交流問題及經驗。")).font(.subheadline).foregroundStyle(Color.secondary)
+                        Label(store.t("Open conversations", "進入交流"), systemImage: "arrow.right").font(.subheadline.weight(.semibold))
+                    }
+                }.buttonStyle(.plain).accessibilityIdentifier("openParentCommunity")
+                Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
+                VStack(spacing: 0) {
+                    resource("Child Assessment Service (CAS)", "兒童體能智力測驗服務（CAS）", "stethoscope", "https://www.dhcas.gov.hk/en/faq.html", chinese: "https://www.dhcas.gov.hk/tc/faq.html")
+                    Divider()
+                    resource("Assessment registration & appointments", "評估登記及預約", "calendar", "https://www.dhcas.gov.hk/en/registration_appointment.html", chinese: "https://www.dhcas.gov.hk/tc/registration_appointment.html")
+                    Divider()
+                    resource("Follow-up & service referrals", "跟進與服務轉介", "arrow.triangle.branch", "https://www.dhcas.gov.hk/en/management_referral.html", chinese: "https://www.dhcas.gov.hk/tc/management_referral.html")
+                    Divider()
+                    resource("Central referral system (CRSRS)", "康復服務中央轉介系統", "building.2", "https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/", chinese: "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_crsrehab/centralref/", health: false)
+                }.background(.white, in: RoundedRectangle(cornerRadius: 22))
+                Text(store.t("Support for parents", "家長資源")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
+                VStack(spacing: 0) {
+                    resource("Maternal & Child Health Centres", "母嬰健康院", "figure.and.child.holdinghands", "https://www.dh.gov.hk/english/main/main_fhs/main_fhs.html")
+                    Divider()
+                    resource("On-site pre-school support", "到校學前支援", "building.2", "https://www.swd.gov.hk/oprs/index_en.htm", health: false)
+                }.background(.white, in: RoundedRectangle(cornerRadius: 22))
+                Text(store.t("Common questions", "常見問題")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
+                VStack(spacing: 20) {
+                    DisclosureGroup(store.t("Where can I discuss my concerns?", "有疑問可以搵邊個？")) {
+                        Text(store.t("Start with your family doctor or Maternal & Child Health Centre. They can discuss your observations and whether a referral is needed.", "可以先同家庭醫生或母嬰健康院傾吓你的觀察，以及是否需要轉介。")).padding(.top, 12)
+                    }
+                    DisclosureGroup(store.t("Does this questionnaire assess my child?", "這份問卷會評估小朋友嗎？")) {
+                        Text(store.t("No. It records your observations without scores, diagnosis or a suggested clinical level. Only you choose your journey stage.", "不會。問卷只記錄觀察，不會評分、診斷或建議臨床程度。只有你能選擇目前階段。")).padding(.top, 12)
+                    }
+                    DisclosureGroup(store.t("What can I prepare while waiting?", "等候期間可以準備甚麼？")) {
+                        Text(store.t("Keep your observations and questions together. Use your personal checklist and bring a report to your next professional appointment. Confirm service arrangements with your referring professional.", "整理日常觀察和問題，使用個人清單，會面時帶同記錄報告。請向轉介專業人士確認服務安排。")).padding(.top, 12)
+                    }
+                }.padding(20).background(.white, in: RoundedRectangle(cornerRadius: 22))
+                DisclosureGroup(store.t("About these resources", "關於這些資源")) {
+                    Text(store.t("Sources: Department of Health and Social Welfare Department. Service providers confirm eligibility and arrangements. External links open in your browser.", "資料來源：衛生署及社會福利署。服務資格及安排由機構確認，外部連結會在瀏覽器開啟。")).font(.caption).padding(.top, 12)
                 }
-
-                if let fp = store.content.manifest?.contentFingerprint {
-                    Text(store.t("Content data \(fp)", "資料內容 \(fp)"))
-                        .font(.caption2).foregroundStyle(.tertiary)
-                }
-                Text(store.t("Links reviewed 15 October 2026. Official pages may be updated. External links open in your browser.", "連結於 2026 年 10 月 15 日核對。官方網頁內容可能更新，外部連結會在瀏覽器開啟。"))
-                    .font(.caption).foregroundStyle(.secondary)
-            }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
-        }.background(Brand.background).navigationTitle(store.t("Resources", "資源"))
+            }.padding(20)
+        }.background(Brand.background).navigationTitle(store.t("Community", "社區"))
     }
-
-    private func hubCard(_ icon: String, _ title: String, _ subtitle: String, _ color: Color) -> some View {
-        Card {
+    private func resource(_ en: String, _ zh: String, _ icon: String, _ url: String, chinese: String? = nil, health: Bool = true) -> some View {
+        Link(destination: URL(string: store.language == .english ? url : (chinese ?? url))!) {
             HStack(spacing: 14) {
-                Image(systemName: icon).font(.title2).foregroundStyle(color).frame(width: 44, height: 44).background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
+                Image(systemName: icon).font(.title3).foregroundStyle(Brand.blue).frame(width: 26)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(title).font(.headline)
-                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
+                    Text(store.t(en, zh)).font(.subheadline.weight(.semibold)).foregroundStyle(Color.primary)
+                    Text(health ? store.t("Department of Health", "衛生署") : store.t("Social Welfare Department", "社會福利署")).font(.caption).foregroundStyle(Color.secondary)
                 }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
-            }
+                Spacer(minLength: 4)
+                Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(Brand.blue)
+            }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
@@ -76,10 +87,10 @@ struct ResourceCard: View {
                 HStack {
                     Image(systemName: resource.icon).foregroundStyle(Brand.blue).font(.title2)
                     Spacer()
-                    Image(systemName: "arrow.up.right").foregroundStyle(.secondary)
+                    Image(systemName: "arrow.up.right").foregroundStyle(Color.secondary)
                 }
                 Text(store.t(resource.titleEN, resource.titleZH)).font(.headline).foregroundStyle(.primary)
-                Text(store.t(resource.detailEN, resource.detailZH)).font(.subheadline).foregroundStyle(.secondary)
+                Text(store.t(resource.detailEN, resource.detailZH)).font(.subheadline).foregroundStyle(Color.secondary)
                 Text(resource.url.contains("dhcas") ? store.t("DEPARTMENT OF HEALTH", "衛生署") : store.t("SOCIAL WELFARE DEPARTMENT", "社會福利署"))
                     .font(.caption2.weight(.semibold)).tracking(0.7).foregroundStyle(Brand.teal)
             }
@@ -97,7 +108,7 @@ struct NavigatorView: View {
                     Card {
                         Label(store.t("YOUR CURRENT STAGE", "目前階段"), systemImage: "safari").font(.caption.weight(.bold)).foregroundStyle(Brand.teal)
                         Text(profile.stage.title(store.language)).font(.title2.bold())
-                        Text(profile.stage.nextStep(store.language)).foregroundStyle(.secondary)
+                        Text(profile.stage.nextStep(store.language)).foregroundStyle(Color.secondary)
                         Button(store.t("Update my stage", "更新目前階段")) { editing = true }
                     }
                     SectionHeading(title: store.t("A manageable next step", "一步一步來"))
@@ -114,7 +125,7 @@ struct NavigatorView: View {
                         }.buttonStyle(.plain).accessibilityValue(done ? store.t("Completed", "已完成") : store.t("Not completed", "尚未完成"))
                     }
                     Text(store.t("This is your personal checklist. Ticking a step does not register you for a service or change an official waiting list.", "這是你的個人清單。勾選項目不代表已登記服務，亦不會更改官方輪候狀況。"))
-                        .font(.caption).foregroundStyle(.secondary)
+                        .font(.caption).foregroundStyle(Color.secondary)
                     SectionHeading(title: store.t("Official guidance", "官方指引"))
                     ResourceCard(resource: OfficialResource.all[profile.stage == .noticed || profile.stage == .professionalFollowUp ? 0 : profile.stage == .awaitingAssessment ? 1 : 3])
                     NavigationLink(store.t("See all resources", "查看所有資源")) { ResourcesView() }
@@ -129,7 +140,8 @@ struct NavigatorView: View {
         case .noticed, .professionalFollowUp: return [l.text("Write down the changes you have noticed", "記下你留意到的變化"), l.text("Arrange a conversation with your doctor or MCHC", "安排與醫生或母嬰健康院討論"), l.text("Bring your questions and observations", "準備希望詢問的問題和觀察記錄")]
         case .awaitingAssessment: return [l.text("Confirm registration and appointment arrangements with your centre", "向中心確認登記及預約安排"), l.text("Check which documents the centre asks you to bring", "確認中心要求攜帶哪些文件"), l.text("Prepare an observation report", "準備觀察記錄報告")]
         case .assessed, .diagnosed: return [l.text("Discuss your report with the assessment team", "與評估團隊討論報告"), l.text("Ask your referring professional about suitable services", "向轉介專業人士了解合適的服務"), l.text("Confirm the referral steps and required documents", "確認轉介步驟及所需文件")]
-        case .registered: return [l.text("Keep your referring professional’s contact details", "保留轉介專業人士的聯絡資料"), l.text("Ask about support while waiting", "了解輪候期間的支援"), l.text("Continue recording everyday observations", "繼續記錄日常觀察")]
+        case .receivingServices: return [l.text("Keep your service contact details", "記低服務單位嘅聯絡資料"), l.text("Record questions for your service team", "記低想問服務團隊嘅問題"), l.text("Keep recording everyday observations", "繼續記錄日常觀察")]
+        case .registered, .waitingSupport: return [l.text("Keep your referring professional’s contact details", "保留轉介專業人士的聯絡資料"), l.text("Ask about support while waiting", "了解輪候期間的支援"), l.text("Continue recording everyday observations", "繼續記錄日常觀察")]
         }
     }
 }

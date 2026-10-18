@@ -3,89 +3,55 @@ import SwiftUI
 struct HomeView: View {
     @EnvironmentObject var store: AppStore
     @State private var recording = false
+    @State private var profileOpen = false
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(store.t("ONE MOMENT AT A TIME", "每天一點一滴")).font(.caption.weight(.semibold)).tracking(1.8).foregroundStyle(Brand.teal)
-                        Text(store.t("You’re doing this\ntogether.", "陪伴成長\n一起向前。"))
-                            .font(.system(.largeTitle, design: .rounded).bold())
-                    }
-                    Spacer()
-                    Image(systemName: "sun.max.fill").font(.system(size: 38)).foregroundStyle(.orange.opacity(0.75)).padding(.top, 18).accessibilityHidden(true)
-                }
-                if let p = store.data.profile {
+                if let profile = store.data.profile {
                     Card {
                         HStack(spacing: 14) {
-                            Text(String(p.displayName(store.language).prefix(1))).font(.title2.bold()).foregroundStyle(.white)
-                                .frame(width: 54, height: 54).background(Brand.blue.gradient, in: RoundedRectangle(cornerRadius: 18))
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(p.displayName(store.language)).font(.title3.bold())
-                                Text(p.age(store.language)).font(.subheadline).foregroundStyle(.secondary)
+                            Text(String(profile.displayName(store.language).prefix(1))).font(.title2.bold()).foregroundStyle(Brand.blue)
+                                .frame(width: 48, height: 48).background(Brand.blue.opacity(0.08), in: Circle())
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(profile.displayName(store.language)).font(.title3.bold())
+                                Text(profile.age(store.language)).font(.subheadline).foregroundStyle(.secondary)
                             }
                             Spacer()
-                            Image(systemName: "leaf.fill").foregroundStyle(Brand.teal)
+                            Button { profileOpen = true } label: { Label(store.t("Edit", "編輯"), systemImage: "pencil") }.font(.subheadline)
                         }
-                        Divider()
-                        Text(p.stage.title(store.language)).font(.subheadline.weight(.medium))
-                        Text(store.t("Your stage, chosen by you", "由你選擇的目前階段")).font(.caption).foregroundStyle(.secondary)
                     }
                 }
+                PrimaryButton(title: store.t("Add an observation", "新增觀察"), symbol: "plus") { recording = true }.accessibilityIdentifier("captureMoment")
                 HStack(spacing: 14) {
-                    stat("\(store.data.records.filter { Calendar.current.isDate($0.date, equalTo: Date(), toGranularity: .month) }.count)", store.t("Moments this month", "本月記錄"), "text.bubble", Brand.blue)
-                    stat("\(store.data.answeredCount)/\(store.questions.count)", store.t("Questions answered", "已回答題目"), "list.clipboard", Brand.teal)
-                }
-                PrimaryButton(title: store.t("Capture a moment", "記下這一刻"), symbol: "plus") { recording = true }.accessibilityIdentifier("captureMoment")
-                SectionHeading(title: store.t("A little guidance", "給你一點指引"))
-                NavigationLink { NavigatorView() } label: {
-                    feature("safari", store.t("Your next step", "下一步"), store.t("Find your way through local services", "了解本地服務與輪候安排"), Brand.blue)
+                    NavigationLink { NavigatorView() } label: { shortcut("safari", store.t("Your next step", "下一步")) }
+                    NavigationLink { ReportsView() } label: { shortcut("doc.text", store.t("Reports", "報告")) }
                 }.buttonStyle(.plain)
-                if store.data.profile?.stage == .noticed || !store.data.answers.isEmpty {
-                    NavigationLink { QuestionnaireView() } label: {
-                        feature("list.clipboard", store.t("Get to know their world", "了解孩子的日常"), store.t("30 gentle observation prompts · save as you go", "30 道觀察題目・隨時儲存進度"), Brand.teal)
-                    }.buttonStyle(.plain).accessibilityIdentifier("openQuestionnaire")
+                NavigationLink { QuestionnaireView() } label: {
+                    Card { SettingsRow(title: store.t("Questionnaire", "觀察問卷"), icon: "book", value: "\(store.data.reviewedCount)/\(store.questions.count)") }
+                }.buttonStyle(.plain).accessibilityIdentifier("openQuestionnaire")
+                HStack {
+                    Text(store.t("Recent records", "最近記錄")).font(.title3.bold())
+                    Spacer()
+                    NavigationLink(store.t("View all", "查看全部")) { RecordsView() }.font(.subheadline)
                 }
-                NavigationLink { ReportsView() } label: {
-                    feature("doc.text", store.t("Prepare for a conversation", "為會面做好準備"), store.t("Bring your observations together in a report", "將你的觀察整理成報告"), .purple)
-                }.buttonStyle(.plain)
-                SectionHeading(title: store.t("Recent moments", "最近的點滴"))
                 if store.data.records.isEmpty {
-                    Card {
-                        Image(systemName: "text.bubble").font(.title).foregroundStyle(Brand.blue)
-                        Text(store.t("Every little moment matters", "每個小片段都值得記下")).font(.headline)
-                        Text(store.t("Something new, something difficult, a small win. Your first record can be just a sentence.", "新嘗試、困難時刻或小小進步，第一則記錄可以只有一句話。"))
-                            .font(.subheadline).foregroundStyle(.secondary)
-                    }
+                    ContentUnavailableView(store.t("No records yet", "仲未有記錄"), systemImage: "book")
                 } else {
-                    ForEach(store.data.records.sorted { $0.date > $1.date }.prefix(3)) { r in
-                        NavigationLink { RecordDetail(recordID: r.id) } label: { RecordCard(record: r) }.buttonStyle(.plain)
+                    ForEach(store.data.records.sorted { $0.date > $1.date }.prefix(3)) { record in
+                        NavigationLink { RecordDetail(recordID: record.id) } label: { RecordCard(record: record) }.buttonStyle(.plain)
                     }
                 }
-            }.padding(20).frame(maxWidth: 680)
-                .frame(maxWidth: .infinity)
-        }.background(Brand.background)
-            .navigationTitle("CareVoice").navigationBarTitleDisplayMode(.inline)
+            }.padding(20)
+        }.background(Brand.background).navigationTitle(store.t("Home", "首頁"))
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { NavigationLink { SettingsView() } label: { Image(systemName: "gearshape").frame(width: 44, height: 44) }.accessibilityLabel(store.t("Settings", "設定")).accessibilityIdentifier("openSettings") } }
             .sheet(isPresented: $recording) { NavigationStack { RecordEditor() } }
+            .sheet(isPresented: $profileOpen) { NavigationStack { ProfileEditor() } }
+            .navigationDestination(isPresented: $store.showQuestionnaire) { QuestionnaireView() }
     }
-    private func stat(_ value: String, _ title: String, _ symbol: String, _ color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: symbol).foregroundStyle(color)
-            Text(value).font(.system(.title, design: .rounded).bold())
-            Text(title).font(.caption).foregroundStyle(.secondary)
-        }.frame(maxWidth: .infinity, alignment: .leading).padding(18).background(color.opacity(0.07), in: RoundedRectangle(cornerRadius: 22))
-    }
-    private func feature(_ icon: String, _ title: String, _ subtitle: String, _ color: Color) -> some View {
+    private func shortcut(_ icon: String, _ title: String) -> some View {
         Card {
-            HStack(spacing: 14) {
-                Image(systemName: icon).font(.title2).foregroundStyle(color).frame(width: 44, height: 44).background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 14))
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(title).font(.headline)
-                    Text(subtitle).font(.caption).foregroundStyle(.secondary)
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.right").font(.caption.bold()).foregroundStyle(.tertiary)
-            }
+            HStack { Image(systemName: icon).font(.title2).foregroundStyle(Brand.blue); Spacer(); Image(systemName: "arrow.up.right").font(.caption) }
+            Text(title).font(.headline)
         }
     }
 }
@@ -107,8 +73,9 @@ struct QuestionnaireView: View {
                         .font(.system(.largeTitle, design: .rounded).bold())
                     Text(store.t("\(store.data.answeredCount) answered · \(store.data.reviewedCount - store.data.answeredCount) skipped. There is no score or clinical result. You can return to any question.", "已回答 \(store.data.answeredCount) 題・略過 \(store.data.reviewedCount - store.data.answeredCount) 題。問卷不會產生分數或臨床結果，你可以隨時修改答案。"))
                     if store.data.needsProfessionalFollowUp { FollowUpCard() }
+                    if store.data.needsSafetyRouting { SafetyGuidance() }
                     ForEach(store.questions) { q in
-                        Button { index = q.id - 1; summary = false } label: {
+                        Button { index = store.questions.firstIndex(where: { $0.id == q.id }) ?? 0; summary = false } label: {
                             Card {
                                 Text(q.text(store.language)).font(.subheadline).foregroundStyle(.primary)
                                 Text(store.data.answers[q.id]?.title(store.language) ?? store.t("Not answered", "尚未回答")).font(.caption.bold()).foregroundStyle(Brand.blue)
@@ -118,6 +85,7 @@ struct QuestionnaireView: View {
                     NavigationLink(store.t("Explore next steps", "查看下一步")) { NavigatorView() }.buttonStyle(.borderedProminent)
                 } else {
                     let q = store.questions[index]
+                    if store.data.needsSafetyRouting { SafetyGuidance() }
                     HStack {
                         Text(store.t("Question \(index + 1) of \(store.questions.count)", "第 \(index + 1) 題，共 \(store.questions.count) 題")).font(.subheadline.weight(.semibold))
                         Spacer()
@@ -132,7 +100,7 @@ struct QuestionnaireView: View {
                         ForEach(q.options, id: \.self) { answer in
                             Button {
                                 store.answer(q, answer)
-                                if q.id >= 29 && (answer == .yes || answer == .unsure) { followUp = true }
+                                if [29, 30, 131].contains(q.id) && (answer == .yes || answer == .unsure) { followUp = true }
                             } label: {
                                 HStack {
                                     Text(answer.title(store.language)).fontWeight(.medium)
@@ -142,6 +110,9 @@ struct QuestionnaireView: View {
                                     .background(store.data.answers[q.id] == answer ? Brand.blue.opacity(0.1) : Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 16))
                             }.accessibilityIdentifier("answer-\(answer.rawValue)")
                         }
+                    }
+                    if q.id == 131, store.data.answers[q.id] == .yes || store.data.answers[q.id] == .unsure {
+                        TextField(store.t("When did you notice this? (optional)", "何時留意到？（選填）"), text: Binding(get: { store.data.regressionWhen?[q.id] ?? "" }, set: { value in store.update { if $0.regressionWhen == nil { $0.regressionWhen = [:] }; $0.regressionWhen?[q.id] = value } })).textFieldStyle(.roundedBorder)
                     }
                     HStack {
                         Button(store.t("Previous", "上一題")) { index -= 1 }.disabled(index == 0)
@@ -161,6 +132,7 @@ struct QuestionnaireView: View {
         .sheet(isPresented: $followUp) { NavigationStack { ScrollView { FollowUpCard().padding(24) }.toolbar { Button(store.t("Done", "完成")) { followUp = false } } }.presentationDetents([.medium, .large]) }
         .onChange(of: index) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
         .onChange(of: summary) { _, _ in scroll.scrollTo("questionTop", anchor: .top) }
+        .onChange(of: store.data.needsSafetyRouting) { _, value in if value { scroll.scrollTo("questionTop", anchor: .top) } }
         }
     }
     private func advance() { if index < store.questions.count - 1 { index += 1 } else { summary = true } }

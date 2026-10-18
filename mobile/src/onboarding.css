@@ -1,0 +1,189 @@
+/* Hallmark · guided mobile onboarding · CareVoice tokens · pastel choices.
+ * Reference: spacious introduction, question bubble, full-width stage choices.
+ * Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4 */
+dialog.guided-onboarding-dialog { position: fixed; inset: 0; width: min(100%, 560px); max-width: 560px; height: 100dvh; max-height: 100dvh; margin: 0 auto; padding: 0; border: 0; border-radius: 0; background: var(--color-surface); color: var(--color-ink); overflow: hidden; }
+.guided-onboarding-dialog::backdrop { background: var(--color-paper); }
+form.guided-onboarding { height: 100%; display: flex; flex-direction: column; background: var(--color-surface); }
+.onboarding-top { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; padding: calc(var(--space-md) + env(safe-area-inset-top)) var(--space-lg) var(--space-md); gap: var(--space-lg); }
+.onboarding-back { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--color-paper); color: var(--color-ink); }
+.onboarding-progress { display: flex; gap: 6px; padding: 0; margin: 0; list-style: none; }
+.onboarding-progress li { width: 28px; height: 4px; border-radius: 4px; background: var(--color-line); }
+.onboarding-progress .complete { background: var(--color-accent); }
+.onboarding-count { font-size: .8rem; color: var(--color-muted); min-width: 44px; text-align: right; }
+.onboarding-content { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-lg); }
+.onboarding-step-0 .onboarding-content { padding: 0; display: flex; flex-direction: column; }
+.onboarding-journey-art { position: relative; flex: 1 0 250px; max-height: 46dvh; margin: 0 24px; }
+.journey-orbit { position: absolute; width: 78%; height: 80%; left: 11%; top: 10%; border: 2px dashed var(--color-line); border-radius: 50%; transform: rotate(-22deg); }
+.journey-family { position: absolute; width: 64%; height: 78%; left: 18%; top: 10%; object-fit: cover; object-position: center 40%; border-radius: 48% 48% 42% 42%; border: 8px solid var(--color-soft); }
+.journey-note { position: absolute; display: flex; align-items: center; gap: 10px; padding: 14px; border: 3px solid var(--color-surface); border-radius: 18px; color: var(--color-ink); font-size: .875rem; font-weight: 600; box-shadow: 0 6px 16px var(--color-shadow); }
+.journey-note svg { color: var(--color-accent); flex-shrink: 0; }
+.journey-note-observe { left: 0; top: 8%; background: var(--color-sand); transform: rotate(-9deg); }
+.journey-note-assess { right: 0; top: 44%; background: var(--color-purple-soft); transform: rotate(8deg); }
+.journey-note-support { left: 4%; bottom: 2%; background: var(--color-success-soft); transform: rotate(-5deg); }
+.journey-heart { position: absolute; right: 9%; top: 5%; color: var(--color-accent); transform: rotate(15deg); }
+.onboarding-introduction { flex: 1 0 auto; border-radius: 36px 36px 0 0; margin-top: 24px; padding: 28px 28px 16px; text-align: left; background: var(--color-soft); }
+.onboarding-introduction h1 { font-size: clamp(2.25rem, 10vw, 3.4rem); line-height: 1.03; letter-spacing: -.045em; white-space: pre-line; margin-bottom: 16px; }
+.onboarding-introduction p { max-width: 32ch; margin: 0; line-height: 1.6; }
+@media (max-height: 700px) {
+  .onboarding-journey-art { flex-basis: 210px; }
+  .onboarding-introduction { margin-top: 12px; padding-top: 20px; }
+  .onboarding-introduction h1 { font-size: 2.25rem; }
+  .journey-note { padding: 10px; }
+}
+.onboarding-question { display: flex; align-items: center; gap: var(--space-md); margin-bottom: var(--space-xl); }
+.onboarding-guide { flex: 0 0 48px; height: 48px; display: grid; place-items: center; border-radius: 18px; background: var(--color-accent); color: var(--color-surface); transform: rotate(-5deg); }
+.onboarding-question h1 { position: relative; flex: 1; font-size: clamp(1.15rem, 4.6vw, 1.45rem); line-height: 1.35; padding: var(--space-lg) var(--space-md); background: var(--color-soft); border: 1px solid var(--color-accent); border-radius: 20px; }
+.onboarding-question h1::before { content: ""; position: absolute; width: 10px; height: 10px; left: -6px; top: calc(50% - 5px); background: var(--color-soft); border-left: 1px solid var(--color-accent); border-bottom: 1px solid var(--color-accent); transform: rotate(45deg); }
+.onboarding-basics > label, .onboarding-details label { display: block; color: var(--color-ink); font-size: 1rem; margin-bottom: var(--space-lg); }
+.onboarding-basics input, .onboarding-details input, .onboarding-details textarea { font-size: 1rem; background: var(--color-paper); border: 1px solid var(--color-line); border-radius: 16px; min-height: 56px; }
+.onboarding-basics .age-fields { border: 0; padding: 0; margin: var(--space-xl) 0 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-md); }
+.onboarding-basics .age-fields legend { padding: 0 0 var(--space-md); font-weight: 600; }
+.onboarding-basics .age-fields label { padding: var(--space-lg) var(--space-md); border-radius: 24px; background: var(--color-soft); text-align: center; color: var(--color-ink); }
+.onboarding-basics .age-fields label:last-child { background: var(--color-sand); }
+.onboarding-basics .age-fields input { display: block; width: 100%; margin-top: var(--space-md); background: var(--color-surface); font-size: 1.6rem; font-weight: 650; text-align: center; }
+.onboarding-stages { border: 0; padding: 0; margin: 0; display: grid; gap: 12px; }
+.onboarding-stage { position: relative; display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 14px var(--space-md); margin: 0; border: 2px solid transparent; border-radius: 16px; cursor: pointer; color: var(--color-ink); font-size: .9375rem; font-weight: 500; line-height: 1.4; }
+.onboarding-stage > span:not(.onboarding-selection) { flex: 1; min-width: 0; }
+.onboarding-stage input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.onboarding-stage:focus-within { outline: 3px solid var(--color-focus); outline-offset: 3px; }
+.onboarding-stage.selected { border-color: var(--color-accent); }
+.stage-tone-0 { background: var(--color-blue-soft); }
+.stage-tone-1 { background: var(--color-success-soft); }
+.stage-tone-2 { background: var(--color-sand); }
+.stage-tone-3 { background: var(--color-pink-soft); }
+.stage-tone-4 { background: var(--color-purple-soft); }
+.stage-tone-5 { background: var(--color-soft); }
+.onboarding-selection { display: grid; place-items: center; width: 20px; height: 20px; flex: 0 0 20px; border: 1px solid var(--color-muted); border-radius: 50%; }
+.selected .onboarding-selection { background: var(--color-accent); border-color: var(--color-accent); color: var(--color-surface); }
+.onboarding-details { margin-top: var(--space-lg); }
+.onboarding-details summary { padding: 12px 0; min-height: 44px; color: var(--color-muted); cursor: pointer; }
+.onboarding-details[open] summary { margin-bottom: var(--space-md); }
+.onboarding-footer { flex: 0 0 auto; padding: var(--space-md) var(--space-lg) calc(var(--space-lg) + env(safe-area-inset-bottom)); background: var(--color-surface); }
+.onboarding-step-0 .onboarding-footer { background: var(--color-soft); }
+.onboarding-footer .primary.full { height: 56px; margin: 0; border-radius: 999px; font-size: 1rem; }
+@media (hover: hover) { .onboarding-stage:hover { border-color: var(--color-accent); } }
+
+/* Keep the seven journey choices above the persistent footer on phones. */
+.onboarding-step-2 .onboarding-content { padding-top: 8px; padding-bottom: 0; }
+.onboarding-step-2 .onboarding-question { margin-bottom: 16px; }
+.onboarding-step-2 .onboarding-question h1 { padding: 16px; }
+.onboarding-step-2 .onboarding-stages { gap: 8px; }
+.onboarding-step-2 .onboarding-stage { min-height: 52px; padding: 8px 12px; font-size: .875rem; line-height: 1.3; }
+.onboarding-stage > svg { flex-shrink: 0; }
+.onboarding-step-2 .onboarding-details { margin-top: 4px; }
+@media (max-height: 740px) {
+  .onboarding-step-2 .onboarding-top { padding-top: calc(8px + env(safe-area-inset-top)); padding-bottom: 8px; }
+  .onboarding-step-2 .onboarding-content { padding-left: 16px; padding-right: 16px; }
+  .onboarding-step-2 .onboarding-question { margin-bottom: 12px; }
+  .onboarding-step-2 .onboarding-question h1 { padding: 12px; }
+  .onboarding-step-2 .onboarding-stages { gap: 6px; }
+  .onboarding-step-2 .onboarding-stage { min-height: 48px; padding: 6px 10px; gap: 8px; }
+  .onboarding-step-2 .onboarding-footer { padding: 8px 16px calc(12px + env(safe-area-inset-bottom)); }
+}
+
+/* Survey uses the existing pastel tokens; each screen asks one question. */
+.survey-onboarding.onboarding-step-0 .onboarding-content { display: block; padding: 24px; }
+.survey-onboarding.onboarding-step-0 .onboarding-footer { background: var(--color-surface); }
+.survey-onboarding .onboarding-progress li { width: 20px; }
+.survey-answer { padding: 24px; border-radius: 24px; }
+.survey-answer label { display: block; margin-bottom: 12px; font-weight: 600; }
+.survey-answer input, .survey-answer textarea, .survey-age input { width: 100%; border: 1px solid var(--color-line); border-radius: 16px; background: var(--color-surface); font-size: 1rem; min-height: 56px; }
+.survey-answer textarea { resize: vertical; }
+.survey-age { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.survey-age label { padding: 24px 16px; border-radius: 24px; text-align: center; font-weight: 600; }
+.survey-age input { margin-top: 16px; text-align: center; font-size: 2rem; }
+.survey-hint { margin: 0 0 20px; }
+.survey-skip { display: block; min-height: 44px; margin: 0 auto 8px; padding: 8px 24px; background: transparent; color: var(--color-accent); }
+.survey-onboarding.onboarding-step-3 .onboarding-stage { min-height: 52px; padding: 10px 14px; }
+.survey-onboarding.onboarding-step-3 .onboarding-stages { gap: 8px; }
+.survey-onboarding.onboarding-step-3 .onboarding-question { margin-bottom: 16px; }
+.survey-onboarding.onboarding-step-3 .survey-hint { margin-bottom: 16px; }
+.birthday-fields { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.1fr) minmax(0, 1fr); gap: 10px; border: 0; margin: 24px 0 16px; padding: 0; }
+.birthday-fields label { padding: 16px 8px 10px; border-radius: 20px; background: var(--color-soft); text-align: center; font-size: .875rem; font-weight: 600; }
+.birthday-fields label:nth-of-type(2) { background: var(--color-sand); }
+.birthday-fields label:nth-of-type(3) { background: var(--color-purple-soft); }
+.birthday-fields select { display: block; width: 100%; min-height: 60px; margin-top: 12px; padding: 8px 4px; background: var(--color-surface); border: 1px solid var(--color-line); border-radius: 12px; color: var(--color-ink); font-size: 1rem; font-weight: 600; }
+.birthday-summary { padding: 20px 16px; border: 1px solid var(--color-line); border-radius: 20px; text-align: center; color: var(--color-muted); }
+.birthday-summary strong { display: block; color: var(--color-ink); font-size: 1.125rem; margin-bottom: 6px; }
+.birthday-summary span { display: block; font-size: .875rem; }
+/* Reference refinement: continuous progress, clear headings and supportive hints.
+ * Hallmark · pre-emit critique: P4 H5 E4 S4 R5 V4 */
+.survey-progress-bar { appearance: none; border: 0; width: 100%; min-width: 0; height: 12px; flex: 1; overflow: hidden; border-radius: 999px; background: var(--color-line); color: var(--color-accent); }
+.survey-progress-bar::-webkit-progress-bar { background: var(--color-line); border-radius: 999px; }
+.survey-progress-bar::-webkit-progress-value { background: var(--color-accent); border-radius: 999px; }
+.survey-progress-bar::-moz-progress-bar { background: var(--color-accent); border-radius: 999px; }
+.survey-onboarding .onboarding-top { gap: 12px; }
+.survey-onboarding .onboarding-back { background: transparent; }
+.survey-onboarding .onboarding-content, .survey-onboarding.onboarding-step-0 .onboarding-content { display: flex; flex-direction: column; padding: 16px 24px 0; }
+.survey-question { margin-bottom: 24px; }
+.survey-question h1 { font-size: clamp(1.4rem, 5.5vw, 1.8rem); line-height: 1.25; letter-spacing: -.025em; margin: 0; }
+.survey-onboarding .onboarding-stages, .survey-onboarding .birthday-panel, .survey-onboarding .survey-answer { flex-shrink: 0; }
+.survey-onboarding .onboarding-stage { border-color: var(--color-line); box-shadow: 0 2px 0 var(--color-line); border-radius: 14px; }
+.survey-onboarding .onboarding-stage.selected { border-color: var(--color-accent); box-shadow: 0 2px 0 var(--color-accent); color: var(--color-accent-hover); }
+.survey-guide-hint { display: flex; align-items: center; gap: 12px; margin-top: auto; padding: 24px 0 12px; }
+.survey-guide-symbol { display: grid; place-items: center; width: 56px; height: 64px; flex-shrink: 0; border-radius: 22px 26px 20px 24px; background: var(--color-success-soft); color: var(--color-accent); transform: rotate(-7deg); }
+.survey-guide-hint p { border: 1px solid var(--color-line); border-radius: 16px; padding: 12px 14px; margin: 0; font-size: .875rem; line-height: 1.4; color: var(--color-muted); }
+.survey-onboarding .onboarding-footer .primary.full { border-radius: 14px; box-shadow: 0 3px 0 var(--color-accent-hover); }
+.survey-onboarding .onboarding-footer .primary.full:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--color-accent-hover); }
+.survey-onboarding.onboarding-step-2 .survey-question { margin-bottom: 16px; }
+@media (max-height: 740px) {
+ .survey-onboarding.onboarding-step-2 .onboarding-content { padding: 8px 16px 0; }
+ .survey-onboarding.onboarding-step-2 .survey-guide-hint { padding-top: 12px; }
+ .survey-onboarding.onboarding-step-2 .survey-guide-symbol { width: 40px; height: 44px; }
+ .survey-onboarding.onboarding-step-2 .survey-guide-hint p { padding: 8px 10px; font-size: .8rem; }
+}
+/* Give choice-heavy survey pages a quieter layout and more separation. */
+.survey-onboarding.onboarding-step-2 .stage-choice-icon { display: none; }
+.survey-onboarding.onboarding-step-2 .onboarding-stages { gap: 10px; }
+.survey-onboarding.onboarding-step-2 .onboarding-stage { min-height: 52px; padding: 10px 14px; box-shadow: none; font-weight: 500; }
+.survey-onboarding.onboarding-step-3 .onboarding-stages { gap: 14px; }
+.survey-onboarding.onboarding-step-3 .onboarding-stage { min-height: 60px; padding: 16px; box-shadow: none; }
+.survey-onboarding.onboarding-step-3 .survey-hint { margin: -8px 0 24px; font-size: .875rem; }
+.survey-onboarding.onboarding-step-3 .onboarding-selection { border-radius: 6px; }
+@media (max-height: 700px) {
+ .survey-onboarding.onboarding-step-2 .onboarding-stages { gap: 8px; }
+ .survey-onboarding.onboarding-step-2 .onboarding-stage { min-height: 48px; padding: 8px 12px; }
+ .survey-onboarding.onboarding-step-3 .onboarding-stages { gap: 12px; }
+ .survey-onboarding.onboarding-step-3 .onboarding-stage { min-height: 54px; padding: 12px 16px; }
+}
+/* Fill the available height on tall displays without moving the footer. */
+.survey-onboarding.onboarding-step-2 .onboarding-stages {
+  flex: 1 0 auto;
+  grid-template-rows: repeat(7, minmax(48px, 1fr));
+  gap: clamp(8px, 1.4dvh, 18px);
+  padding-bottom: 8px;
+}
+.survey-onboarding.onboarding-step-2 .onboarding-stage {
+  height: 100%;
+  min-height: 48px;
+}
+/* Visual choice grid: readable two-column cards on narrow phones. */
+.survey-onboarding.onboarding-step-2 .onboarding-stages,
+.survey-onboarding.onboarding-step-3 .onboarding-stages {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px; flex: 1 0 auto; padding-bottom: 8px;
+}
+.survey-onboarding.onboarding-step-2 .onboarding-stages { grid-template-rows: repeat(4, minmax(96px, 1fr)); }
+.survey-onboarding.onboarding-step-3 .onboarding-stages { grid-template-rows: repeat(3, minmax(100px, 1fr)); }
+.survey-onboarding.onboarding-step-2 .onboarding-stage,
+.survey-onboarding.onboarding-step-3 .onboarding-stage {
+  position: relative; flex-direction: column; justify-content: center; gap: 12px;
+  min-height: 96px; height: 100%; padding: 28px 10px 14px;
+  text-align: center; font-size: .875rem; line-height: 1.35;
+}
+.survey-onboarding .onboarding-stage > span:not(.onboarding-selection) { flex: 0; }
+.survey-onboarding.onboarding-step-2 .stage-choice-icon,
+.survey-onboarding.onboarding-step-3 .stage-choice-icon { display: block; color: var(--color-accent); }
+.survey-onboarding .onboarding-stage .onboarding-selection { position: absolute; top: 10px; right: 10px; width: 18px; height: 18px; }
+.survey-onboarding .onboarding-stage.selected { background: var(--color-blue-soft); border-color: var(--color-accent); }
+@media (min-width: 400px) {
+ .survey-onboarding.onboarding-step-2 .onboarding-stages,
+ .survey-onboarding.onboarding-step-3 .onboarding-stages { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+ .survey-onboarding.onboarding-step-2 .onboarding-stages { grid-template-rows: repeat(3, minmax(104px, 1fr)); }
+ .survey-onboarding.onboarding-step-3 .onboarding-stages { grid-template-rows: repeat(2, minmax(104px, 1fr)); }
+}
+@media (max-height: 700px) and (max-width: 399px) {
+ .survey-onboarding.onboarding-step-2 .onboarding-stages { gap: 8px; grid-template-rows: repeat(4, minmax(96px, 1fr)); }
+ .survey-onboarding.onboarding-step-2 .onboarding-stage { gap: 6px; font-size: .8rem; padding: 24px 8px 8px; }
+ .survey-onboarding.onboarding-step-2 .stage-choice-icon { width: 20px; height: 20px; }
+}

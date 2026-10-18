@@ -4,17 +4,25 @@ struct RecordsView: View {
     @EnvironmentObject var store: AppStore
     @State private var search = ""
     @State private var category: RecordCategory?
+    @State private var selectedDate = Date()
+    @State private var allDates = false
     @State private var adding = false
     private var filtered: [BehaviorRecord] {
         store.data.records.filter { r in
-            (category == nil || r.category == category) && (search.isEmpty || r.text.localizedCaseInsensitiveContains(search) || r.location.localizedCaseInsensitiveContains(search))
+            (allDates || Calendar.current.isDate(r.date, inSameDayAs: selectedDate)) && (category == nil || r.category == category) && (search.isEmpty || r.text.localizedCaseInsensitiveContains(search) || r.location.localizedCaseInsensitiveContains(search))
         }.sorted { $0.date > $1.date }
     }
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
-                Text(store.t("The everyday moments tell a story.", "日常的點滴，訴說成長的故事。"))
-                    .foregroundStyle(.secondary)
+                DatePicker(store.t("Choose a day", "選擇日期"), selection: $selectedDate, in: ...Date(), displayedComponents: .date)
+                    .datePickerStyle(.graphical).tint(Brand.blue)
+                HStack {
+                    Text(selectedDate, format: .dateTime.month().day()).font(.headline)
+                    Spacer()
+                    Button { adding = true } label: { Label(store.t("Add record", "新增記錄"), systemImage: "plus") }
+                }
+                Toggle(store.t("Browse all records", "瀏覽全部記錄"), isOn: $allDates)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
                         filterButton(store.t("All", "全部"), value: nil)
@@ -29,10 +37,10 @@ struct RecordsView: View {
                 }
             }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
         }.background(Brand.background)
-            .navigationTitle(store.t("Your moments", "日常記錄"))
+            .navigationTitle(store.t("Tracker", "追蹤"))
+            .sheet(isPresented: $adding) { NavigationStack { RecordEditor(initialDate: selectedDate) } }
+            .toolbar { NavigationLink { ReportsView() } label: { Label(store.t("Reports", "報告"), systemImage: "doc.text").labelStyle(.titleAndIcon) } }
             .searchable(text: $search, prompt: store.t("Search observations", "搜尋記錄"))
-            .toolbar { Button { adding = true } label: { Label(store.t("New record", "新增記錄"), systemImage: "plus") }.accessibilityIdentifier("addRecord") }
-            .sheet(isPresented: $adding) { NavigationStack { RecordEditor() } }
     }
     private func filterButton(_ title: String, value: RecordCategory?) -> some View {
         Button { category = value } label: {
@@ -55,6 +63,7 @@ struct RecordCard: View {
             }
             Text(record.text).font(.body).lineLimit(4).foregroundStyle(.primary)
             if !record.location.isEmpty { Label(record.location, systemImage: "mappin").font(.caption).foregroundStyle(.secondary) }
+            Label(store.t("View details", "查看詳情"), systemImage: "chevron.right").font(.caption).foregroundStyle(Brand.blue)
         }
     }
 }
@@ -64,6 +73,7 @@ struct RecordDetail: View {
     @Environment(\.dismiss) private var dismiss
     let recordID: UUID
     @State private var editing = false
+    @State private var expandDetails = false
     @State private var deleting = false
     var body: some View {
         Group {
@@ -73,27 +83,36 @@ struct RecordDetail: View {
                         Card {
                             Label(record.category.title(store.language), systemImage: record.category.symbol).foregroundStyle(Brand.blue).font(.headline)
                             Text(record.date, format: .dateTime.year().month().day().hour().minute()).font(.subheadline).foregroundStyle(.secondary)
+                            Text(store.t("What happened", "發生了甚麼")).font(.headline)
                             Text(record.text).textSelection(.enabled)
                             if !record.location.isEmpty { Label(record.location, systemImage: "mappin") }
                             if let n = record.durationMinutes { Label(store.t("\(n) minutes", "\(n) 分鐘"), systemImage: "clock") }
                         }
                         if !record.context.isEmpty { Card { SectionHeading(title: store.t("What happened before", "之前發生了甚麼")); Text(record.context) } }
                         if !record.helped.isEmpty { Card { SectionHeading(title: store.t("What helped", "有幫助的方法")); Text(record.helped) } }
+                        if record.context.isEmpty || record.helped.isEmpty {
+                            Card {
+                                Text(store.t("Remember a little more?", "還記得更多細節嗎？")).font(.headline)
+                                Text(store.t("Add what happened before or what helped, while it’s still fresh.", "趁記憶還清晰，補充之前發生的事或有幫助的方法。")).font(.subheadline).foregroundStyle(.secondary)
+                                Button { expandDetails = true; editing = true } label: { Label(store.t("Add details", "補充詳情"), systemImage: "pencil").frame(minHeight: 44) }
+                            }
+                        }
                         let related = store.data.related(to: record)
                         if !related.isEmpty {
-                            SectionHeading(title: store.t("Earlier moments in this category", "同類別的過往記錄"))
-                            Text(store.t("Grouped by your chosen category, not an inferred connection.", "按你選擇的類別分組，並非推斷因果關係。"))
+                            SectionHeading(title: store.t("Earlier records in this category", "同類別的過往記錄"))
+                            Text(store.t("Grouped by the category you chose.", "按你選擇的類別分組。"))
                                 .font(.caption).foregroundStyle(.secondary)
-                            ForEach(related) { earlier in RecordCard(record: earlier) }
+                            ForEach(related) { earlier in NavigationLink { RecordDetail(recordID: earlier.id) } label: { RecordCard(record: earlier) }.buttonStyle(.plain) }
                         }
+                        NavigationLink { ReportsView() } label: { Label(store.t("Prepare a report", "準備報告"), systemImage: "doc.text").frame(maxWidth: .infinity, minHeight: 52) }.buttonStyle(.bordered)
                         Button(store.t("Delete record", "刪除記錄"), role: .destructive) { deleting = true }
                     }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
                 }.background(Brand.background)
-                    .toolbar { Button(store.t("Edit", "編輯")) { editing = true } }
-                    .sheet(isPresented: $editing) { NavigationStack { RecordEditor(existing: record) } }
+                    .toolbar { Button(store.t("Edit", "編輯")) { expandDetails = false; editing = true } }
+                    .sheet(isPresented: $editing) { NavigationStack { RecordEditor(existing: record, expandDetails: expandDetails) } }
             }
         }
-        .navigationTitle(store.t("Moment details", "記錄詳情")).navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(store.t("Record details", "記錄詳情")).navigationBarTitleDisplayMode(.inline)
         .alert(store.t("Delete this record?", "刪除此記錄？"), isPresented: $deleting) {
             Button(store.t("Cancel", "取消"), role: .cancel) { }
             Button(store.t("Delete", "刪除"), role: .destructive) { store.deleteRecord(recordID); if !store.data.records.contains(where: { $0.id == recordID }) { dismiss() } }
@@ -106,66 +125,83 @@ struct RecordEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     var existing: BehaviorRecord?
+    var expandDetails = false
+    var initialDate: Date = Date()
+    var onSaved: (BehaviorRecord) -> Void = { _ in }
     @State private var record = BehaviorRecord(text: "")
     @StateObject private var speech = SpeechRecorder()
     @State private var beforeSpeech = ""
     @State private var duration = ""
     @State private var confirmDiscard = false
+    @State private var voice = true
+    @State private var moreDetails = false
     private var valid: Bool {
         !record.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && (duration.isEmpty || (Int(duration).map { $0 >= 0 && $0 <= 1440 } ?? false))
     }
     var body: some View {
-        Form {
-            Section {
-                TextField(store.t("What did you notice?", "你留意到甚麼？"), text: $record.text, axis: .vertical).lineLimit(5...12).accessibilityIdentifier("recordText")
-                Button {
-                    if speech.isRecording { speech.stop() }
-                    else {
-                        beforeSpeech = record.text
-                        Task { await speech.start(language: store.language) }
-                    }
-                } label: {
-                    Label(speech.isRecording ? store.t("Stop · \(speech.seconds)s", "停止・\(speech.seconds)秒") : store.t("Use voice · up to 60 seconds", "語音輸入・最多 60 秒"), systemImage: speech.isRecording ? "stop.circle.fill" : "mic.fill")
-                        .foregroundStyle(speech.isRecording ? .red : Brand.blue)
-                }.disabled(speech.isStarting)
-                if let message = speech.error { Text(message).font(.caption).foregroundStyle(.secondary) }
-            } header: { Text(store.t("A moment worth remembering", "值得記下的片段")) }
-            footer: { Text(store.t("Voice transcription runs on supported devices using Apple’s on-device speech recognition. Review the text before saving. Audio is not saved.", "語音轉文字使用 Apple 裝置端辨識，需裝置支援。儲存前請檢查文字，錄音不會被保留。")) }
-            Section(store.t("Details", "詳情")) {
-                Picker(store.t("Category", "類別"), selection: $record.category) { ForEach(RecordCategory.allCases) { c in Text(c.title(store.language)).tag(c) } }
-                DatePicker(store.t("When", "時間"), selection: $record.date, in: ...Date())
-                TextField(store.t("Place (optional)", "地點（選填）"), text: $record.location)
-                TextField(store.t("Duration in minutes (optional)", "持續分鐘（選填）"), text: $duration).keyboardType(.numberPad)
-                if !duration.isEmpty && !(Int(duration).map { $0 >= 0 && $0 <= 1440 } ?? false) {
-                    Text(store.t("Enter a whole number from 0 to 1440.", "請輸入 0 至 1440 的整數。" )).foregroundStyle(.red).font(.caption)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Picker(store.t("Record type", "記錄方式"), selection: $voice) {
+                    Label(store.t("Voice record", "語音記錄"), systemImage: "mic").tag(true)
+                    Label(store.t("Text record", "文字記錄"), systemImage: "pencil").tag(false)
+                }.pickerStyle(.segmented).onChange(of: voice) { _, _ in speech.stop() }
+                if voice {
+                    VStack(spacing: 18) {
+                        Image(systemName: speech.isRecording ? "waveform" : "mic.fill").font(.system(size: 36)).foregroundStyle(Brand.blue)
+                            .frame(width: 88, height: 88).background(Color.pink.opacity(0.1), in: Circle())
+                        Text(speech.isRecording ? store.t("Recording · \(speech.seconds) / 60 seconds", "錄音中 · \(speech.seconds) / 60 秒") : store.t("Tap to start recording (up to 60 seconds)", "點按開始錄音（最多 60 秒）")).font(.subheadline).foregroundStyle(.secondary)
+                        Button {
+                            if speech.isRecording { speech.stop() }
+                            else { beforeSpeech = record.text; Task { await speech.start(language: store.language) } }
+                        } label: { Text(store.t(speech.isRecording ? "Stop recording" : "Start recording", speech.isRecording ? "停止錄音" : "開始錄音")) }
+                            .buttonStyle(AccountPrimaryStyle()).disabled(speech.isStarting)
+                        if let error = speech.error { Text(error).font(.subheadline).foregroundStyle(.secondary) }
+                    }.frame(maxWidth: .infinity)
                 }
+                if !voice || !record.text.isEmpty {
+                    TextField(store.t("What did you notice?", "你留意到甚麼？"), text: $record.text, axis: .vertical).lineLimit(5...12)
+                        .padding(16).background(Brand.background, in: RoundedRectangle(cornerRadius: 18)).accessibilityIdentifier("recordText")
+                        .disabled(speech.isRecording || speech.isStarting)
+                }
+                DisclosureGroup(isExpanded: $moreDetails) {
+                    VStack(alignment: .leading, spacing: 18) {
+                        Picker(store.t("Category", "類別"), selection: $record.category) { ForEach(RecordCategory.allCases) { c in Text(c.title(store.language)).tag(c) } }.pickerStyle(.menu)
+                        VStack(alignment: .leading) { Text(store.t("When", "時間")).font(.subheadline); DatePicker(store.t("When", "時間"), selection: $record.date, in: ...Date()).labelsHidden() }
+                        detail(store.t("Place (optional)", "地點（選填）"), text: $record.location)
+                        TextField(store.t("Minutes (optional)", "分鐘（選填）"), text: $duration).keyboardType(.numberPad).textFieldStyle(.roundedBorder)
+                        if !duration.isEmpty && !(Int(duration).map { $0 >= 0 && $0 <= 1440 } ?? false) { Text(store.t("Enter a whole number from 0 to 1440.", "請輸入 0 至 1440 的整數。")).font(.caption).foregroundStyle(.red) }
+                        detail(store.t("What happened before?", "之前發生了甚麼？"), text: $record.context)
+                        detail(store.t("What helped?", "甚麼方法有幫助？"), text: $record.helped)
+                    }.padding(.top, 18)
+                } label: { Text(store.t("More details", "更多詳情")).font(.subheadline.weight(.semibold)) }
+                Text(store.t("Review the transcript before saving. Speech is processed on your device; audio is not saved.", "儲存前請檢查文字。語音於裝置端處理，錄音不會保留。")).font(.caption).foregroundStyle(.secondary)
+            }.padding(20)
+        }.scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom) {
+                HStack(spacing: 12) {
+                    Button(store.t("Cancel", "取消")) { speech.stop(); confirmDiscard = true }.frame(maxWidth: .infinity, minHeight: 56).background(Brand.background, in: Capsule())
+                    Button(store.t("Save record", "儲存記錄")) {
+                        speech.stop(); record.text = record.text.trimmingCharacters(in: .whitespacesAndNewlines); record.durationMinutes = Int(duration)
+                        if store.saveRecord(record) { onSaved(record); dismiss() }
+                    }.buttonStyle(AccountPrimaryStyle()).disabled(!valid || speech.isRecording || speech.isStarting).accessibilityIdentifier("saveRecord")
+                }.padding(20).background(.bar)
             }
-            Section(store.t("A little more context (optional)", "補充情況（選填）")) {
-                TextField(store.t("What happened before?", "之前發生了甚麼？"), text: $record.context, axis: .vertical).lineLimit(2...5)
-                TextField(store.t("What helped?", "甚麼方法有幫助？"), text: $record.helped, axis: .vertical).lineLimit(2...5)
+            .navigationTitle(store.t(existing == nil ? "Quick Record" : "Edit record", existing == nil ? "快速記錄" : "編輯記錄")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button { speech.stop(); confirmDiscard = true } label: { Image(systemName: "xmark") }.accessibilityLabel(store.t("Close", "關閉")) } }
+            .presentationDetents([.large]).presentationDragIndicator(.visible).presentationCornerRadius(28)
+            .interactiveDismissDisabled()
+            .confirmationDialog(store.t("Discard this draft?", "放棄此草稿？"), isPresented: $confirmDiscard, titleVisibility: .visible) {
+                Button(store.t("Discard", "放棄"), role: .destructive) { dismiss() }
+                Button(store.t("Keep editing", "繼續編輯"), role: .cancel) {}
             }
-        }
-        .navigationTitle(store.t(existing == nil ? "Capture a moment" : "Edit moment", existing == nil ? "記下這一刻" : "編輯記錄"))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel", "取消")) { speech.stop(); confirmDiscard = true } }
-            ToolbarItem(placement: .confirmationAction) {
-                Button(store.t("Save", "儲存")) {
-                    speech.stop()
-                    record.text = record.text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    record.durationMinutes = Int(duration)
-                    if store.saveRecord(record) { dismiss() }
-                }.bold().disabled(!valid || speech.isRecording || speech.isStarting).accessibilityIdentifier("saveRecord")
+            .onAppear { moreDetails = expandDetails; if let existing { record = existing; duration = existing.durationMinutes.map(String.init) ?? ""; voice = false } else { record.date = initialDate } }
+            .onChange(of: speech.transcript) { _, value in
+                if !value.isEmpty { record.text = beforeSpeech + (beforeSpeech.isEmpty ? "" : "\n") + value }
             }
-        }
-        .interactiveDismissDisabled()
-        .confirmationDialog(store.t("Discard this draft?", "放棄此草稿？"), isPresented: $confirmDiscard, titleVisibility: .visible) {
-            Button(store.t("Discard", "放棄"), role: .destructive) { dismiss() }
-            Button(store.t("Keep editing", "繼續編輯"), role: .cancel) { }
-        }
-        .onAppear { if let existing { record = existing; duration = existing.durationMinutes.map(String.init) ?? "" } }
-        .onChange(of: speech.transcript) { _, value in record.text = beforeSpeech + (beforeSpeech.isEmpty ? "" : "\n") + value }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { speech.stop() } }
-        .onDisappear { speech.stop() }
+            .onChange(of: scenePhase) { _, phase in if phase != .active { speech.stop() } }
+            .onDisappear { speech.stop() }
+    }
+    private func detail(_ title: String, text: Binding<String>) -> some View {
+        VStack(alignment: .leading, spacing: 8) { Text(title).font(.subheadline); TextField(title, text: text, axis: .vertical).lineLimit(2...5).textFieldStyle(.roundedBorder) }
     }
 }

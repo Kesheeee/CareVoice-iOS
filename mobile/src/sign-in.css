@@ -1,0 +1,62 @@
+/* Hallmark · genre: soft product UI · structure: single-column account form
+ * Theme: existing CareVoice blue · audience: caregivers · purpose: sign-in preview
+ * Existing design.md governs typography, navigation and tokens.
+ * Hallmark · pre-emit critique: P4 H5 E4 S4 R5 V4 */
+.app-shell.sign-in-shell { max-width: 560px; min-height: 100dvh; background: transparent; isolation: isolate; }
+.sign-in-shell main { min-height: 100dvh; padding: var(--space-md) var(--space-lg) calc(var(--space-lg) + env(safe-area-inset-bottom)); }
+.sign-in-screen { width: 100%; max-width: 400px; margin: 0 auto; }
+.sign-in-screen .sign-in-heading { padding-top: clamp(96px, 16svh, 144px); }
+.sign-in-back { display: inline-flex; align-items: center; gap: var(--space-sm); min-height: 44px; padding: 0 var(--space-sm); margin-left: calc(-1 * var(--space-sm)); color: var(--color-accent); }
+.sign-in-heading { padding: var(--space-lg) 0; }
+.sign-in-mark { display: grid; place-items: center; width: 64px; height: 64px; border-radius: var(--radius-lg); background: var(--color-soft); color: var(--color-accent); margin-bottom: var(--space-lg); }
+.sign-in-heading h1 { font-size: 2rem; line-height: 1.2; }
+.account-sheet h1:focus, .account-sheet h2:focus { outline: none; }
+.sign-in-screen .sign-in-heading h1:focus { outline: none; }
+.sign-in-switch { min-height: 44px; margin-top: 12px; color: var(--color-accent); }
+.password-update { padding: 24px; }
+.password-update .sign-in-field input { padding-left: 16px; }
+.sign-in-screen .password-hint { margin: -8px 0 16px; color: var(--color-muted); font-size: .85rem; }
+.password-requirements { margin: -4px 0 20px; font-size: .8rem; line-height: 1.5; }
+.password-requirements ul { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+.password-requirements li { display: flex; align-items: flex-start; gap: 6px; color: var(--color-muted); }
+.password-requirements li svg { flex-shrink: 0; margin-top: 2px; }
+.password-requirements li[data-met="true"] { color: var(--color-accent); }
+.create-account-screen .sign-in-field { margin-bottom: 16px; }
+.create-account-screen label { font-size: .875rem; }
+.sign-in-screen form .sign-in-error { margin: 0 0 16px; }
+.sign-in-video { position: fixed; top: 0; bottom: 0; left: 50%; width: min(100%, 560px); transform: translateX(-50%); z-index: -1; overflow: clip; background: var(--color-soft); pointer-events: none; }
+.sign-in-video::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, color-mix(in srgb, var(--color-paper) 12%, transparent), color-mix(in srgb, var(--color-paper) 94%, transparent) 38%, var(--color-paper) 85%); }
+.sign-in-video video, .sign-in-video img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.sign-in-preview { display: flex; align-items: flex-start; gap: var(--space-sm); margin-bottom: var(--space-lg); color: var(--color-muted); }
+.sign-in-preview svg { margin-top: var(--space-xs); }
+.sign-in-preview p { font-size: var(--text-sm); }
+.sign-in-screen form { display: flex; flex-direction: column; }
+.sign-in-screen label { display: block; margin: 0 0 var(--space-sm); font-weight: 600; }
+.sign-in-screen input { width: 100%; min-width: 0; min-height: 52px; padding: var(--space-sm) var(--space-md); border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-ink); }
+.sign-in-field { position: relative; margin-bottom: var(--space-lg); }
+.sign-in-field .sign-in-field-icon { position: absolute; left: var(--space-md); top: 50%; transform: translateY(-50%); color: var(--color-muted); pointer-events: none; }
+.sign-in-field input { display: block; height: 56px; min-height: 56px; margin: 0; font-size: 1rem; line-height: 1.5; border-radius: 20px; padding-left: 48px; box-shadow: 0 3px 8px var(--color-shadow); }
+.sign-in-field input::placeholder { color: var(--color-muted); opacity: .75; }
+.sign-in-screen label.sr-only { margin: 0; }
+.sign-in-password { position: relative; }
+.sign-in-password input { padding-right: 56px; }
+.sign-in-password button { position: absolute; right: var(--space-sm); top: 6px; width: 44px; height: 44px; display: grid; place-items: center; color: var(--color-muted); border-radius: var(--radius-sm); }
+.sign-in-screen .primary.full { border-radius: 999px; height: 56px; min-height: 56px; font-size: 1rem; line-height: 1.25; margin-top: 0; }
+.sign-in-help { align-self: flex-end; min-height: 44px; padding: var(--space-sm) 0; margin-bottom: var(--space-md); color: var(--color-accent); font-size: var(--text-body); }
+.sign-in-screen button { white-space: nowrap; }
+.sign-in-status:empty { display: none; }
+.sign-in-delivery { font-size: 0.95rem; line-height: 1.6; margin-bottom: 24px; overflow-wrap: anywhere; }
+.sign-in-delivery strong { display: block; margin: 8px 0; }
+.sign-in-resend { display: block; min-height: 48px; margin: 12px auto 0; color: var(--color-accent); }
+.sign-in-status.sign-in-error { color: var(--color-danger); background: var(--color-danger-soft); }
+.account-email { overflow-wrap: anywhere; color: var(--color-muted); font-size: 0.9rem; }
+.auth-loading, .account-import { max-width: 520px; margin: 0 auto; padding: 48px 24px; }
+.account-import h1 { font-size: 1.75rem; }
+.account-import p { line-height: 1.6; margin: 20px 0; }
+.sign-in-status:not(:empty) { margin-top: var(--space-md); padding: var(--space-md); border-radius: var(--radius-sm); background: var(--color-soft); color: var(--color-ink); }
+.sign-in-local { border-top: 1px solid var(--color-line); margin-top: var(--space-lg); padding-top: var(--space-lg); }
+.sign-in-local p { text-align: center; margin-top: var(--space-md); font-size: var(--text-sm); }
+@media (hover: hover) {
+  .sign-in-back:hover, .sign-in-help:hover, .sign-in-password button:hover { color: var(--color-accent-hover); }
+}
+@media (max-width: 350px) { .sign-in-heading h1 { font-size: 1.75rem; } }

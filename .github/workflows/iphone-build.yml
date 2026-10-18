@@ -1,0 +1,57 @@
+name: iPhone build
+on:
+  push:
+    branches: [main, feature/mobile-web]
+  workflow_dispatch:
+jobs:
+  native:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check generated review and shared content
+        run: |
+          python3 scripts/sync_swift_review.py --check
+          cmp mobile/src/questions.json CareVoice/Resources/questions.json
+          cmp mobile/public/media/carevoice-family-hd.mp4 CareVoice/Resources/Media/carevoice-family-hd.mp4
+      - name: Core tests
+        run: swift test
+      - name: Build native iPhone app
+        run: xcodebuild -project CareVoice.xcodeproj -scheme CareVoice -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - name: Test mobile parity on iPhone
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          devices = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', 'available', '-j']))['devices']
+          phone = next(d for runtime, group in devices.items() if 'iOS' in runtime for d in group if 'iPhone' in d['name'])
+          subprocess.run(['xcodebuild', '-project', 'CareVoice.xcodeproj', '-scheme', 'CareVoice', '-destination', 'platform=iOS Simulator,id=' + phone['udid'], '-resultBundlePath', 'SettingsTests.xcresult', 'CODE_SIGNING_ALLOWED=NO', 'test'], check=True)
+          PY
+      - name: Export simulator screenshots
+        if: always()
+        run: |
+          if [ -d SettingsTests.xcresult ]; then python3 scripts/export_iphone_screenshots.py SettingsTests.xcresult iphone-screenshots; fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: settings-iphone-test-results
+          path: |
+            SettingsTests.xcresult
+            iphone-screenshots
+  single-file:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare isolated single-file target
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil, subprocess, tempfile
+          root=Path(tempfile.mkdtemp(prefix='carevoice-review-'))
+          (root/'CareVoice/Resources').mkdir(parents=True)
+          (root/'scripts').mkdir()
+          shutil.copy('review/CareVoiceComplete.swift',root/'CareVoice/CareVoiceComplete.swift')
+          shutil.copytree('CareVoice/Resources/Assets.xcassets',root/'CareVoice/Resources/Assets.xcassets')
+          shutil.copy('CareVoice/Resources/PrivacyInfo.xcprivacy',root/'CareVoice/Resources/PrivacyInfo.xcprivacy')
+          shutil.copy('scripts/generate_project.py',root/'scripts/generate_project.py')
+          subprocess.run(['python3',str(root/'scripts/generate_project.py')],check=True)
+          subprocess.run(['xcodebuild','-project',str(root/'CareVoice.xcodeproj'),'-scheme','CareVoice','-sdk','iphonesimulator','-destination','generic/platform=iOS Simulator','CODE_SIGNING_ALLOWED=NO','build'],check=True)
+          PY

@@ -1,0 +1,37 @@
+/* CareVoice mobile launch · full-screen motion with a bottom account sheet.
+ * Existing CareVoice tokens; reference informs hierarchy and interaction.
+ * Hallmark · pre-emit critique: P4 H5 E4 S4 R5 V4 */
+.launch-shell main { padding: 0; }
+.launch-screen { position: relative; isolation: isolate; min-height: calc(100svh - env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: flex-end; padding: var(--space-xl) var(--space-lg) calc(var(--space-xl) + env(safe-area-inset-bottom)); }
+.launch-copy h1, .launch-actions > .launch-account { position: relative; isolation: isolate; }
+.launch-copy h1::before, .launch-actions > .launch-account::before { content: ""; position: absolute; inset: -12px -16px; z-index: -1; pointer-events: none; background: color-mix(in srgb, var(--color-paper) 24%, transparent); mask-image: radial-gradient(ellipse, black 35%, transparent 72%); -webkit-mask-image: radial-gradient(ellipse, black 35%, transparent 72%); }
+.launch-actions > .launch-account::before { inset: 0 8%; }
+.launch-shell .sign-in-video::after { background: none; }
+.launch-copy { text-align: center; margin-bottom: clamp(40px, 8svh, 80px); padding-top: 52svh; }
+.launch-brand { font-size: 1rem; font-weight: 650; letter-spacing: -.02em; color: var(--color-accent); margin-bottom: var(--space-md); }
+.launch-copy h1 { font-size: clamp(1.75rem, 7.5vw, 2.5rem); line-height: 1.15; letter-spacing: -.045em; white-space: pre-line; max-width: 450px; margin: 0 auto; }
+.launch-actions { display: grid; gap: var(--space-md); }
+.launch-actions .primary, .account-providers .primary, .account-provider { border-radius: 999px; min-height: 52px; font-weight: 650; }
+.launch-account, .account-local { min-height: 44px; width: 100%; text-align: center; color: var(--color-muted); white-space: nowrap; }
+.launch-account { font-size: var(--text-body); }
+dialog.account-sheet { position: fixed; inset: auto 0 0; margin: 0 auto; width: min(100%, 560px); max-width: 560px; max-height: min(92dvh, 900px); padding: 0; border: 0; border-radius: 28px 28px 0 0; background: var(--color-paper); color: var(--color-ink); overflow: auto; overscroll-behavior: contain; box-shadow: 0 -8px 40px var(--color-shadow); }
+dialog.account-sheet::backdrop { background: transparent; }
+.account-sheet-handle { width: 36px; height: 4px; background: var(--color-line); border-radius: 999px; margin: 12px auto 0; }
+.account-sheet-close { position: absolute; top: var(--space-sm); right: var(--space-sm); display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--color-muted); }
+.account-sheet-content { padding: var(--space-xl) var(--space-lg) calc(var(--space-lg) + env(safe-area-inset-bottom)); }
+.account-sheet-content h2 { font-size: clamp(1.8rem, 7vw, 2.25rem); letter-spacing: -.04em; line-height: 1.2; padding-right: var(--space-lg); }
+.account-sheet-description { margin-top: var(--space-sm); font-size: 1rem; line-height: 1.5; }
+.account-providers { display: grid; gap: 12px; margin: var(--space-lg) 0 var(--space-md); }
+.account-providers > button { width: 100%; height: 52px; margin: 0; padding: 12px var(--space-md); font-size: 1rem; font-weight: 650; line-height: 1.25; white-space: nowrap; }
+.account-provider { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px var(--space-md); background: var(--color-surface); border: 1px solid var(--color-line); color: var(--color-ink); white-space: nowrap; }
+.provider-google { display: block; width: 22px; height: 22px; object-fit: contain; flex-shrink: 0; }
+.account-preview-note { font-size: .75rem; color: var(--color-muted); text-align: center; margin-bottom: var(--space-sm); }
+.account-provider-status { font-size: var(--text-body); background: var(--color-soft); padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm); }
+.account-local { font-size: .8rem; text-decoration: underline; text-underline-offset: 3px; }
+.account-sheet .sign-in-screen { max-width: none; padding: var(--space-md) var(--space-lg) calc(var(--space-lg) + env(safe-area-inset-bottom)); }
+.account-sheet .sign-in-heading { padding-top: var(--space-md); }
+.account-sheet .email-entry-screen { min-height: min(50dvh, 440px); }
+.email-entry-screen .sign-in-field { margin-bottom: var(--space-xl); }
+@media (hover: hover) { .account-provider:hover { background: var(--color-soft); } .launch-account:hover, .account-local:hover { color: var(--color-accent); } }
+@media (prefers-reduced-motion: no-preference) { dialog.account-sheet[open] { animation: account-sheet-enter 240ms var(--ease-out); } @keyframes account-sheet-enter { from { transform: translateY(100%); } to { transform: translateY(0); } } }
+@media (max-width: 350px) { .account-providers > button { font-size: .9rem; } }
