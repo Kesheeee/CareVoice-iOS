@@ -7155,8 +7155,8 @@ enum CommunityFailure: Error {
 
 enum CommunityConfiguration {
     // Publishable client configuration only. Never put a secret/service_role key here.
-    static let projectURL = ""
-    static let publishableKey = ""
+    static let projectURL = "https://lbbpuwtwhiectsmhhuej.supabase.co"
+    static let publishableKey = "sb_publishable_uUt_7SQgMfPA0idY7ZBVHw_KOcWZHRY"
     static var current: (URL, String)? {
         if ProcessInfo.processInfo.arguments.contains("--ui-testing") { return nil }
         let address = Bundle.main.object(forInfoDictionaryKey: "CareVoiceCommunityURL") as? String ?? projectURL

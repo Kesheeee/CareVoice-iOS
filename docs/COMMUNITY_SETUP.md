@@ -6,6 +6,15 @@ Implemented: verified email-code sign-in, a separate public nickname, topic-filt
 
 ## Connect the project
 
+### Current review environment — 18 October 2026
+
+- Dedicated **CareVoice** project in **Kesheeee's Org**, Singapore (`ap-southeast-1`): `lbbpuwtwhiectsmhhuej`.
+- Project URL: `https://lbbpuwtwhiectsmhhuej.supabase.co`. Both native source and the full Swift review file use its public publishable key. No privileged keys are included.
+- The `parent_community` migration is applied. The permission scenarios were also run against the live Supabase auth schema inside a rolled-back transaction; no test users or discussions remain. Anonymous REST access returns 401 / permission denied.
+- Email authentication and email confirmation are enabled; anonymous authentication is disabled.
+- **Still pending:** set the Magic Link template to include `{{ .Token }}` in the [dashboard](https://supabase.com/dashboard/project/lbbpuwtwhiectsmhhuej/auth/templates), verify email delivery with consenting testers, configure production SMTP, and assign a verified moderator. Dashboard sign-in is required to finish the template change. The email-code flow has not yet been tested end to end.
+- Security advisors reported only two informational notices for private moderator/audit tables having RLS with no policies. This is intentional deny-by-default behavior: those tables are accessed through restricted helpers, not directly by app users. See [RLS without policies](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
 1. Create/select a dedicated CareVoice Supabase project. Do not use another app's database without explicit approval.
 2. Apply `supabase/migrations/20261018010000_parent_community.sql` with the Supabase migration workflow. It creates new community tables, restricted grants, RLS and narrow private authorization helpers. Do not run `bootstrap_ci.sql` on Supabase; that file is only an auth-schema stub for disposable CI databases.
 3. Enable email authentication with email confirmation. For **Magic Link** in Authentication → Email Templates, include `{{ .Token }}` so the app's email-code field can verify the message. Example:
