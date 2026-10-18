@@ -131,7 +131,7 @@ struct CommunityAccountView: View {
             } else if community.user == nil {
                 AccountForm(community: community, initialMode: .login)
             } else if !community.identityLoaded {
-                if community.error == nil {
+                if community.busy || community.restoring {
                     ProgressView(store.t("Loading your community profile…", "正在載入社區檔案…")).frame(maxWidth: .infinity)
                 } else {
                     Button(store.t("Try again", "再試一次")) { Task { await community.refresh() } }.disabled(community.busy)
