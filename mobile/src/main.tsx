@@ -656,17 +656,6 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
                 <ChevronRight size={17} />
               </button>
             </div>
-            {user && <>
-              <h2 className="profile-section">{t("Account", "帳戶", "账户")}</h2>
-              <p className="account-email">{user.email}</p>
-              <div className="settings-list"><button disabled={signingOut} onClick={async () => {
-                setSigningOut(true);
-                try {
-                  const { error } = await authClient.auth.signOut({ scope: "local" });
-                  if (error) throw error;
-                } catch { setError(t("Could not sign out. Please try again.", "無法登出，請再試一次。")); setSigningOut(false); }
-              }}><LockKeyhole size={20} />{signingOut ? t("Signing out…", "正在登出…") : t("Sign out", "登出")}<ChevronRight size={17} /></button></div>
-            </>}
             {languageSaved && <p className="language-saved" role="status"><Check size={16} />{t("Language updated", "語言設定已更新", "语言设置已更新")}</p>}
             <h2 className="profile-section">{t("Care", "照顧工具")}</h2>
             <div className="settings-list">
@@ -734,6 +723,17 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               )}
             </p>
             </details>
+            {user && <>
+              <h2 className="profile-section">{t("Account", "帳戶", "账户")}</h2>
+              <p className="account-email">{user.email}</p>
+              <div className="settings-list"><button disabled={signingOut} onClick={async () => {
+                setSigningOut(true);
+                try {
+                  const { error } = await authClient.auth.signOut({ scope: "local" });
+                  if (error) throw error;
+                } catch { setError(t("Could not sign out. Please try again.", "無法登出，請再試一次。")); setSigningOut(false); }
+              }}><LockKeyhole size={20} />{signingOut ? t("Signing out…", "正在登出…") : t("Sign out", "登出")}<ChevronRight size={17} /></button></div>
+            </>}
           </div>
         )}
         {page === "report" && (

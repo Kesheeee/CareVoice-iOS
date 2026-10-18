@@ -3079,7 +3079,6 @@ struct SettingsView: View {
                 Button { profileOpen = true } label: { SettingsRow(title: store.t("Profile", "個人檔案"), icon: "person") }.accessibilityIdentifier("settings-preferences")
                 Button { languageOpen = true } label: { SettingsRow(title: store.t("Language", "語言"), icon: "globe", value: store.language.displayName) }.accessibilityIdentifier("languagePicker")
             }
-            AccountSettingsRow(community: store.community)
             Section(store.t("Care", "照顧工具")) {
                 NavigationLink { QuestionnaireView() } label: { SettingsRow(title: store.t("Observation questions", "觀察問卷"), icon: "book", value: "\(store.data.answeredCount)/\(store.questions.count)", chevron: false) }.accessibilityIdentifier("openQuestionnaire")
                 NavigationLink { ReportsView() } label: { SettingsRow(title: store.t("Reports & sharing", "報告同分享"), icon: "doc.text", chevron: false) }.accessibilityIdentifier("openReports")
@@ -3093,6 +3092,7 @@ struct SettingsView: View {
                     Text(store.t("Your child’s records stay on this device, protected by iOS. They are not synced to your account or included in device backups. Export a backup before changing devices or deleting the app.", "孩子的記錄受 iOS 保護並保留於此裝置，不會同步至帳戶或包括在裝置備份內。更換裝置或刪除應用程式前請匯出備份。")).font(.subheadline).foregroundStyle(Color.secondary)
                 }
             }
+            AccountSettingsRow(community: store.community)
         }.scrollContentBackground(.hidden).background(Brand.background)
             .navigationTitle(store.t("Settings", "設定"))
             .sheet(isPresented: $languageOpen) { LanguageSettingsView() }
