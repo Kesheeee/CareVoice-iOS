@@ -24,7 +24,6 @@ export function SignIn({
   const [recovering, setRecovering] = useState(false);
   const [visible, setVisible] = useState(false);
   const [email, setEmail] = useState("");
-  const [repeatEmail, setRepeatEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [confirmation, setConfirmation] = useState(false);
@@ -55,19 +54,6 @@ export function SignIn({
     event.preventDefault();
     if (requestInFlight.current) return;
     setError("");
-    if (
-      creating &&
-      email.trim().toLowerCase() !== repeatEmail.trim().toLowerCase()
-    ) {
-      setError(
-        t(
-          "Your email addresses don’t match.",
-          "兩次輸入的電郵地址不一致。",
-          "两次输入的邮箱地址不一致。",
-        ),
-      );
-      return;
-    }
     if (creating && password !== repeatPassword) {
       setError(
         t(
@@ -194,34 +180,6 @@ export function SignIn({
                 onChange={(event) => setEmail(event.target.value)}
               />
             </div>
-            {creating && (
-              <>
-                <label htmlFor="sign-in-repeat-email">
-                  {t("Re-enter email", "再次輸入電郵", "再次输入邮箱")}
-                </label>
-                <div className="sign-in-field">
-                  <Mail
-                    className="sign-in-field-icon"
-                    size={20}
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="sign-in-repeat-email"
-                    name="confirmEmail"
-                    type="email"
-                    autoComplete="off"
-                    inputMode="email"
-                    autoCapitalize="none"
-                    spellCheck={false}
-                    placeholder="you@example.com"
-                    required
-                    disabled={busy}
-                    value={repeatEmail}
-                    onChange={(event) => setRepeatEmail(event.target.value)}
-                  />
-                </div>
-              </>
-            )}
             {!recovering && (
               <>
                 <label htmlFor="sign-in-password">

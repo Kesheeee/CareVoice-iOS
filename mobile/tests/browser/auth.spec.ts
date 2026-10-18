@@ -48,7 +48,6 @@ async function openSignup(page: import("@playwright/test").Page) {
     .getByRole("button", { name: "Continue with email", exact: true })
     .click();
   await page.getByLabel("Email", { exact: true }).fill(user.email);
-  await page.getByLabel("Re-enter email", { exact: true }).fill(user.email);
   await page
     .getByLabel("Password", { exact: true })
     .fill("test-password-not-real");
@@ -57,7 +56,7 @@ async function openSignup(page: import("@playwright/test").Page) {
     .fill("test-password-not-real");
 }
 
-test("Signup checks both confirmations and waits for verification", async ({
+test("Signup checks password confirmation and waits for verification", async ({
   page,
 }) => {
   let sends = 0;
@@ -73,17 +72,6 @@ test("Signup checks both confirmations and waits for verification", async ({
     await route.fulfill({ json: { ...user, identities: [] } });
   });
   await openSignup(page);
-  await page
-    .getByLabel("Re-enter email", { exact: true })
-    .fill("typo@example.com");
-  await page
-    .getByRole("button", { name: "Create account", exact: true })
-    .click();
-  await expect(page.getByRole("alert")).toContainText(
-    "email addresses don’t match",
-  );
-  expect(sends).toBe(0);
-  await page.getByLabel("Re-enter email", { exact: true }).fill(user.email);
   await page
     .getByLabel("Confirm password", { exact: true })
     .fill("different-password");

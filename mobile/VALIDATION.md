@@ -49,7 +49,7 @@ Not yet validated: physical devices, Safari/WebKit, OS share sheets, print-to-PD
 
 
 18 October 2026 — password account flow:
-- Continue with email now opens Create your account with repeated email and password confirmation; existing accounts use password login.
+- Continue with email now opens Create your account with email and password confirmation; existing accounts use password login.
 - Browser tests mock Supabase signup/login and verify mismatch blocking, confirmation-required gating, delivery errors, rejected/unconfirmed logins, account isolation, callback handling, and 320/375/414px layouts with accessible keyboard focus. No real emails or accounts are created by these tests.
 - Email confirmation remains enabled. Public signup still requires SMTP configuration; this UI change does not remove that restriction. Set or reset password sends a recovery email; a verified recovery session opens the new-password form (including after refresh). Existing passwordless accounts can use this to establish a password.
 - Production build and 17 unit tests pass. Seven auth browser tests pass in Chromium and WebKit; three-language phone form layout, reduced-motion video, and media-error handling are also checked. WebKit media-error testing dispatches the browser error event because media networking can bypass interception. Physical-phone inbox delivery remains unverified.
