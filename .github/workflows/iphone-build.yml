@@ -8,17 +8,22 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+      - name: Check generated review and shared content
+        run: |
+          python3 scripts/sync_swift_review.py --check
+          cmp mobile/src/questions.json CareVoice/Resources/questions.json
+          cmp mobile/public/media/carevoice-family-hd.mp4 CareVoice/Resources/Media/carevoice-family-hd.mp4
       - name: Core tests
         run: swift test
       - name: Build native iPhone app
         run: xcodebuild -project CareVoice.xcodeproj -scheme CareVoice -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
-      - name: Test Settings on iPhone
+      - name: Test mobile parity on iPhone
         run: |
           python3 - <<'PY'
           import json, subprocess
           devices = json.loads(subprocess.check_output(['xcrun', 'simctl', 'list', 'devices', 'available', '-j']))['devices']
           phone = next(d for runtime, group in devices.items() if 'iOS' in runtime for d in group if 'iPhone' in d['name'])
-          subprocess.run(['xcodebuild', '-project', 'CareVoice.xcodeproj', '-scheme', 'CareVoice', '-destination', 'platform=iOS Simulator,id=' + phone['udid'], '-only-testing:CareVoiceUITests/CareVoiceUITests/testSettingsNavigationAndPreferences', '-only-testing:CareVoiceUITests/CareVoiceUITests/testLanguageSelectionAndPersistence', '-only-testing:CareVoiceUITests/CareVoiceUITests/testParentsCommunitySetupAndAccountNavigation', '-resultBundlePath', 'SettingsTests.xcresult', 'CODE_SIGNING_ALLOWED=NO', 'test'], check=True)
+          subprocess.run(['xcodebuild', '-project', 'CareVoice.xcodeproj', '-scheme', 'CareVoice', '-destination', 'platform=iOS Simulator,id=' + phone['udid'], '-resultBundlePath', 'SettingsTests.xcresult', 'CODE_SIGNING_ALLOWED=NO', 'test'], check=True)
           PY
       - uses: actions/upload-artifact@v4
         if: always()

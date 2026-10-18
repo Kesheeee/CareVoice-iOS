@@ -1,120 +1,74 @@
 import XCTest
 
 final class CareVoiceUITests: XCTestCase {
-    func testParentsCommunitySetupAndAccountNavigation() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
-        XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
-        app.buttons["getStarted"].tap(); app.buttons["saveProfile"].tap()
-        app.tabBars.buttons.element(boundBy: 2).tap()
-        app.buttons["Parents"].tap()
-        XCTAssertTrue(app.staticTexts["Community setup is pending"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["Publish"].exists)
-        snapshot(app, "Community-Parents-Setup")
-        app.buttons["Community account"].tap()
-        XCTAssertTrue(app.buttons["Read community guidelines"].waitForExistence(timeout: 5))
-        app.buttons["Read community guidelines"].tap()
-        XCTAssertTrue(app.navigationBars["Community Guidelines"].waitForExistence(timeout: 5))
+    private func launch(_ arguments: [String] = ["--seed-profile"]) -> XCUIApplication {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"] + arguments; app.launch(); return app
     }
-    func testLanguageSelectionAndPersistence() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
-        XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
-        app.buttons["getStarted"].tap(); app.buttons["saveProfile"].tap()
-        app.tabBars.buttons.element(boundBy: 3).tap(); app.buttons["openSettings"].tap()
+    func testSettingsNavigationAndPreferences() {
+        let app = launch()
+        XCTAssertTrue(app.buttons["tab-3"].waitForExistence(timeout: 10)); app.buttons["tab-3"].tap()
+        XCTAssertTrue(app.buttons["languagePicker"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.staticTexts["Your child"].exists)
         app.buttons["settings-preferences"].tap()
-        for (language, title) in [("繁體中文", "帳戶偏好"), ("English", "Account preferences"), ("简体中文", "账户偏好")] {
+        XCTAssertTrue(app.textFields["nickname"].waitForExistence(timeout: 5))
+        app.buttons["saveProfile"].tap()
+        app.buttons["openReports"].tap()
+        app.swipeUp()
+        XCTAssertTrue(app.buttons["sharePDF"].waitForExistence(timeout: 5))
+        snapshot(app, "Settings-Report")
+    }
+    func testLanguageSelectionAndPersistence() {
+        let app = launch(); app.buttons["tab-3"].tap()
+        for language in ["traditionalChinese", "english", "simplifiedChinese"] {
             app.buttons["languagePicker"].tap()
-            XCTAssertTrue(app.buttons[language].waitForExistence(timeout: 5))
-            app.buttons[language].tap()
-            XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 5))
+            let option = app.buttons["language-" + language]
+            XCTAssertTrue(option.waitForExistence(timeout: 5)); option.tap()
+            app.buttons["saveLanguage"].tap()
         }
         snapshot(app, "Settings-SimplifiedChinese")
         app.terminate(); app.launchArguments = ["--ui-testing", "--preserve-ui-data"]; app.launch()
-        app.tabBars.buttons.element(boundBy: 3).tap(); app.buttons["openSettings"].tap()
-        XCTAssertTrue(app.buttons["settings-preferences"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["账户偏好"].exists)
-        app.buttons["settings-preferences"].tap()
-        XCTAssertTrue(app.navigationBars["账户偏好"].waitForExistence(timeout: 5))
+        app.buttons["tab-3"].tap()
+        XCTAssertTrue(app.staticTexts["简体中文"].waitForExistence(timeout: 5))
     }
-    func testSettingsNavigationAndPreferences() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
-        XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
-        app.buttons["getStarted"].tap(); app.buttons["saveProfile"].tap()
-        app.tabBars.buttons["Profile"].tap()
-        app.buttons["openSettings"].tap()
-        XCTAssertTrue(app.buttons["settings-preferences"].waitForExistence(timeout: 5))
-        snapshot(app, "Settings-Overview")
-        app.buttons["settings-preferences"].tap()
-        let name = app.textFields["caregiverName"]
-        XCTAssertTrue(name.waitForExistence(timeout: 5)); name.tap(); name.typeText("Alex")
-        app.buttons["saveCaregiverName"].tap()
-        XCTAssertTrue(app.staticTexts["Saved on this device"].waitForExistence(timeout: 5))
-        app.navigationBars.buttons.element(boundBy: 0).tap()
-        for page in ["security", "community", "data", "notifications", "help"] {
-            let row = app.buttons["settings-" + page]
-            if !row.isHittable { app.swipeUp() }
-            row.tap()
-            if page == "data" {
-                snapshot(app, "Settings-Data")
-                app.swipeUp()
-                app.buttons["deleteLocalData"].tap()
-                XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
-                app.alerts.buttons["Cancel"].tap()
-            }
-            app.navigationBars.buttons.element(boundBy: 0).tap()
-        }
-        app.terminate(); app.launchArguments = ["--ui-testing", "--preserve-ui-data"]; app.launch()
-        app.tabBars.buttons["Profile"].tap(); app.buttons["openSettings"].tap()
-        XCTAssertTrue(app.staticTexts["Alex"].waitForExistence(timeout: 5))
-        app.buttons["settings-preferences"].tap()
-        XCTAssertEqual(app.textFields["caregiverName"].value as? String, "Alex")
+    func testParentsCommunitySetupAndAccountNavigation() {
+        let app = launch(); app.buttons["tab-2"].tap()
+        XCTAssertTrue(app.staticTexts["Official resources & support"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.links.containing(.staticText, identifier: "Child Assessment Service (CAS)").firstMatch.exists)
+        snapshot(app, "Community-Resources")
     }
-    func testOnboardingRecordingPersistenceAndReport() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
-        XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
-        snapshot(app, "01-Welcome")
-        app.buttons["getStarted"].tap()
-        let nickname = app.textFields["nickname"]
-        XCTAssertTrue(nickname.waitForExistence(timeout: 5)); nickname.tap(); nickname.typeText("Alex")
-        app.buttons["saveProfile"].tap()
-        XCTAssertTrue(app.buttons["captureMoment"].waitForExistence(timeout: 5))
-        snapshot(app, "02-Home")
-        app.buttons["captureMoment"].tap()
-        let text = app.textFields["recordText"]
-        XCTAssertTrue(text.waitForExistence(timeout: 5)); text.tap(); text.typeText("Waved hello at the park today.")
+    func testQuickRecordTabsSaveAndPersistence() {
+        let app = launch(); app.buttons["tab-1"].tap(); app.buttons["addRecord"].tap()
+        XCTAssertTrue(app.buttons["Start recording"].waitForExistence(timeout: 5))
+        app.buttons["Text record"].tap()
+        let text = app.textViews["recordText"].exists ? app.textViews["recordText"] : app.textFields["recordText"]
+        XCTAssertTrue(text.waitForExistence(timeout: 5)); text.tap(); text.typeText("Waved hello at the park.")
         app.buttons["saveRecord"].tap()
-        app.tabBars.buttons["Records"].tap()
-        XCTAssertTrue(app.staticTexts["Waved hello at the park today."].waitForExistence(timeout: 5))
-        snapshot(app, "03-Records")
+        XCTAssertTrue(app.staticTexts["Waved hello at the park."].waitForExistence(timeout: 5))
         app.terminate(); app.launchArguments = ["--ui-testing", "--preserve-ui-data"]; app.launch()
-        XCTAssertTrue(app.buttons["captureMoment"].waitForExistence(timeout: 5))
-        app.tabBars.buttons["Records"].tap()
-        XCTAssertTrue(app.staticTexts["Waved hello at the park today."].waitForExistence(timeout: 5))
-        app.tabBars.buttons["Profile"].tap()
-        app.buttons["Reports"].tap()
-        XCTAssertTrue(app.buttons["shareReport"].waitForExistence(timeout: 5))
-        snapshot(app, "04-Report")
-        app.buttons["shareReport"].tap()
-        XCTAssertTrue(app.otherElements["ActivityListView"].waitForExistence(timeout: 5) || app.buttons["Copy"].exists || app.buttons["Close"].exists)
+        app.buttons["tab-1"].tap()
+        XCTAssertTrue(app.staticTexts["Waved hello at the park."].waitForExistence(timeout: 5))
+        snapshot(app, "Records-Saved")
     }
-    func testQuestionnaireAndTraditionalChinese() throws {
-        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
-        app.buttons["getStarted"].tap(); app.buttons["saveProfile"].tap()
-        app.tabBars.buttons["Profile"].tap()
-        app.buttons["Observation questionnaire"].tap()
-        XCTAssertTrue(app.buttons["answer-often"].waitForExistence(timeout: 5))
-        app.buttons["answer-often"].tap(); app.swipeUp()
-        app.buttons["nextQuestion"].tap()
-        XCTAssertTrue(app.staticTexts["Question 2 of 30"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.staticTexts["Question 2 of 30"].isHittable)
-        snapshot(app, "05-Questionnaire")
-        app.navigationBars.buttons.element(boundBy: 0).tap()
-        app.buttons["openSettings"].tap()
-        app.buttons["settings-preferences"].tap()
-        app.buttons["languagePicker"].tap()
-        app.buttons["繁體中文"].tap()
-        XCTAssertTrue(app.tabBars.buttons["首頁"].waitForExistence(timeout: 5))
-        app.tabBars.buttons["首頁"].tap()
-        snapshot(app, "06-TraditionalChinese")
+    func testRevisedQuestionnaireAndSummaryNavigation() {
+        let app = launch(); app.buttons["openQuestionnaire"].tap()
+        XCTAssertTrue(app.staticTexts["Question 1 of 33"].waitForExistence(timeout: 5))
+        app.buttons["answer-often"].tap(); app.swipeUp(); app.buttons["nextQuestion"].tap()
+        XCTAssertTrue(app.staticTexts["Question 2 of 33"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons["Review"].tap()
+        app.swipeUp()
+        app.buttons.containing(.staticText, identifier: "Does your child respond when they hear their name?").firstMatch.tap()
+        XCTAssertTrue(app.staticTexts["Question 1 of 33"].waitForExistence(timeout: 5))
+    }
+    func testSignupRejectsWeakPasswordsWithoutNetwork() {
+        let app = launch(["--auth-preview"])
+        app.buttons["getStarted"].tap(); app.buttons["Continue with email"].tap()
+        let email = app.textFields["authEmail"]; XCTAssertTrue(email.waitForExistence(timeout: 5)); email.tap(); email.typeText("preview@example.com")
+        app.buttons["authSubmit"].tap()
+        let password = app.secureTextFields["authPassword"]; password.tap(); password.typeText("weak")
+        app.swipeUp(); app.buttons["authSubmit"].tap()
+        XCTAssertTrue(app.staticTexts["authError"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts["authError"].label.contains("8 characters"))
+        snapshot(app, "Account-Password-Validation")
     }
     private func snapshot(_ app: XCUIApplication, _ name: String) {
         let attachment = XCTAttachment(screenshot: app.screenshot()); attachment.name = name; attachment.lifetime = .keepAlways; add(attachment)

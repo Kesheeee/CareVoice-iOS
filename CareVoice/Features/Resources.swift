@@ -19,127 +19,57 @@ struct OfficialResource: Identifiable {
 
 struct ResourcesView: View {
     @EnvironmentObject var store: AppStore
-    @State private var section = 0
-    @State private var topic = "first"
-    @State private var question = ""
-    @State private var submittedQuestion: String?
-    @FocusState private var typing: Bool
-
-    private var relevantResources: [OfficialResource] {
-        // Explicit topic selection, not AI matching or clinical suitability scoring.
-        let ids: [String]
-        switch topic {
-        case "appointment": ids = ["appointment", "first"]
-        case "referral": ids = ["referral", "support"]
-        default: ids = ["first", "services"]
-        }
-        return OfficialResource.all.filter { ids.contains($0.id) }
-    }
-
     var body: some View {
-        VStack(spacing: 0) {
-            Picker(store.t("Community section", "社區分類"), selection: $section) {
-                Text(store.t("Ask CareVoice", "問 CareVoice")).tag(0)
-                Text(store.t("Resources", "資源")).tag(1)
-                Text(store.t("Parents", "家長交流")).tag(2)
-            }.pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
-            if section == 2 {
-                ParentCommunityView(community: store.community)
-            } else {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    if section == 0 { askContent }
-                    else if section == 1 {
-                        Text(store.t("Official resources", "官方資源")).font(.title2.bold())
-                        Text(store.t("Browse service information from the Department of Health and Social Welfare Department.", "瀏覽衛生署及社會福利署嘅服務資料。"))
-                            .font(.subheadline).foregroundStyle(.secondary)
-                        NavigationLink { ServiceTypesView() } label: { Label(store.t("Service types", "服務種類"), systemImage: "square.grid.2x2").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
-                        NavigationLink { ServiceDirectoryView() } label: { Label(store.t("Find a centre · waiting times", "尋找中心・輪候時間"), systemImage: "mappin.and.ellipse").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
-                        NavigationLink { GlossaryView() } label: { Label(store.t("Glossary", "術語對照"), systemImage: "character.book.closed").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
-                        NavigationLink { CitableFactsView() } label: { Label(store.t("Cited information", "可引用資料"), systemImage: "checkmark.seal").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
-                        ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
-                        sourceNote
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                VStack(spacing: 0) {
+                    resource("Child Assessment Service (CAS)", "兒童體能智力測驗服務（CAS）", "stethoscope", "https://www.dhcas.gov.hk/en/faq.html", chinese: "https://www.dhcas.gov.hk/tc/faq.html")
+                    Divider()
+                    resource("Assessment registration & appointments", "評估登記及預約", "calendar", "https://www.dhcas.gov.hk/en/registration_appointment.html", chinese: "https://www.dhcas.gov.hk/tc/registration_appointment.html")
+                    Divider()
+                    resource("Follow-up & service referrals", "跟進與服務轉介", "arrow.triangle.branch", "https://www.dhcas.gov.hk/en/management_referral.html", chinese: "https://www.dhcas.gov.hk/tc/management_referral.html")
+                    Divider()
+                    resource("Central referral system (CRSRS)", "康復服務中央轉介系統", "building.2", "https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/centralref/", chinese: "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_crsrehab/centralref/", health: false)
+                }.background(.white, in: RoundedRectangle(cornerRadius: 22))
+                Text(store.t("Support for parents", "家長資源")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                VStack(spacing: 0) {
+                    resource("Maternal & Child Health Centres", "母嬰健康院", "figure.and.child.holdinghands", "https://www.dh.gov.hk/english/main/main_fhs/main_fhs.html")
+                    Divider()
+                    resource("On-site pre-school support", "到校學前支援", "building.2", "https://www.swd.gov.hk/oprs/index_en.htm", health: false)
+                }.background(.white, in: RoundedRectangle(cornerRadius: 22))
+                Text(store.t("Common questions", "常見問題")).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                VStack(spacing: 20) {
+                    DisclosureGroup(store.t("Where can I discuss my concerns?", "有疑問可以搵邊個？")) {
+                        Text(store.t("Start with your family doctor or Maternal & Child Health Centre. They can discuss your observations and whether a referral is needed.", "可以先同家庭醫生或母嬰健康院傾吓你的觀察，以及是否需要轉介。")).padding(.top, 12)
                     }
-                }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
-            }.scrollDismissesKeyboard(.interactively)
-            }
-            if section == 0 { composer }
-        }
-        .background(Brand.background)
-        .navigationTitle(store.t("Community", "社區"))
-        .navigationBarTitleDisplayMode(.inline)
-    }
-
-    private var askContent: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack(spacing: 12) {
-                Image(systemName: "bubble.left.and.bubble.right.fill").font(.title2).foregroundStyle(Brand.blue)
-                    .frame(width: 52, height: 52).background(Brand.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 18))
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(store.t("A little help, one question at a time.", "一個問題，一齊搵方向。")).font(.headline)
-                    Text(store.t("AI connection pending", "AI 尚未連接")).font(.caption).foregroundStyle(.secondary)
+                    DisclosureGroup(store.t("Does this questionnaire assess my child?", "這份問卷會評估小朋友嗎？")) {
+                        Text(store.t("No. It records your observations without scores, diagnosis or a suggested clinical level. Only you choose your journey stage.", "不會。問卷只記錄觀察，不會評分、診斷或建議臨床程度。只有你能選擇目前階段。")).padding(.top, 12)
+                    }
+                    DisclosureGroup(store.t("What can I prepare while waiting?", "等候期間可以準備甚麼？")) {
+                        Text(store.t("Keep your observations and questions together. Use your personal checklist and bring a report to your next professional appointment. Confirm service arrangements with your referring professional.", "整理日常觀察和問題，使用個人清單，會面時帶同記錄報告。請向轉介專業人士確認服務安排。")).padding(.top, 12)
+                    }
+                }.padding(20).background(.white, in: RoundedRectangle(cornerRadius: 22))
+                DisclosureGroup(store.t("About these resources", "關於這些資源")) {
+                    Text(store.t("Sources: Department of Health and Social Welfare Department. Service providers confirm eligibility and arrangements. External links open in your browser.", "資料來源：衛生署及社會福利署。服務資格及安排由機構確認，外部連結會在瀏覽器開啟。")).font(.caption).padding(.top, 12)
                 }
-            }
-            Text(store.t("What would you like help with today?", "今日想了解邊方面？")).font(.title2.bold())
-            Text(store.t("Choose a topic to browse official links, or try writing your question below. No question is sent while AI is disconnected.", "揀主題瀏覽官方連結，或者喺下面試寫問題。AI 未連接前，問題唔會傳送。"))
-                .font(.subheadline).foregroundStyle(.secondary)
-            VStack(spacing: 10) {
-                topicButton("first", "Understanding my child’s needs", "了解小朋友嘅需要", "heart", .blue)
-                topicButton("appointment", "Finding assessment services", "尋找評估服務", "stethoscope", .purple)
-                topicButton("referral", "Support while waiting", "輪候期間嘅支援", "clock", .orange)
-            }
-            if let submittedQuestion {
-                HStack { Spacer(minLength: 32); Text(submittedQuestion).padding(16).background(Brand.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 20)) }
-                Card {
-                    Label(store.t("Not sent", "未傳送"), systemImage: "wifi.slash").font(.subheadline.bold())
-                    Text(store.t("CareVoice AI is not connected yet. These links are selected by your topic, not an analysis of your situation.", "CareVoice AI 尚未連接。以下連結按你揀嘅主題顯示，並非對你情況嘅分析。"))
-                        .font(.subheadline).foregroundStyle(.secondary)
-                    Button(store.t("Clear question", "清除問題")) { self.submittedQuestion = nil }
+            }.padding(20)
+        }.background(Brand.background).navigationTitle(store.t("Community", "社區"))
+    }
+    private func resource(_ en: String, _ zh: String, _ icon: String, _ url: String, chinese: String? = nil, health: Bool = true) -> some View {
+        Link(destination: URL(string: store.language == .english ? url : (chinese ?? url))!) {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.title3).foregroundStyle(Brand.blue).frame(width: 26)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(store.t(en, zh)).font(.subheadline.weight(.semibold)).foregroundStyle(Color.primary)
+                    Text(health ? store.t("Department of Health", "衛生署") : store.t("Social Welfare Department", "社會福利署")).font(.caption).foregroundStyle(.secondary)
                 }
-            }
-            HStack { Text(store.t("Resources for this topic", "呢個主題嘅資源")).font(.headline); Spacer(); Image(systemName: "checkmark.shield").foregroundStyle(Brand.blue) }
-            ForEach(relevantResources) { resource in ResourceCard(resource: resource) }
-            sourceNote
-            Text(store.t("Clinic matching will need verified location, service and referral data. CareVoice does not diagnose or confirm clinic availability.", "配對診所需要已核實嘅地區、服務同轉介資料。CareVoice 唔會診斷或確認診所名額。"))
-                .font(.caption).foregroundStyle(.secondary)
+                Spacer(minLength: 4)
+                Image(systemName: "arrow.up.right").font(.caption).foregroundStyle(Brand.blue)
+            }.padding(18).frame(maxWidth: .infinity, alignment: .leading)
         }
-    }
-
-    private func topicButton(_ id: String, _ en: String, _ zh: String, _ symbol: String, _ color: Color) -> some View {
-        Button { topic = id } label: {
-            HStack(spacing: 12) {
-                Image(systemName: symbol).frame(width: 24).foregroundStyle(Brand.blue)
-                Text(store.t(en, zh)).font(.subheadline.weight(.medium)).foregroundStyle(.primary)
-                Spacer()
-                Image(systemName: topic == id ? "checkmark.circle.fill" : "circle").foregroundStyle(topic == id ? Brand.blue : Color.secondary)
-            }.padding(16).frame(minHeight: 56).background(color.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(topic == id ? Brand.blue : Color.clear, lineWidth: 2))
-        }.buttonStyle(.plain).accessibilityAddTraits(topic == id ? .isSelected : [])
-    }
-
-    private var composer: some View {
-        HStack(alignment: .bottom, spacing: 12) {
-            TextField(store.t("Describe what’s happening…", "講吓你遇到嘅情況…"), text: $question, axis: .vertical)
-                .lineLimit(1...4).focused($typing).padding(14)
-                .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
-                .onChange(of: question) { question = String($0.prefix(2000)) }
-            Button {
-                submittedQuestion = question.trimmingCharacters(in: .whitespacesAndNewlines)
-                question = ""; typing = false
-            } label: {
-                Image(systemName: "arrow.up").font(.headline).foregroundStyle(.white)
-                    .frame(width: 48, height: 48).background(Brand.blue, in: Circle())
-            }.disabled(question.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .accessibilityLabel(store.t("Preview question locally", "本機預覽問題"))
-        }.padding(16).background(.bar)
-    }
-
-    private var sourceNote: some View {
-        Text(store.t("Official links open in your browser. Confirm eligibility, referral requirements and availability with the service provider.", "官方連結會喺瀏覽器開啟。資格、轉介要求同名額請向服務機構確認。"))
-            .font(.caption).foregroundStyle(.secondary)
     }
 }
-
 
 struct ResourceCard: View {
     @EnvironmentObject var store: AppStore
@@ -203,7 +133,8 @@ struct NavigatorView: View {
         case .noticed, .professionalFollowUp: return [l.text("Write down the changes you have noticed", "記下你留意到的變化"), l.text("Arrange a conversation with your doctor or MCHC", "安排與醫生或母嬰健康院討論"), l.text("Bring your questions and observations", "準備希望詢問的問題和觀察記錄")]
         case .awaitingAssessment: return [l.text("Confirm registration and appointment arrangements with your centre", "向中心確認登記及預約安排"), l.text("Check which documents the centre asks you to bring", "確認中心要求攜帶哪些文件"), l.text("Prepare an observation report", "準備觀察記錄報告")]
         case .assessed, .diagnosed: return [l.text("Discuss your report with the assessment team", "與評估團隊討論報告"), l.text("Ask your referring professional about suitable services", "向轉介專業人士了解合適的服務"), l.text("Confirm the referral steps and required documents", "確認轉介步驟及所需文件")]
-        case .registered: return [l.text("Keep your referring professional’s contact details", "保留轉介專業人士的聯絡資料"), l.text("Ask about support while waiting", "了解輪候期間的支援"), l.text("Continue recording everyday observations", "繼續記錄日常觀察")]
+        case .receivingServices: return [l.text("Keep your service contact details", "記低服務單位嘅聯絡資料"), l.text("Record questions for your service team", "記低想問服務團隊嘅問題"), l.text("Keep recording everyday observations", "繼續記錄日常觀察")]
+        case .registered, .waitingSupport: return [l.text("Keep your referring professional’s contact details", "保留轉介專業人士的聯絡資料"), l.text("Ask about support while waiting", "了解輪候期間的支援"), l.text("Continue recording everyday observations", "繼續記錄日常觀察")]
         }
     }
 }

@@ -78,6 +78,11 @@ final class CommunityAPI {
         guard (200...299).contains(http.statusCode) else {
             // Never show raw server errors or tokens to the user.
             let message = String(data: data, encoding: .utf8) ?? ""
+            if message.contains("over_email_send_rate_limit") { throw CommunityFailure.emailLimit }
+            if message.contains("email_not_confirmed") { throw CommunityFailure.unconfirmed }
+            if message.contains("invalid_credentials") { throw CommunityFailure.credentials }
+            if message.contains("weak_password") { throw CommunityFailure.weakPassword }
+            if message.contains("email_address_not_authorized") { throw CommunityFailure.emailUnavailable }
             if http.statusCode == 429 || message.contains("community_rate_limit") { throw CommunityFailure.rateLimit }
             if http.statusCode == 401 {
                 if token != nil { try clearSession() }
@@ -102,6 +107,27 @@ final class CommunityAPI {
     }
     func sendCode(email: String) async throws {
         _ = try await send("auth/v1/otp", method: "POST", body: ["email": email, "create_user": true], token: nil)
+    }
+    func passwordSignIn(email: String, password: String) async throws {
+        let bytes = try await send("auth/v1/token", method: "POST", body: ["email": email, "password": password], token: nil,
+                                   query: [URLQueryItem(name: "grant_type", value: "password")])
+        try persist(decoder.decode(CommunitySession.self, from: bytes))
+    }
+    func createAccount(email: String, password: String) async throws {
+        guard PasswordPolicy.accepts(password) else { throw CommunityFailure.weakPassword }
+        let bytes = try await send("auth/v1/signup", method: "POST", body: ["email": email, "password": password], token: nil,
+                                   query: [URLQueryItem(name: "redirect_to", value: "https://carevoice-preview-zeta.vercel.app/")])
+        // An unconfirmed user is not a session. Never grant access just because signup returned 200.
+        if let value = try? decoder.decode(CommunitySession.self, from: bytes) { try persist(value) }
+    }
+    func resetPassword(email: String) async throws {
+        _ = try await send("auth/v1/recover", method: "POST", body: ["email": email], token: nil,
+                           query: [URLQueryItem(name: "redirect_to", value: "https://carevoice-preview-zeta.vercel.app/")])
+    }
+    func validateSession() async throws {
+        guard session != nil else { return }
+        let bearer = try await token()
+        _ = try decoder.decode(CommunityUser.self, from: await send("auth/v1/user", method: "GET", body: nil, token: bearer))
     }
     func verify(email: String, code: String) async throws {
         let data = try await send("auth/v1/verify", method: "POST", body: ["email": email, "token": code, "type": "email"], token: nil)
@@ -145,6 +171,7 @@ final class CommunityStore: ObservableObject {
     @Published private(set) var posts: [CommunityPost] = []
     @Published private(set) var moderator = false
     @Published private(set) var busy = false
+    @Published private(set) var restoring = true
     @Published private(set) var hasMore = false
     @Published var error: CommunityFailure?
     @Published var topic: CommunityTopic?
@@ -170,12 +197,22 @@ final class CommunityStore: ObservableObject {
     }
     func start() async {
         guard !started else { return }; started = true
+        defer { restoring = false }
         guard configured else { return }
         await perform { api in
-            try api.restore(); user = api.session?.user
-            if user != nil { try await loadIdentity(api); try await fetchFeed(api, more: false) }
+            try api.restore()
+            // Do not expose a cached identity before checking its token with Auth.
+            do { try await api.validateSession() }
+            catch { try api.clearSession(); throw error }
         }
     }
+    func passwordSignIn(_ email: String, password: String) async -> Bool {
+        await perform { try await $0.passwordSignIn(email: email, password: password) }
+    }
+    func createAccount(_ email: String, password: String) async -> Bool {
+        await perform { try await $0.createAccount(email: email, password: password) }
+    }
+    func resetPassword(_ email: String) async -> Bool { await perform { try await $0.resetPassword(email: email) } }
     private func loadIdentity(_ api: CommunityAPI) async throws {
         guard let id = api.session?.user.id else { throw CommunityFailure.signIn }
         let profiles = try await api.rows("community_profiles", query: [URLQueryItem(name: "user_id", value: "eq." + id.uuidString)], as: [CommunityProfile].self)
@@ -205,7 +242,7 @@ final class CommunityStore: ObservableObject {
         if more { let existing = Set(posts.map(\.id)); posts += result.filter { !existing.contains($0.id) } }
         else { posts = result }
     }
-    func refresh(more: Bool = false) async { await perform { try await fetchFeed($0, more: more) } }
+    func refresh(more: Bool = false) async { await perform { api in try await loadIdentity(api); try await fetchFeed(api, more: more) } }
     func savePost(id: UUID? = nil, topic: CommunityTopic, title: String, body: String) async -> Bool {
         guard CommunityValidation.validPost(title: title, body: body) else { error = .invalid; return false }
         return await perform { api in

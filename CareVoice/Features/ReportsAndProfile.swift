@@ -19,13 +19,18 @@ struct ReportsView: View {
                 }.pickerStyle(.segmented)
                 Text(store.t("Review your report before sharing. It contains your child’s observations and will leave this device only through the destination you choose.", "分享前請檢查報告，當中包含孩子的觀察記錄。報告只會透過你選擇的方式分享。"))
                     .font(.subheadline).foregroundStyle(.secondary)
-                PrimaryButton(title: store.t("Share PDF report", "分享 PDF 報告"), symbol: "square.and.arrow.up") {
+                Card { Text(report).font(.subheadline).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                PrimaryButton(title: store.t("Share or download report", "分享或下載報告"), symbol: "square.and.arrow.up") {
                     do {
-                        let url = try PDFReport.make(text: report)
+                        let url = FileManager.default.temporaryDirectory.appendingPathComponent("CareVoice-report-\(UUID().uuidString).txt")
+                        try Data(report.utf8).write(to: url, options: [.atomic, .completeFileProtection])
                         lastURL = url; export = ExportFile(url: url)
                     } catch { store.errorMessage = store.t("The report could not be created. Please try again.", "未能建立報告，請再試。") }
                 }.accessibilityIdentifier("shareReport")
-                Card { Text(report).font(.subheadline).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                Button {
+                    do { let url = try PDFReport.make(text: report); lastURL = url; export = ExportFile(url: url) }
+                    catch { store.errorMessage = store.t("The report could not be created. Please try again.", "未能建立報告，請再試。") }
+                } label: { Label(store.t("Print / save PDF", "列印／儲存 PDF"), systemImage: "doc.text").frame(maxWidth: .infinity, minHeight: 56) }.buttonStyle(.bordered).accessibilityIdentifier("sharePDF")
             }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
         }.background(Brand.background).navigationTitle(store.t("Reports", "報告")).navigationBarTitleDisplayMode(.inline)
             .sheet(item: $export, onDismiss: cleanup) { item in ShareSheet(url: item.url) }

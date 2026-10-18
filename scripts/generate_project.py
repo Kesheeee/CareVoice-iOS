@@ -10,11 +10,11 @@ def q(s): return json.dumps(str(s))
 def refs(xs): return '(' + ', '.join(xs) + (',)' if xs else ')')
 appfiles=sorted((root/'CareVoice').rglob('*.swift'))
 uitests=sorted((root/'CareVoiceUITests').glob('*.swift'))
-resources=[root/'CareVoice/Resources/Assets.xcassets',root/'CareVoice/Resources/PrivacyInfo.xcprivacy']+sorted(p for p in (root/'CareVoice/Resources').rglob('*.json') if not any(part.endswith('.xcassets') for part in p.parts))
+resources=sorted((root/'CareVoice/Resources/Media').glob('*'))+[root/'CareVoice/Resources/Assets.xcassets',root/'CareVoice/Resources/PrivacyInfo.xcprivacy']+sorted(p for p in (root/'CareVoice/Resources').rglob('*.json') if not any(part.endswith('.xcassets') for part in p.parts))
 fileids=[]
 builds={'app':[],'ui':[],'resources':[]}
 for f in appfiles+uitests+resources:
- rel=f.relative_to(root).as_posix(); kind='sourcecode.swift' if f.suffix=='.swift' else 'folder.assetcatalog' if f.suffix=='.xcassets' else 'text.xml' if f.suffix=='.xcprivacy' else 'text.json'
+ rel=f.relative_to(root).as_posix(); kind='sourcecode.swift' if f.suffix=='.swift' else 'folder.assetcatalog' if f.suffix=='.xcassets' else 'text.xml' if f.suffix=='.xcprivacy' else 'video.mp4' if f.suffix=='.mp4' else 'image.jpeg' if f.suffix=='.jpg' else 'image.png' if f.suffix=='.png' else 'text.json'
  fid=obj(rel, f'isa = PBXFileReference; lastKnownFileType = {kind}; path = {q(rel)}; sourceTree = "<group>";')
  fileids.append(fid)
  bid=obj('build:'+rel, f'isa = PBXBuildFile; fileRef = {fid};')

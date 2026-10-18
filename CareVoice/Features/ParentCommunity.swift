@@ -112,7 +112,7 @@ struct CommunityAccountView: View {
         }
         .navigationTitle(embedded ? store.t("Community", "社區") : store.t("Community account", "社區帳戶"))
         .navigationBarTitleDisplayMode(.inline)
-        .task { await community.start(); name = community.profile?.displayName ?? "" }
+        .task { await community.start(); if community.user != nil { await community.refresh() }; name = community.profile?.displayName ?? "" }
         .onChange(of: community.profile?.displayName) { _, value in name = value ?? "" }
         .alert(store.t("Delete your community account?", "刪除社區帳戶？"), isPresented: $deleteAccount) {
             Button(store.t("Cancel", "取消"), role: .cancel) {}
@@ -130,34 +130,7 @@ struct CommunityAccountView: View {
                     NavigationLink(store.t("Read community guidelines", "閱讀社區守則")) { SettingsDetailView(page: .guidelines) }
                 }
             } else if community.user == nil {
-                Card {
-                    Text(store.t("Join the conversation", "加入交流")).font(.title3.bold())
-                    Text(store.t("Sign in with an email code. Your email stays private; only your chosen nickname appears on posts.", "使用電郵驗證碼登入。電郵會保持私人，帖子只會顯示你選擇的暱稱。"))
-                        .font(.subheadline).foregroundStyle(.secondary)
-                    if let sentEmail {
-                        Text(store.t("Code sent to ", "驗證碼已傳送至 ") + sentEmail).font(.subheadline)
-                        TextField(store.t("Email code", "電郵驗證碼"), text: $code)
-                            .textContentType(.oneTimeCode).keyboardType(.numberPad).textFieldStyle(.roundedBorder)
-                            .onChange(of: code) { _, value in code = String(value.filter(\.isNumber).prefix(8)) }
-                        Button(store.t("Verify & continue", "驗證並繼續")) {
-                            Task { if await community.verify(sentEmail, code: code) { code = ""; self.sentEmail = nil } }
-                        }.buttonStyle(.borderedProminent).disabled(community.busy || code.count < 6)
-                        TimelineView(.periodic(from: .now, by: 1)) { context in
-                            Button(store.t("Send a new code", "重新傳送驗證碼")) {
-                                Task { if await community.sendCode(sentEmail) { nextSend = Date().addingTimeInterval(60) } }
-                            }.disabled(community.busy || context.date < nextSend)
-                        }
-                        Button(store.t("Use another email", "使用其他電郵")) { self.sentEmail = nil; code = "" }.disabled(community.busy)
-                    } else {
-                        TextField(store.t("Email address", "電郵地址"), text: $email)
-                            .textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never)
-                            .autocorrectionDisabled().textFieldStyle(.roundedBorder)
-                        Button(store.t("Send sign-in code", "傳送登入驗證碼")) {
-                            let address = CommunityValidation.clean(email)
-                            Task { if await community.sendCode(address) { sentEmail = address; nextSend = Date().addingTimeInterval(60) } }
-                        }.buttonStyle(.borderedProminent).disabled(community.busy || !email.contains("@"))
-                    }
-                }
+                AccountForm(community: community, initialMode: .login)
             } else {
                 Card {
                     Text(store.t("Your public nickname", "你的公開暱稱")).font(.headline)

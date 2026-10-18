@@ -1,13 +1,5 @@
+// GENERATED from CareVoice/Features/Survey.swift; standalone survey preview.
 import SwiftUI
-
-// CareVoice web survey → standalone SwiftUI review, iOS 16+.
-// Add this file to an iOS target and open the preview below.
-// Usage: CareVoiceSurveyReview { answer in /* persist answer, then route */ }
-// onComplete supplies the answers; this preview does not persist personal data.
-// Route noticed to the optional questionnaire; other stages to Home.
-// Not wired to the existing six-stage ChildProfile model: integrate the two new
-// stages and birthday/supportGoals fields before replacing native onboarding.
-// Phase 1 pathway reference: content fingerprint 0ae157aa8e0a22c8.
 
 struct CareVoiceSurveyAnswer: Codable {
     var nickname: String
@@ -23,12 +15,16 @@ struct CareVoiceSurveyAnswer: Codable {
 
 struct CareVoiceSurveyReview: View {
     var chinese = false
+    var simplifiedChinese = false
     var onClose: () -> Void = {}
     var onComplete: (CareVoiceSurveyAnswer) -> Void
     @State private var step = 0
     @State private var nickname = ""
     @State private var birthday = Calendar.current.date(byAdding: .year, value: -3, to: Date())!
     @State private var birthdayChosen = false
+    @State private var birthDay = 0
+    @State private var birthMonth = 0
+    @State private var birthYear = 0
     @State private var stage: String?
     @State private var goals: Set<String> = []
     @State private var notes = ""
@@ -52,7 +48,8 @@ struct CareVoiceSurveyReview: View {
         ("waiting", "Support while waiting", "輪候期間嘅支援", "heart"),
         ("observations", "Recording observations", "記錄日常觀察", "magnifyingglass")
     ]
-    private func t(_ en: String, _ zh: String) -> String { chinese ? zh : en }
+    private var language: AppLanguage { simplifiedChinese ? .simplifiedChinese : (chinese ? .traditionalChinese : .english) }
+    private func t(_ en: String, _ zh: String) -> String { language.text(en, zh) }
     private var heading: String {
         [t("What should we call your child?", "點稱呼你嘅小朋友？"),
          t("When is your child’s birthday?", "小朋友嘅生日係幾時？"),
@@ -97,10 +94,10 @@ struct CareVoiceSurveyReview: View {
                     .font(.headline).foregroundStyle(.white)
                     .frame(maxWidth: .infinity, minHeight: 56)
                     .background(blue.opacity(canContinue ? 1 : 0.4), in: RoundedRectangle(cornerRadius: 14))
-                    .disabled(!canContinue)
+                    .disabled(!canContinue).accessibilityIdentifier("surveyContinue")
                 }.padding(.horizontal, 24).padding(.bottom, 12)
             }.background(Color(uiColor: .systemBackground)).tint(blue)
-        }.environment(\.locale, Locale(identifier: chinese ? "zh_Hant_HK" : "en_HK"))
+        }.environment(\.locale, language.locale)
     }
 
     @ViewBuilder private func question(width: CGFloat, height: CGFloat) -> some View {
@@ -109,21 +106,27 @@ struct CareVoiceSurveyReview: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(t("Nickname (optional)", "暱稱（選填）")).font(.subheadline.bold())
                 TextField(t("Your child’s nickname", "小朋友嘅暱稱"), text: $nickname)
-                    .textFieldStyle(.roundedBorder).textInputAutocapitalization(.words)
+                    .textFieldStyle(.roundedBorder).textInputAutocapitalization(.words).accessibilityIdentifier("surveyNickname")
                     .onChange(of: nickname) { nickname = String($0.prefix(40)) }
             }.padding(24).background(pastels[0], in: RoundedRectangle(cornerRadius: 24))
         case 1:
             VStack(alignment: .leading, spacing: 20) {
                 Text(t("Choose their date of birth. We’ll work out their age for you.", "揀出生日期，我哋會自動計算年齡。")).foregroundStyle(.secondary)
-                DatePicker(t("Birthday", "生日"), selection: $birthday, in: dateRange, displayedComponents: .date)
-                    .datePickerStyle(.wheel).labelsHidden()
-                    .onChange(of: birthday) { _ in birthdayChosen = true }
-                // Explicit confirmation supports accepting the initially displayed date.
-                Toggle(t("Use this birthday", "使用呢個生日"), isOn: $birthdayChosen)
-                if birthdayChosen {
-                    Text(birthday, style: .date).font(.headline)
+                HStack(spacing: 10) {
+                    birthdayPart(t("Day", "日"), value: $birthDay, values: Array(1...31), color: pastels[0])
+                    birthdayPart(t("Month", "月"), value: $birthMonth, values: Array(1...12), color: pastels[2])
+                    birthdayPart(t("Year", "年"), value: $birthYear, values: Array(((Calendar.current.component(.year, from: Date()) - 7)...Calendar.current.component(.year, from: Date())).reversed()), color: pastels[4])
                 }
-            }.padding(20).background(pastels[2], in: RoundedRectangle(cornerRadius: 24))
+                VStack(spacing: 8) {
+                    if birthdayChosen {
+                        Text(birthday, style: .date).font(.headline)
+                        let months = Calendar.current.dateComponents([.month], from: birthday, to: Date()).month ?? 0
+                        Text(t("\(months / 12) years · \(months % 12) months old", "\(months / 12) 歲 \(months % 12) 個月")).font(.subheadline).foregroundStyle(.secondary)
+                    } else {
+                        Text(t(birthDay > 0 && birthMonth > 0 && birthYear > 0 ? "Choose a valid birthday for a child under 7, no later than today." : "Their birthday will appear here", "請選擇未滿七歲小朋友嘅有效生日。")).font(.subheadline).foregroundStyle(.secondary)
+                    }
+                }.padding(20).frame(maxWidth: .infinity).overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.secondary.opacity(0.2)))
+            }
         case 2, 3:
             let items = step == 2 ? stages : options
             let count = typeSize.isAccessibilitySize ? 1 : (width >= 400 ? 3 : 2)
@@ -151,7 +154,7 @@ struct CareVoiceSurveyReview: View {
                             .overlay(alignment: .topTrailing) {
                                 Image(systemName: selected ? "checkmark.circle.fill" : "circle").foregroundStyle(selected ? blue : Color.secondary).padding(10)
                             }
-                        }.buttonStyle(.plain).accessibilityAddTraits(selected ? .isSelected : [])
+                        }.buttonStyle(.plain).accessibilityIdentifier("survey-" + item.0).accessibilityAddTraits(selected ? .isSelected : [])
                     }
                 }
             }
@@ -165,6 +168,28 @@ struct CareVoiceSurveyReview: View {
         }
     }
 
+    private func birthdayPart(_ label: String, value: Binding<Int>, values: [Int], color: Color) -> some View {
+        VStack(spacing: 12) {
+            Text(label).font(.subheadline.bold())
+            Picker(label, selection: value) {
+                Text("—").tag(0)
+                ForEach(values, id: \.self) { number in Text(String(number)).tag(number) }
+            }.pickerStyle(.menu).accessibilityIdentifier("birthday-" + label).labelsHidden().frame(maxWidth: .infinity, minHeight: 56)
+                .background(.white, in: RoundedRectangle(cornerRadius: 12))
+                .onChange(of: value.wrappedValue) { _ in validateBirthday() }
+        }.padding(10).frame(maxWidth: .infinity).background(color, in: RoundedRectangle(cornerRadius: 20))
+    }
+    private func validateBirthday() {
+        let calendar = Calendar.current
+        guard birthDay > 0, birthMonth > 0, birthYear > 0,
+              let date = calendar.date(from: DateComponents(year: birthYear, month: birthMonth, day: birthDay)),
+              calendar.component(.day, from: date) == birthDay,
+              calendar.component(.month, from: date) == birthMonth, dateRange.contains(date) else {
+            birthdayChosen = false; return
+        }
+        birthday = date; birthdayChosen = true
+    }
+
     private func finish(notes: String) {
         guard let stage, birthdayChosen, dateRange.contains(birthday) else { return }
         onComplete(CareVoiceSurveyAnswer(nickname: nickname.trimmingCharacters(in: .whitespacesAndNewlines), birthDate: birthday, stage: stage, supportGoals: goals.sorted(), notes: notes))
@@ -176,4 +201,45 @@ struct CareVoiceSurveyReview_Previews: PreviewProvider {
         CareVoiceSurveyReview { _ in }.previewDisplayName("English")
         CareVoiceSurveyReview(chinese: true) { _ in }.previewDisplayName("繁體中文")
     }
+}
+
+
+enum AppLanguage: String, Codable, CaseIterable, Identifiable {
+    case english, traditionalChinese, simplifiedChinese
+    var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .english: return "English"
+        case .traditionalChinese: return "繁體中文"
+        case .simplifiedChinese: return "简体中文"
+        }
+    }
+    var shortName: String {
+        switch self {
+        case .english: return "EN"
+        case .traditionalChinese: return "繁"
+        case .simplifiedChinese: return "简"
+        }
+    }
+    var locale: Locale {
+        switch self {
+        case .english: return Locale(identifier: "en_HK")
+        case .traditionalChinese: return Locale(identifier: "zh_Hant_HK")
+        case .simplifiedChinese: return Locale(identifier: "zh_Hans_CN")
+        }
+    }
+    var speechLocale: Locale {
+        switch self {
+        case .english: return Locale(identifier: "en-US")
+        case .traditionalChinese: return Locale(identifier: "zh-HK")
+        case .simplifiedChinese: return Locale(identifier: "zh-CN")
+        }
+    }
+    // Convert app-owned copy at display time, never saved user text or source quotations.
+    func chineseText(_ traditional: String) -> String {
+        guard self == .simplifiedChinese else { return traditional }
+        let simplified = traditional.applyingTransform(StringTransform("Traditional-Simplified"), reverse: false) ?? traditional
+        return simplified.replacingOccurrences(of: "帐户", with: "账户")
+    }
+    func text(_ en: String, _ zh: String) -> String { self == .english ? en : chineseText(zh) }
 }

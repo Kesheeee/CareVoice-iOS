@@ -39,57 +39,96 @@ enum SettingsPage: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
     @EnvironmentObject var store: AppStore
+    @State private var languageOpen = false
+    @State private var profileOpen = false
+    @State private var deleting = false
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 26) {
-                HStack(spacing: 16) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.system(size: 48)).foregroundStyle(Brand.blue)
-                        .accessibilityHidden(true)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(store.t("Settings", "設定")).font(.largeTitle.bold()).accessibilityAddTraits(.isHeader)
-                        if let name = store.data.caregiverName, !name.isEmpty {
-                            Text(name).font(.subheadline).foregroundStyle(.secondary)
-                        }
-                    }
-                }.padding(.top, 8).padding(.bottom, 8)
-                VStack(spacing: 0) {
-                    ForEach(SettingsPage.main) { page in
-                        NavigationLink { SettingsDetailView(page: page) } label: {
-                            HStack(spacing: 18) {
-                                Image(systemName: page.icon).font(.title2).foregroundStyle(Brand.blue)
-                                    .frame(width: 30).accessibilityHidden(true)
-                                Text(store.t(page.title.0, page.title.1)).font(.body.weight(.medium))
-                                    .foregroundStyle(.primary).frame(maxWidth: .infinity, alignment: .leading)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                Image(systemName: "chevron.right").font(.caption.weight(.semibold))
-                                    .foregroundStyle(.tertiary).accessibilityHidden(true)
-                            }.frame(minHeight: 72).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityIdentifier("settings-" + page.rawValue)
-                    }
-                }
-                Divider()
-                VStack(alignment: .leading, spacing: 0) {
-                    ForEach(SettingsPage.footer) { page in
-                        NavigationLink { SettingsDetailView(page: page) } label: {
-                            Text(store.t(page.title.0, page.title.1)).font(.subheadline)
-                                .foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                                .contentShape(Rectangle())
-                        }.buttonStyle(.plain)
-                    }
-                }
-            }.padding(.horizontal, 24).padding(.bottom, 28)
-                .frame(maxWidth: 600).frame(maxWidth: .infinity)
-        }
-        .background(Color(uiColor: .systemBackground))
-        .navigationTitle("").navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink { SettingsDetailView(page: .help) } label: {
-                    Image(systemName: "questionmark.bubble").frame(minWidth: 44, minHeight: 44)
-                }.accessibilityLabel(store.t("Help & support", "幫助與支援"))
+        List {
+            Section(store.t("Preferences", "偏好設定")) {
+                Button { profileOpen = true } label: { SettingsRow(title: store.t("Profile", "個人檔案"), icon: "person") }.accessibilityIdentifier("settings-preferences")
+                Button { languageOpen = true } label: { SettingsRow(title: store.t("Language", "語言"), icon: "globe", value: store.language.displayName) }.accessibilityIdentifier("languagePicker")
             }
+            Section(store.t("Account", "帳戶")) { AccountSettingsRow(community: store.community) }
+            Section(store.t("Care", "照顧工具")) {
+                NavigationLink { QuestionnaireView() } label: { SettingsRow(title: store.t("Observation questions", "觀察問卷"), icon: "book", value: "\(store.data.answeredCount)/\(store.questions.count)", chevron: false) }.accessibilityIdentifier("openQuestionnaire")
+                NavigationLink { ReportsView() } label: { SettingsRow(title: store.t("Reports & sharing", "報告同分享"), icon: "doc.text", chevron: false) }.accessibilityIdentifier("openReports")
+            }
+            NativeBackupControls()
+            Section {
+                Button(role: .destructive) { deleting = true } label: { Label(store.t("Delete all local data", "刪除所有本機資料"), systemImage: "trash") }.accessibilityIdentifier("deleteLocalData")
+            }
+            Section {
+                DisclosureGroup(store.t("Privacy & storage", "私隱同儲存")) {
+                    Text(store.t("Your child’s records stay on this device, protected by iOS. They are not synced to your account or included in device backups. Export a backup before changing devices or deleting the app.", "孩子的記錄受 iOS 保護並保留於此裝置，不會同步至帳戶或包括在裝置備份內。更換裝置或刪除應用程式前請匯出備份。")).font(.subheadline).foregroundStyle(.secondary)
+                }
+            }
+        }.scrollContentBackground(.hidden).background(Brand.background)
+            .navigationTitle(store.t("Settings", "設定"))
+            .sheet(isPresented: $languageOpen) { LanguageSettingsView() }
+            .sheet(isPresented: $profileOpen) { NavigationStack { ProfileEditor() } }
+            .alert(store.t("Delete all local data?", "刪除所有本機資料？"), isPresented: $deleting) {
+                Button(store.t("Cancel", "取消"), role: .cancel) {}
+                Button(store.t("Delete everything", "全部刪除"), role: .destructive) { store.erase() }
+            } message: { Text(store.t("This removes this account’s profile, records and answers from this device. Shared copies are not deleted.", "將刪除此帳戶在本裝置的檔案、記錄及答案，已分享的副本不會刪除。")) }
+    }
+}
+
+struct SettingsRow: View {
+    let title: String
+    let icon: String
+    var value = ""
+    var chevron = true
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.title3).foregroundStyle(Brand.blue).frame(width: 24)
+            Text(title).foregroundStyle(Color.primary)
+            Spacer(minLength: 8)
+            if !value.isEmpty { Text(value).font(.subheadline).foregroundStyle(.secondary).multilineTextAlignment(.trailing) }
+            if chevron { Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary) }
+        }.frame(minHeight: 48).contentShape(Rectangle())
+    }
+}
+
+struct AccountSettingsRow: View {
+    @EnvironmentObject var store: AppStore
+    @ObservedObject var community: CommunityStore
+    var body: some View {
+        if let user = community.user {
+            Text(user.email ?? "").font(.subheadline).foregroundStyle(.secondary)
+            Button { Task { _ = await community.signOut() } } label: { SettingsRow(title: store.t("Sign out", "登出"), icon: "rectangle.portrait.and.arrow.right") }.disabled(community.busy)
+        } else {
+            Text(store.t("Local preview", "本機預覽")).foregroundStyle(.secondary)
         }
+    }
+}
+
+struct LanguageSettingsView: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var selected = AppLanguage.english
+    var body: some View {
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 24) {
+                Text(store.t("Choose your language", "選擇語言")).font(.title2.bold())
+                Text(store.t("Changes the app’s text. Your notes stay as you wrote them.", "更改應用程式文字，你的記錄會保留原文。")).foregroundStyle(.secondary)
+                VStack(spacing: 12) {
+                    ForEach(AppLanguage.allCases) { language in
+                        Button { selected = language } label: {
+                            HStack {
+                                Text(language.displayName).foregroundStyle(Color.primary)
+                                Spacer()
+                                Image(systemName: selected == language ? "checkmark.circle.fill" : "circle").foregroundStyle(Brand.blue)
+                            }.padding(20).frame(minHeight: 64)
+                                .background(selected == language ? Brand.blue.opacity(0.08) : .white, in: RoundedRectangle(cornerRadius: 18))
+                                .overlay(RoundedRectangle(cornerRadius: 18).stroke(selected == language ? Brand.blue : Color.gray.opacity(0.2)))
+                        }.accessibilityIdentifier("language-" + language.rawValue).accessibilityAddTraits(selected == language ? .isSelected : [])
+                    }
+                }
+                Spacer(minLength: 0)
+                Button(store.t("Save language", "儲存語言")) { store.setLanguage(selected); dismiss() }.buttonStyle(AccountPrimaryStyle()).accessibilityIdentifier("saveLanguage")
+            }.padding(24).background(Brand.background)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel", "取消")) { dismiss() } } }
+        }.onAppear { selected = store.language }.presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
     }
 }
 
@@ -126,19 +165,6 @@ struct AccountPreferencesView: View {
                 if saved { Label(store.t("Saved on this device", "已儲存於此裝置"), systemImage: "checkmark.circle").foregroundStyle(Brand.teal) }
             } header: { Text(store.t("Your profile", "你的檔案")) }
             footer: { Text(store.t("A nickname is enough. This name is not published to the community.", "使用暱稱即可。此名稱不會公開至社區。")) }
-            Section(store.t("Your child", "你的孩子")) {
-                if let profile = store.data.profile {
-                    LabeledContent(store.t("Nickname", "暱稱"), value: profile.displayName(store.language))
-                }
-                Button(store.t("Edit child details", "編輯孩子資料")) { editingChild = true }
-            }
-            Section(store.t("Language", "語言")) {
-                Picker(store.t("App language", "應用程式語言"), selection: Binding(get: { store.language }, set: { store.setLanguage($0) })) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(language.displayName).tag(language)
-                    }
-                }.accessibilityIdentifier("languagePicker")
-            }
         }.onAppear { name = store.data.caregiverName ?? "" }
             .sheet(isPresented: $editingChild) { NavigationStack { ProfileEditor() } }
     }
@@ -158,7 +184,7 @@ struct SettingsDataView: View {
                 Text(store.t("The export includes your profile, observations and questionnaire answers. Choose where to save or share it.", "匯出內容包含檔案、觀察及問卷答案。請自行選擇儲存或分享位置。"))
                     .font(.footnote).foregroundStyle(.secondary)
             }
-            // REVIEW_BACKUP_CONTROLS
+            NativeBackupControls()
             Section(store.t("AI sharing", "與 AI 分享")) {
                 Label(store.t("AI is not connected", "AI 尚未連接"), systemImage: "lock.shield")
                 Text(store.t("Questions and records are not sent to an AI service. Sharing controls will be available when the service is connected.", "問題及記錄不會傳送至 AI 服務。連接服務後才會提供分享控制。"))

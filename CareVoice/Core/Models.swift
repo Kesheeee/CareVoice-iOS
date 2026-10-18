@@ -41,16 +41,19 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
 }
 
 enum JourneyStage: String, Codable, CaseIterable, Identifiable {
-    case noticed, professionalFollowUp, awaitingAssessment, assessed, diagnosed, registered
+    case noticed, professionalFollowUp, awaitingAssessment, assessed, diagnosed, registered, waitingSupport, receivingServices
+    static let onboarding: [JourneyStage] = [.noticed, .professionalFollowUp, .awaitingAssessment, .assessed, .registered, .waitingSupport, .receivingServices]
     var id: String { rawValue }
     func title(_ l: AppLanguage) -> String {
         switch self {
         case .noticed: return l.text("Just noticing differences", "剛留意到一些不同")
-        case .professionalFollowUp: return l.text("A professional suggested follow-up", "專業人士建議跟進")
+        case .professionalFollowUp: return l.text("Seeking a professional referral", "專業人士建議跟進")
         case .awaitingAssessment: return l.text("Referred / awaiting assessment", "已轉介／等候評估")
-        case .assessed: return l.text("Assessed, with a report", "已完成評估並取得報告")
+        case .assessed: return l.text("Assessment completed / discussing referral", "已完成評估並取得報告")
         case .diagnosed: return l.text("Already diagnosed", "已有診斷")
-        case .registered: return l.text("Registered for services", "已登記輪候服務")
+        case .waitingSupport: return l.text("Arranging support while waiting", "輪候期間安排過渡支援")
+        case .receivingServices: return l.text("Allocated a service / changing services", "已獲編配服務／更改服務選擇")
+        case .registered: return l.text("Registered in the central referral system", "已登記輪候服務")
         }
     }
     func nextStep(_ l: AppLanguage) -> String {
@@ -58,7 +61,7 @@ enum JourneyStage: String, Codable, CaseIterable, Identifiable {
         case .noticed, .professionalFollowUp: return l.text("Discuss your observations with your family doctor or Maternal & Child Health Centre.", "與家庭醫生或母嬰健康院討論你觀察到的情況。")
         case .awaitingAssessment: return l.text("Check your referral and appointment details with your Child Assessment Centre. Bring your observations.", "向兒童體能智力測驗中心確認轉介及預約安排，並準備日常觀察記錄。")
         case .assessed, .diagnosed: return l.text("Discuss the report and suitable service referrals with your social worker or assessment team.", "與社工或評估團隊討論報告及合適的服務轉介。")
-        case .registered: return l.text("Keep your referring social worker updated and ask about support available while waiting.", "與轉介社工保持聯絡，了解輪候期間可用的支援。")
+        case .registered, .waitingSupport, .receivingServices: return l.text("Keep your referring social worker updated and ask about support available while waiting.", "與轉介社工保持聯絡，了解輪候期間可用的支援。")
         }
     }
 }
@@ -66,11 +69,14 @@ enum JourneyStage: String, Codable, CaseIterable, Identifiable {
 struct ChildProfile: Codable, Equatable {
     var nickname = ""
     var ageMonths = 36
+    var birthDate: Date? = nil
+    var supportGoals: [String]? = nil
+    var currentAgeMonths: Int { birthDate.map { max(0, Calendar.current.dateComponents([.month], from: Calendar.current.startOfDay(for: $0), to: Calendar.current.startOfDay(for: Date())).month ?? ageMonths) } ?? ageMonths }
     var stage: JourneyStage = .noticed
     var firstConcernDate = Date()
     var concernNotes = ""
     func displayName(_ l: AppLanguage) -> String { nickname.isEmpty ? l.text("Your child", "你的孩子") : nickname }
-    func age(_ l: AppLanguage) -> String { l.text("\(ageMonths / 12)y \(ageMonths % 12)m", "\(ageMonths / 12) 歲 \(ageMonths % 12) 個月") }
+    func age(_ l: AppLanguage) -> String { l.text("\(currentAgeMonths / 12)y \(currentAgeMonths % 12)m", "\(currentAgeMonths / 12) 歲 \(currentAgeMonths % 12) 個月") }
 }
 
 enum RecordCategory: String, Codable, CaseIterable, Identifiable {
@@ -112,9 +118,11 @@ struct BehaviorRecord: Codable, Identifiable, Equatable {
 }
 
 enum Answer: String, Codable, CaseIterable {
-    case never, rarely, sometimes, often, yes, no, unsure, skipped
+    case varied, limited, never, rarely, sometimes, often, yes, no, unsure, skipped
     func title(_ l: AppLanguage) -> String {
         switch self {
+        case .varied: return l.text("Several kinds", "幾種都玩")
+        case .limited: return l.text("Only one or two", "淨係一兩樣")
         case .never: return l.text("Never", "從不")
         case .rarely: return l.text("Rarely", "少見")
         case .sometimes: return l.text("Sometimes", "有時")
@@ -134,9 +142,12 @@ struct Question: Codable, Identifiable {
     let en: String
     let zh: String
     let yesNo: Bool
+    var customOptions: [Answer]? = nil
+    var safety: String? = nil
+    enum CodingKeys: String, CodingKey { case id, categoryEN, categoryZH, en, zh, yesNo, safety; case customOptions = "options" }
     func text(_ l: AppLanguage) -> String { l.text(en, zh) }
     func category(_ l: AppLanguage) -> String { l.text(categoryEN, categoryZH) }
-    var options: [Answer] { yesNo ? [.yes, .no, .unsure] : [.never, .rarely, .sometimes, .often, .unsure] }
+    var options: [Answer] { customOptions ?? (yesNo ? [.yes, .no, .unsure] : [.never, .rarely, .sometimes, .often, .unsure]) }
 }
 
 struct AppData: Codable, Equatable {
@@ -147,10 +158,12 @@ struct AppData: Codable, Equatable {
     var records: [BehaviorRecord] = []
     var answers: [Int: Answer] = [:]
     var completedSteps: Set<String> = []
-    var answeredCount: Int { answers.values.filter { $0 != .skipped }.count }
-    var reviewedCount: Int { answers.count }
+    var regressionWhen: [Int: String]? = nil
+    var answeredCount: Int { answers.filter { (101...133).contains($0.key) && $0.value != .skipped }.count }
+    var reviewedCount: Int { answers.keys.filter { (101...133).contains($0) }.count }
+    var needsSafetyRouting: Bool { [132, 133].contains { answers[$0] == .yes || answers[$0] == .unsure } }
     var needsProfessionalFollowUp: Bool {
-        [29, 30].contains { answers[$0] == .yes || answers[$0] == .unsure }
+        [29, 30, 131].contains { answers[$0] == .yes || answers[$0] == .unsure }
     }
     func related(to record: BehaviorRecord) -> [BehaviorRecord] {
         records.filter { $0.id != record.id && $0.date <= record.date && $0.category == record.category }
@@ -175,6 +188,12 @@ enum ReportBuilder {
         for q in questions {
             if let a = data.answers[q.id], a != .skipped { lines += ["\(q.id). \(q.text(l))", "   \(a.title(l))"] }
         }
+        if let bytes = ContentData.load("legacy-questions"), let legacy = try? JSONDecoder().decode([Question].self, from: bytes), data.answers.keys.contains(where: { $0 < 101 }), !questions.contains(where: { $0.id < 101 }) {
+            lines += ["", l.text("Earlier questionnaire responses", "舊版問卷回答")]
+            for q in legacy { if let a = data.answers[q.id], a != .skipped { lines += [q.text(l), a.title(l)] } }
+        }
+        if let when = data.regressionWhen?[131], !when.isEmpty { lines += [l.text("When the change was noticed: ", "何時留意到變化：") + when] }
+        if data.needsSafetyRouting { lines += [l.text("A seizure or self-injury response was Yes or Not sure. Discuss these observations promptly with a doctor. Seek emergency medical help for immediate danger.", "抽搐或傷害自己的題目回答為有或不確定，請盡快與醫生討論。如有即時危險，請尋求緊急醫療協助。")] }
         if data.needsProfessionalFollowUp { lines += ["", l.text("A loss-of-skills response was Yes or Not sure. Discuss this observation promptly with a qualified professional.", "技能退步題目回答為「是」或「不確定」，請盡快與合資格專業人士討論。") ] }
         lines += ["", l.text("Behavior records", "行為記錄")]
         for r in data.records.sorted(by: { $0.date < $1.date }) {

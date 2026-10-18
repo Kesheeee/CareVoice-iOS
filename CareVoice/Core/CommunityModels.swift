@@ -109,8 +109,14 @@ enum CommunityValidation {
 
 enum CommunityFailure: Error {
     case unavailable, signIn, denied, rateLimit, conflict, invalid, network, storage
+    case credentials, unconfirmed, weakPassword, emailLimit, emailUnavailable
     func message(_ language: AppLanguage) -> String {
         switch self {
+        case .credentials: return language.text("The email or password is incorrect. Please try again.", "電郵或密碼不正確，請再試。")
+        case .unconfirmed: return language.text("Check your inbox and confirm your email before signing in.", "請檢查收件箱並確認電郵後再登入。")
+        case .weakPassword: return language.text("Use at least 8 characters with an uppercase letter, lowercase letter, number and symbol.", "請使用至少八個字元，包含大寫字母、小寫字母、數字及符號。")
+        case .emailLimit: return language.text("Email delivery has reached its sending limit. This request could not be completed. Please try later or contact CareVoice support.", "電郵寄送已達上限，未能完成此要求。請稍後再試或聯絡 CareVoice 支援。")
+        case .emailUnavailable: return language.text("Email delivery is not available for this address yet. Please contact CareVoice support.", "目前未能向此地址寄送電郵，請聯絡 CareVoice 支援。")
         case .unavailable: return language.text("Community connection is not configured yet.", "社區連接尚未設定。")
         case .signIn: return language.text("Please sign in again. Your text is still here.", "請重新登入，你的文字仍保留在此。")
         case .denied: return language.text("This action is not available for your account or this discussion.", "你的帳戶或此討論目前無法執行這項操作。")

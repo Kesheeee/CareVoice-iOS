@@ -289,8 +289,7 @@ struct GovernmentContent {
 
     static func load() -> GovernmentContent {
         func decode<T: Decodable>(_ name: String, _ type: T.Type) -> T? {
-            guard let url = Bundle.main.url(forResource: name, withExtension: "json") else { return nil }
-            guard let data = try? Data(contentsOf: url) else { return nil }
+            guard let data = ContentData.load(name) else { return nil }
             return try? JSONDecoder().decode(T.self, from: data)
         }
         return GovernmentContent(

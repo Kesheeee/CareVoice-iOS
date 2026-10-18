@@ -46,12 +46,12 @@ final class CareVoiceCoreTests: XCTestCase {
         XCTAssertEqual(try JSONDecoder().decode(AppData.self, from: JSONEncoder().encode(data)), data)
     }
     func testSkipDoesNotCountAsAnswer() {
-        var data = AppData(); data.answers = [1: .often, 2: .skipped, 3: .unsure]
+        var data = AppData(); data.answers = [1: .often, 101: .often, 102: .skipped, 103: .unsure]
         XCTAssertEqual(data.answeredCount, 2); XCTAssertEqual(data.reviewedCount, 3)
     }
     func testRegressionFollowUpDoesNotRequireQuestionnaireCompletion() {
         for answer in [Answer.yes, .unsure] {
-            for id in [29, 30] {
+            for id in [29, 30, 131] {
                 var data = AppData(); data.answers[id] = answer
                 XCTAssertTrue(data.needsProfessionalFollowUp)
             }
