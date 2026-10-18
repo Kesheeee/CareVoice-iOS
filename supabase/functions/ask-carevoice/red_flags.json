@@ -1,0 +1,67 @@
+[
+  {
+    "flag_id": "RF-001",
+    "signal_tc": "孩子出現自傷行為（撞頭、咬自己、抓傷自己）或對他人有攻擊行為",
+    "route_tc": "立即聯絡孩子的主診醫生；情況緊急時到就近急症室或致電 999",
+    "route_contact": "999（緊急）｜社署熱線 2343 2255（24 小時）",
+    "never_say_tc": "絕對不可以說「這是自閉症的典型行為，忍一忍就好」或「大個就會好」。系統不判斷行為的成因，只把家長帶到真人專業支援。",
+    "source_id": "SRC-020",
+    "status": "active",
+    "signal_en": "The child shows self-injury (head-banging, biting, scratching) or aggression toward others",
+    "route_en": "Contact the child's treating doctor immediately; in an emergency go to the nearest A&E or call 999",
+    "route_contact_en": "999 (emergency) | SWD hotline 2343 2255 (24 hours)",
+    "never_say_en": "Never say 'this is typical autistic behaviour, just endure it' or 'they'll grow out of it'. The system does not judge the cause of the behaviour; it only directs the parent to real human professional support."
+  },
+  {
+    "flag_id": "RF-002",
+    "signal_tc": "孩子出現抽搐、意識改變、突然無法喚醒或呼吸異常",
+    "route_tc": "立即致電 999 或前往急症室",
+    "route_contact": "999",
+    "never_say_tc": "不要作任何解釋性或安撫性的判斷。系統只做轉送，不評論症狀。",
+    "source_id": "SRC-020",
+    "status": "active",
+    "signal_en": "The child has convulsions, altered consciousness, suddenly cannot be woken, or abnormal breathing",
+    "route_en": "Call 999 or go to A&E immediately",
+    "route_contact_en": "999",
+    "never_say_en": "Do not make any explanatory or reassuring judgement. The system only routes, and does not comment on symptoms."
+  },
+  {
+    "flag_id": "RF-003",
+    "signal_tc": "孩子出現能力倒退——本來會講的字詞、本來會做的動作消失了",
+    "route_tc": "盡快約見家庭醫生或母嬰健康院，並要求轉介至衞生署兒童體能智力測驗服務評估",
+    "route_contact": "衞生署兒童體能智力測驗服務（需醫生或心理學家轉介）",
+    "never_say_tc": "不可以說「退步是正常的」或「等等看」。能力倒退需要真人評估，不需要系統意見。",
+    "source_id": "SRC-001",
+    "status": "active",
+    "signal_en": "The child shows skill regression — previously spoken words or performed actions disappear",
+    "route_en": "See a family doctor or Maternal & Child Health Centre soon and ask for referral to the Department of Health Child Assessment Service",
+    "route_contact_en": "Department of Health Child Assessment Service (referral by doctor or psychologist required)",
+    "never_say_en": "Do not say 'regression is normal' or 'wait and see'. Skill regression needs real human assessment, not an app's opinion."
+  },
+  {
+    "flag_id": "RF-004",
+    "signal_tc": "照顧者出現自傷念頭、情緒崩潰、或表示「撐不下去」",
+    "route_tc": "即時尋求真人支援：社署熱線、醫院管理局精神健康專線、防止自殺會熱線，或前往就近急症室",
+    "route_contact": "社署熱線 2343 2255（24 小時）｜醫院管理局精神健康專線 2466 7350（24 小時）｜生命熱線 2382 0000（24 小時）｜香港撒瑪利亞防止自殺會 2389 2222（24 小時）｜明愛向晴軒 18288（24 小時）｜緊急：999／急症室",
+    "never_say_tc": "絕對不可以評價家長（例如「你要正面啲」）。家長在崩潰時最不需要的就是被評判——這是本项目文案的第一条红线。",
+    "source_id": "SRC-021",
+    "status": "active",
+    "signal_en": "The caregiver has thoughts of self-harm, emotional breakdown, or says they 'can't carry on'",
+    "route_en": "Seek real human support immediately: SWD hotline, Hospital Authority mental health hotline, suicide prevention hotline, or go to the nearest A&E",
+    "route_contact_en": "SWD hotline 2343 2255 (24h) | HA Mental Health Direct 2466 7350 (24h) | Suicide Prevention Services 2382 0000 (24h) | The Samaritans HK 2389 2222 (24h) | Caritas Family Crisis Line 18288 (24h) | Emergency: 999 / A&E",
+    "never_say_en": "Never judge the parent (e.g. 'think positive'). The last thing a parent in breakdown needs is to be judged — this is the first red line of this project's copy."
+  },
+  {
+    "flag_id": "RF-005",
+    "signal_tc": "家長要求系統判斷「我的孩子是不是自閉症」",
+    "route_tc": "明確表示不做診斷，並導向衞生署兒童體能智力測驗服務的正式評估（需經醫生或心理學家轉介）",
+    "route_contact": "衞生署兒童體能智力測驗服務",
+    "never_say_tc": "不可以說「你的孩子應該是自閉症」或任何暗示診斷的表述。系統只整理事實、呈現資訊；判斷權在專業評估。",
+    "source_id": "SRC-001",
+    "status": "active",
+    "signal_en": "The parent asks the system to judge 'is my child autistic'",
+    "route_en": "Clearly state that the app does not diagnose, and direct to formal assessment at the Department of Health Child Assessment Service (referral by doctor or psychologist required)",
+    "route_contact_en": "Department of Health Child Assessment Service",
+    "never_say_en": "Do not say 'your child is probably autistic' or any expression implying diagnosis. The system only organises facts and presents information; the judgement belongs to professional assessment."
+  }
+]

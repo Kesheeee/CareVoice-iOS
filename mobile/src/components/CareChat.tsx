@@ -4,7 +4,7 @@ import {translator} from '../i18n';
 import type {Language} from '../domain';
 import {ask, isAskConfigured, type AskResponse} from '../platform/ask';
 
-type Turn = { user: string; response: AskResponse | null; loading: boolean; error: boolean };
+type Turn = { user: string; response: AskResponse | null; loading: boolean; error: boolean | string };
 
 export function CareChat({open, language, onClose, onPreview}: {open:boolean;language:Language;onClose:()=>void;onPreview:(text:string)=>void}) {
   const t=translator(language);
@@ -28,8 +28,8 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
     try{
       const response=await ask(message,language);
       setTurns(prev=>prev.map((turn,i)=>i===prev.length-1?{...turn,response,loading:false}:turn));
-    }catch{
-      setTurns(prev=>prev.map((turn,i)=>i===prev.length-1?{...turn,response:{suggestions:[]},loading:false,error:true}:turn));
+    }catch(error){
+      setTurns(prev=>prev.map((turn,i)=>i===prev.length-1?{...turn,response:{suggestions:[]},loading:false,error:error instanceof Error?error.message:true}:turn));
     }finally{
       setBusy(false);
     }
@@ -53,7 +53,7 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
         {turns.map((turn,i)=><div className="care-chat-turn" key={i}>
           <div className="care-chat-user"><small>{t('You','你')}</small><p>{turn.user}</p></div>
           {turn.loading ? <div className="care-chat-reply"><p>{t('Thinking…','思考中……')}</p></div>
-          : turn.error ? <div className="care-chat-reply care-chat-error"><p>{t('Could not reach CareVoice. Check your connection and try again.','暫時未能連接 CareVoice，請檢查網絡再試。')}</p></div>
+          : turn.error ? <div className="care-chat-reply care-chat-error"><p>{turn.error==='ai_not_configured'?t('AI setup is not finished yet. Please try again later.','AI 設定尚未完成，請稍後再試。'):t('Could not reach CareVoice. Please try again.','暫時未能連接 CareVoice，請再試。')}</p></div>
           : turn.response?.safety ? <div className="care-chat-reply care-chat-safety">
               <p className="care-chat-signal">{turn.response.safety.signal}</p>
               <p className="care-chat-route">{turn.response.safety.route}</p>
