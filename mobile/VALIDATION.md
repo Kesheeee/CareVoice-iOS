@@ -39,4 +39,3 @@ Not yet validated: physical devices, Safari/WebKit, OS share sheets, print-to-PD
 - English, Traditional Chinese, and Simplified Chinese persist through reloads and backups. Simplified interface copy uses OpenCC with explicit wording for the chooser; caregiver notes and names are not converted.
 - Browser tests cover all three selections, persistence, cancellation, and storage failure. Domain tests verify Simplified report labels while preserving original notes.
 - Chromium and WebKit checks at 320, 375, and 414 × 667 confirm all three choices and actions fit without horizontal overflow. Physical iPhone testing remains outstanding.
-
