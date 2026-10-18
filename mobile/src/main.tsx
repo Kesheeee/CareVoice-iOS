@@ -616,36 +616,6 @@ function App() {
         {page === "resources" && <Community language={data.language} />}
         {page === "profile" && (
           <div className="profile-screen">
-
-            <button className="profile-summary" onClick={openProfile}>
-              <span className="large-avatar">
-                <Leaf size={30} />
-              </span>
-              <span className="profile-person">
-              <h2>
-                {data.profile?.nickname ||
-                  t(
-                    data.profile ? "Your child" : "Create your profile",
-                    data.profile ? "你嘅小朋友" : "建立你嘅檔案",
-                  )}
-              </h2>
-              <span className="profile-age">
-                {data.profile
-                  ? `${data.profile.ageMonths} ${t("months", "個月")}`
-                  : t(
-                      "Get started",
-                      "開始使用",
-                    )}
-              </span>
-              </span>
-              <span className="profile-edit">
-                {t(
-                  data.profile ? "Edit profile" : "Get started",
-                  data.profile ? "編輯檔案" : "開始使用",
-                )}
-                <Pencil size={14} />
-              </span>
-            </button>
             <PageHeading title={t("Settings", "設定")} />
             <h2 className="profile-section">{t("Preferences", "偏好設定")}</h2>
             <div className="settings-list">
