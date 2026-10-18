@@ -54,6 +54,35 @@ final class CareVoiceUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Official resources & support"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Child Assessment Service (CAS)")).firstMatch.exists)
         snapshot(app, "Community-Resources")
+        app.buttons["openParentCommunity"].tap()
+        XCTAssertTrue(app.staticTexts["Community setup is pending"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Send sign-in code"].exists)
+    }
+    func testCommunityReusesSignedInAccountForNicknameSetup() {
+        let app = launch(["--seed-profile", "--community-member-preview"])
+        app.buttons["tab-2"].tap(); app.buttons["openParentCommunity"].tap()
+        let nickname = app.textFields["communityNickname"]
+        XCTAssertTrue(nickname.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.textFields["authEmail"].exists)
+        XCTAssertFalse(app.buttons["Send sign-in code"].exists)
+        let join = app.buttons["saveCommunityProfile"]
+        XCTAssertFalse(join.isEnabled)
+        nickname.tap(); nickname.typeText("Parent")
+        XCTAssertFalse(join.isEnabled)
+        app.swipeUp()
+        let agreement = app.switches["acceptCommunityGuidelines"]
+        XCTAssertTrue(agreement.waitForExistence(timeout: 5)); agreement.tap()
+        XCTAssertTrue(join.isEnabled)
+        snapshot(app, "Community-Shared-Account")
+    }
+    func testReturningCommunityMemberOpensFeedWithoutLogin() {
+        let app = launch(["--seed-profile", "--community-member-preview", "--community-existing-profile"])
+        app.buttons["tab-2"].tap(); app.buttons["openParentCommunity"].tap()
+        XCTAssertTrue(app.buttons["Create a post"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.textFields["communityNickname"].exists)
+        XCTAssertFalse(app.textFields["authEmail"].exists)
+        XCTAssertFalse(app.buttons["Send sign-in code"].exists)
+        snapshot(app, "Community-Returning-Member")
     }
     func testQuickRecordTabsSaveAndPersistence() {
         let app = launch(); app.buttons["tab-1"].tap(); app.buttons["addRecord"].tap()

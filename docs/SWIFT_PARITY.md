@@ -35,7 +35,8 @@ For the full app, open `CareVoice.xcodeproj` on a Mac. For an isolated one-file 
 - Signup still respects Supabase email confirmation. The existing SMTP/delivery limits affect both clients; a UI update does not remove those server restrictions. No real account was created or password reset by this port.
 - Google/Apple remain unconnected choices, matching the preview. Native speech uses Apple on-device recognition; availability depends on device and selected language. PDF/printing uses iOS’s share sheet.
 - Native sheet heights, menus and system font metrics differ from Safari. Large accessibility text can scroll; the Continue/Save controls remain outside the scrolling content. Pixel-perfect parity and microphone permissions require physical-device review.
-- The earlier parent-discussion implementation is preserved in source but is not the current primary Community screen, matching the latest TypeScript resource page.
+- Native Community now exposes Parent conversations above the official resources. Conversations reuse the existing CareVoice session: first-time members choose a nickname and accept the community guidelines; returning members open the feed. The standalone email-code flow has been removed. TypeScript still shows resources only; this native discussion entry is an intentional addition.
+- Community account deletion removes the shared CareVoice authentication account, not just a nickname. The confirmation explains this and asks users to export local notes first.
 
 ## Verification
 

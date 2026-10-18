@@ -328,9 +328,6 @@ final class CommunityAPI {
         } catch CommunityFailure.invalid { try clearSession(); throw CommunityFailure.signIn }
           catch CommunityFailure.signIn { try clearSession(); throw CommunityFailure.signIn }
     }
-    func sendCode(email: String) async throws {
-        _ = try await send("auth/v1/otp", method: "POST", body: ["email": email, "create_user": true], token: nil)
-    }
     func passwordSignIn(email: String, password: String) async throws {
         let bytes = try await send("auth/v1/token", method: "POST", body: ["email": email, "password": password], token: nil,
                                    query: [URLQueryItem(name: "grant_type", value: "password")])
@@ -351,10 +348,6 @@ final class CommunityAPI {
         guard session != nil else { return }
         let bearer = try await token()
         _ = try decoder.decode(CommunityUser.self, from: await send("auth/v1/user", method: "GET", body: nil, token: bearer))
-    }
-    func verify(email: String, code: String) async throws {
-        let data = try await send("auth/v1/verify", method: "POST", body: ["email": email, "token": code, "type": "email"], token: nil)
-        try persist(decoder.decode(CommunitySession.self, from: data))
     }
     func signOut() async throws {
         do {
@@ -391,6 +384,7 @@ final class CommunityAPI {
 final class CommunityStore: ObservableObject {
     @Published private(set) var user: CommunityUser?
     @Published private(set) var profile: CommunityProfile?
+    @Published private(set) var identityLoaded = false
     @Published private(set) var posts: [CommunityPost] = []
     @Published private(set) var moderator = false
     @Published private(set) var busy = false
@@ -401,9 +395,22 @@ final class CommunityStore: ObservableObject {
     @Published var mine = false
     private let api: CommunityAPI?
     private var started = false
-    var configured: Bool { api != nil }
+    // Simulator-only UI fixtures have no tokens, transport or production access.
+    private var previewIdentity = false
+    var configured: Bool { api != nil || previewIdentity }
     init() {
         api = CommunityConfiguration.current.map { CommunityAPI(url: $0.0, key: $0.1) }
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--ui-testing") && arguments.contains("--community-member-preview") {
+            previewIdentity = true; started = true; restoring = false; identityLoaded = true
+            let id = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+            user = CommunityUser(id: id, email: nil)
+            if arguments.contains("--community-existing-profile") {
+                profile = CommunityProfile(userId: id, displayName: "Preview parent")
+            }
+        }
+        #endif
     }
     @discardableResult
     func perform(_ operation: (CommunityAPI) async throws -> Void) async -> Bool {
@@ -414,7 +421,7 @@ final class CommunityStore: ObservableObject {
         do { try await operation(api); return true }
         catch {
             self.error = error as? CommunityFailure ?? .network
-            if api.session == nil { profile = nil; posts = []; moderator = false }
+            if api.session == nil { profile = nil; posts = []; moderator = false; identityLoaded = false }
             return false
         }
     }
@@ -439,12 +446,10 @@ final class CommunityStore: ObservableObject {
     private func loadIdentity(_ api: CommunityAPI) async throws {
         guard let id = api.session?.user.id else { throw CommunityFailure.signIn }
         let profiles = try await api.rows("community_profiles", query: [URLQueryItem(name: "user_id", value: "eq." + id.uuidString)], as: [CommunityProfile].self)
+        let isModerator = try await api.rpc("community_is_moderator", as: Bool.self)
         profile = profiles.first
-        moderator = try await api.rpc("community_is_moderator", as: Bool.self)
-    }
-    func sendCode(_ email: String) async -> Bool { await perform { try await $0.sendCode(email: email) } }
-    func verify(_ email: String, code: String) async -> Bool {
-        await perform { api in try await api.verify(email: email, code: code); try await loadIdentity(api); try await fetchFeed(api, more: false) }
+        moderator = isModerator
+        identityLoaded = true
     }
     func saveNickname(_ nickname: String) async -> Bool {
         guard CommunityValidation.validNickname(nickname) else { error = .invalid; return false }
@@ -465,7 +470,10 @@ final class CommunityStore: ObservableObject {
         if more { let existing = Set(posts.map(\.id)); posts += result.filter { !existing.contains($0.id) } }
         else { posts = result }
     }
-    func refresh(more: Bool = false) async { await perform { api in try await loadIdentity(api); try await fetchFeed(api, more: more) } }
+    func refresh(more: Bool = false) async {
+        guard !previewIdentity else { return }
+        await perform { api in try await loadIdentity(api); try await fetchFeed(api, more: more) }
+    }
     func savePost(id: UUID? = nil, topic: CommunityTopic, title: String, body: String) async -> Bool {
         guard CommunityValidation.validPost(title: title, body: body) else { error = .invalid; return false }
         return await perform { api in
@@ -495,12 +503,12 @@ final class CommunityStore: ObservableObject {
         await perform { api in try await api.mutate("community_blocks", method: "POST", body: ["blocked_id": id.uuidString]); posts = [] }
     }
     func signOut() async -> Bool {
-        await perform { api in try await api.signOut(); profile = nil; posts = []; moderator = false }
+        await perform { api in try await api.signOut(); profile = nil; posts = []; moderator = false; identityLoaded = false }
     }
     func deleteAccount() async -> Bool {
         await perform { api in
             _ = try await api.rpc("community_delete_account", as: Bool.self)
-            try api.clearSession(); profile = nil; posts = []; moderator = false
+            try api.clearSession(); profile = nil; posts = []; moderator = false; identityLoaded = false
         }
     }
 }
@@ -688,7 +696,7 @@ enum CommunityFailure: Error {
         case .denied: return language.text("This action is not available for your account or this discussion.", "你的帳戶或此討論目前無法執行這項操作。")
         case .rateLimit: return language.text("Please wait a little before trying again.", "請稍候再試。")
         case .conflict: return language.text("This item already exists or was changed. Refresh and try again.", "此項目已存在或已變更，請重新整理後再試。")
-        case .invalid: return language.text("Please check the details or verification code and try again.", "請檢查資料或驗證碼後再試。")
+        case .invalid: return language.text("Please check the details and try again.", "請檢查資料後再試。")
         case .network: return language.text("Could not connect. Check your connection and try again. Your text has been kept.", "未能連接，請檢查網絡後再試。你的文字已保留。")
         case .storage: return language.text("Your sign-in could not be saved securely. Unlock your device and try again.", "未能安全儲存登入資料，請解鎖裝置後再試。")
         }
@@ -2131,6 +2139,8 @@ struct ParentCommunityView: View {
         .onChange(of: community.topic) { _, _ in Task { await community.refresh() } }
         .sheet(isPresented: $composing) { NavigationStack { CommunityPostEditor(community: community) } }
         .onChange(of: composing) { _, value in if !value { Task { await community.refresh() } } }
+        .navigationTitle(store.t("Parent conversations", "家長交流"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -2138,12 +2148,9 @@ struct CommunityAccountView: View {
     @EnvironmentObject var store: AppStore
     @ObservedObject var community: CommunityStore
     var embedded = false
-    @State private var email = ""
-    @State private var sentEmail: String?
-    @State private var code = ""
     @State private var name = ""
     @State private var deleteAccount = false
-    @State private var nextSend = Date.distantPast
+    @State private var acceptedGuidelines = false
     var body: some View {
         Group {
             if embedded { content }
@@ -2153,10 +2160,10 @@ struct CommunityAccountView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await community.start(); if community.user != nil { await community.refresh() }; name = community.profile?.displayName ?? "" }
         .onChange(of: community.profile?.displayName) { _, value in name = value ?? "" }
-        .alert(store.t("Delete your community account?", "刪除社區帳戶？"), isPresented: $deleteAccount) {
+        .alert(store.t("Delete your CareVoice account?", "刪除 CareVoice 帳戶？"), isPresented: $deleteAccount) {
             Button(store.t("Cancel", "取消"), role: .cancel) {}
             Button(store.t("Delete account", "刪除帳戶"), role: .destructive) { Task { _ = await community.deleteAccount() } }
-        } message: { Text(store.t("Your shared posts, replies and community profile will be permanently deleted. Your child's local records stay on this device.", "你的公開帖子、回覆及社區檔案將永久刪除。孩子的本機記錄會保留於此裝置。")) }
+        } message: { Text(store.t("This deletes your CareVoice sign-in, community profile, posts and replies. Export your child's records in Settings first; after deletion you cannot sign back into this account to open its local records.", "這會刪除你的 CareVoice 登入帳戶、社區檔案、帖子及回覆。請先在設定匯出孩子的記錄；刪除後將無法再登入此帳戶以開啟其本機記錄。")) }
     }
     @ViewBuilder private var content: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -2170,15 +2177,32 @@ struct CommunityAccountView: View {
                 }
             } else if community.user == nil {
                 AccountForm(community: community, initialMode: .login)
+            } else if !community.identityLoaded {
+                if community.error == nil {
+                    ProgressView(store.t("Loading your community profile…", "正在載入社區檔案…")).frame(maxWidth: .infinity)
+                } else {
+                    Button(store.t("Try again", "再試一次")) { Task { await community.refresh() } }.disabled(community.busy)
+                }
             } else {
                 Card {
+                    if community.profile == nil {
+                        Text(store.t("Join the conversation", "加入交流")).font(.title2.bold())
+                        Text(store.t("You're signed in with CareVoice. Choose how your name appears to other parents.", "你已登入 CareVoice。請選擇向其他家長顯示的暱稱。")).font(.subheadline).foregroundStyle(.secondary)
+                    }
                     Text(store.t("Your public nickname", "你的公開暱稱")).font(.headline)
                     TextField(store.t("Choose a nickname", "選擇暱稱"), text: $name).textFieldStyle(.roundedBorder)
                         .textContentType(.nickname).accessibilityIdentifier("communityNickname")
                     Text(store.t("Use 2–40 characters. This is separate from your child's profile and appears beside posts and replies.", "請使用 2–40 個字元。此暱稱與孩子的檔案分開，並會顯示於帖子及回覆旁。"))
                         .font(.caption).foregroundStyle(.secondary)
-                    Button(store.t("Save community profile", "儲存社區檔案")) { Task { _ = await community.saveNickname(name) } }
-                        .buttonStyle(.borderedProminent).disabled(community.busy || !CommunityValidation.validNickname(name))
+                    if community.profile == nil {
+                        NavigationLink(store.t("Read community guidelines", "閱讀社區守則")) { SettingsDetailView(page: .guidelines) }
+                        Toggle(store.t("I agree to the community guidelines", "我同意遵守社區守則"), isOn: $acceptedGuidelines)
+                            .accessibilityIdentifier("acceptCommunityGuidelines")
+                    }
+                    Button(store.t(community.profile == nil ? "Join community" : "Save community profile", community.profile == nil ? "加入社區" : "儲存社區檔案")) { Task { _ = await community.saveNickname(name) } }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(community.busy || !CommunityValidation.validNickname(name) || (community.profile == nil && !acceptedGuidelines))
+                        .accessibilityIdentifier("saveCommunityProfile")
                 }
                 if community.profile != nil {
                     NavigationLink(store.t("Blocked accounts", "已封鎖帳戶")) { CommunityBlockedView(community: community) }
@@ -2186,8 +2210,10 @@ struct CommunityAccountView: View {
                         NavigationLink(store.t("Moderation queue", "待審核舉報")) { CommunityModerationView(community: community) }
                     }
                 }
-                Button(store.t("Sign out", "登出")) { Task { _ = await community.signOut() } }.disabled(community.busy)
-                Button(store.t("Delete community account", "刪除社區帳戶"), role: .destructive) { deleteAccount = true }.disabled(community.busy)
+                if !embedded {
+                    Button(store.t("Sign out of CareVoice", "登出 CareVoice")) { Task { _ = await community.signOut() } }.disabled(community.busy)
+                    Button(store.t("Delete CareVoice account", "刪除 CareVoice 帳戶"), role: .destructive) { deleteAccount = true }.disabled(community.busy)
+                }
             }
             if community.busy { ProgressView().frame(maxWidth: .infinity) }
         }
@@ -2836,6 +2862,13 @@ struct ResourcesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                NavigationLink { ParentCommunityView(community: store.community) } label: {
+                    Card {
+                        Label(store.t("Parent conversations", "家長交流"), systemImage: "bubble.left.and.bubble.right").font(.headline).foregroundStyle(Brand.blue)
+                        Text(store.t("Ask a question or share an experience with other parents using your CareVoice account.", "使用你的 CareVoice 帳戶，與其他家長交流問題及經驗。")).font(.subheadline).foregroundStyle(Color.secondary)
+                        Label(store.t("Open conversations", "進入交流"), systemImage: "arrow.right").font(.subheadline.weight(.semibold))
+                    }
+                }.buttonStyle(.plain).accessibilityIdentifier("openParentCommunity")
                 Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 0) {
                     resource("Child Assessment Service (CAS)", "兒童體能智力測驗服務（CAS）", "stethoscope", "https://www.dhcas.gov.hk/en/faq.html", chinese: "https://www.dhcas.gov.hk/tc/faq.html")

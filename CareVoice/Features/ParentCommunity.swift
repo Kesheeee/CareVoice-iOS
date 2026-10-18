@@ -92,6 +92,8 @@ struct ParentCommunityView: View {
         .onChange(of: community.topic) { _, _ in Task { await community.refresh() } }
         .sheet(isPresented: $composing) { NavigationStack { CommunityPostEditor(community: community) } }
         .onChange(of: composing) { _, value in if !value { Task { await community.refresh() } } }
+        .navigationTitle(store.t("Parent conversations", "家長交流"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
@@ -99,12 +101,9 @@ struct CommunityAccountView: View {
     @EnvironmentObject var store: AppStore
     @ObservedObject var community: CommunityStore
     var embedded = false
-    @State private var email = ""
-    @State private var sentEmail: String?
-    @State private var code = ""
     @State private var name = ""
     @State private var deleteAccount = false
-    @State private var nextSend = Date.distantPast
+    @State private var acceptedGuidelines = false
     var body: some View {
         Group {
             if embedded { content }
@@ -114,10 +113,10 @@ struct CommunityAccountView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await community.start(); if community.user != nil { await community.refresh() }; name = community.profile?.displayName ?? "" }
         .onChange(of: community.profile?.displayName) { _, value in name = value ?? "" }
-        .alert(store.t("Delete your community account?", "刪除社區帳戶？"), isPresented: $deleteAccount) {
+        .alert(store.t("Delete your CareVoice account?", "刪除 CareVoice 帳戶？"), isPresented: $deleteAccount) {
             Button(store.t("Cancel", "取消"), role: .cancel) {}
             Button(store.t("Delete account", "刪除帳戶"), role: .destructive) { Task { _ = await community.deleteAccount() } }
-        } message: { Text(store.t("Your shared posts, replies and community profile will be permanently deleted. Your child's local records stay on this device.", "你的公開帖子、回覆及社區檔案將永久刪除。孩子的本機記錄會保留於此裝置。")) }
+        } message: { Text(store.t("This deletes your CareVoice sign-in, community profile, posts and replies. Export your child's records in Settings first; after deletion you cannot sign back into this account to open its local records.", "這會刪除你的 CareVoice 登入帳戶、社區檔案、帖子及回覆。請先在設定匯出孩子的記錄；刪除後將無法再登入此帳戶以開啟其本機記錄。")) }
     }
     @ViewBuilder private var content: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -131,15 +130,32 @@ struct CommunityAccountView: View {
                 }
             } else if community.user == nil {
                 AccountForm(community: community, initialMode: .login)
+            } else if !community.identityLoaded {
+                if community.error == nil {
+                    ProgressView(store.t("Loading your community profile…", "正在載入社區檔案…")).frame(maxWidth: .infinity)
+                } else {
+                    Button(store.t("Try again", "再試一次")) { Task { await community.refresh() } }.disabled(community.busy)
+                }
             } else {
                 Card {
+                    if community.profile == nil {
+                        Text(store.t("Join the conversation", "加入交流")).font(.title2.bold())
+                        Text(store.t("You're signed in with CareVoice. Choose how your name appears to other parents.", "你已登入 CareVoice。請選擇向其他家長顯示的暱稱。")).font(.subheadline).foregroundStyle(.secondary)
+                    }
                     Text(store.t("Your public nickname", "你的公開暱稱")).font(.headline)
                     TextField(store.t("Choose a nickname", "選擇暱稱"), text: $name).textFieldStyle(.roundedBorder)
                         .textContentType(.nickname).accessibilityIdentifier("communityNickname")
                     Text(store.t("Use 2–40 characters. This is separate from your child's profile and appears beside posts and replies.", "請使用 2–40 個字元。此暱稱與孩子的檔案分開，並會顯示於帖子及回覆旁。"))
                         .font(.caption).foregroundStyle(.secondary)
-                    Button(store.t("Save community profile", "儲存社區檔案")) { Task { _ = await community.saveNickname(name) } }
-                        .buttonStyle(.borderedProminent).disabled(community.busy || !CommunityValidation.validNickname(name))
+                    if community.profile == nil {
+                        NavigationLink(store.t("Read community guidelines", "閱讀社區守則")) { SettingsDetailView(page: .guidelines) }
+                        Toggle(store.t("I agree to the community guidelines", "我同意遵守社區守則"), isOn: $acceptedGuidelines)
+                            .accessibilityIdentifier("acceptCommunityGuidelines")
+                    }
+                    Button(store.t(community.profile == nil ? "Join community" : "Save community profile", community.profile == nil ? "加入社區" : "儲存社區檔案")) { Task { _ = await community.saveNickname(name) } }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(community.busy || !CommunityValidation.validNickname(name) || (community.profile == nil && !acceptedGuidelines))
+                        .accessibilityIdentifier("saveCommunityProfile")
                 }
                 if community.profile != nil {
                     NavigationLink(store.t("Blocked accounts", "已封鎖帳戶")) { CommunityBlockedView(community: community) }
@@ -147,8 +163,10 @@ struct CommunityAccountView: View {
                         NavigationLink(store.t("Moderation queue", "待審核舉報")) { CommunityModerationView(community: community) }
                     }
                 }
-                Button(store.t("Sign out", "登出")) { Task { _ = await community.signOut() } }.disabled(community.busy)
-                Button(store.t("Delete community account", "刪除社區帳戶"), role: .destructive) { deleteAccount = true }.disabled(community.busy)
+                if !embedded {
+                    Button(store.t("Sign out of CareVoice", "登出 CareVoice")) { Task { _ = await community.signOut() } }.disabled(community.busy)
+                    Button(store.t("Delete CareVoice account", "刪除 CareVoice 帳戶"), role: .destructive) { deleteAccount = true }.disabled(community.busy)
+                }
             }
             if community.busy { ProgressView().frame(maxWidth: .infinity) }
         }

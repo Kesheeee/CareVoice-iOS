@@ -122,7 +122,7 @@ enum CommunityFailure: Error {
         case .denied: return language.text("This action is not available for your account or this discussion.", "你的帳戶或此討論目前無法執行這項操作。")
         case .rateLimit: return language.text("Please wait a little before trying again.", "請稍候再試。")
         case .conflict: return language.text("This item already exists or was changed. Refresh and try again.", "此項目已存在或已變更，請重新整理後再試。")
-        case .invalid: return language.text("Please check the details or verification code and try again.", "請檢查資料或驗證碼後再試。")
+        case .invalid: return language.text("Please check the details and try again.", "請檢查資料後再試。")
         case .network: return language.text("Could not connect. Check your connection and try again. Your text has been kept.", "未能連接，請檢查網絡後再試。你的文字已保留。")
         case .storage: return language.text("Your sign-in could not be saved securely. Unlock your device and try again.", "未能安全儲存登入資料，請解鎖裝置後再試。")
         }

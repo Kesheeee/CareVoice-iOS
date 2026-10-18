@@ -105,9 +105,6 @@ final class CommunityAPI {
         } catch CommunityFailure.invalid { try clearSession(); throw CommunityFailure.signIn }
           catch CommunityFailure.signIn { try clearSession(); throw CommunityFailure.signIn }
     }
-    func sendCode(email: String) async throws {
-        _ = try await send("auth/v1/otp", method: "POST", body: ["email": email, "create_user": true], token: nil)
-    }
     func passwordSignIn(email: String, password: String) async throws {
         let bytes = try await send("auth/v1/token", method: "POST", body: ["email": email, "password": password], token: nil,
                                    query: [URLQueryItem(name: "grant_type", value: "password")])
@@ -128,10 +125,6 @@ final class CommunityAPI {
         guard session != nil else { return }
         let bearer = try await token()
         _ = try decoder.decode(CommunityUser.self, from: await send("auth/v1/user", method: "GET", body: nil, token: bearer))
-    }
-    func verify(email: String, code: String) async throws {
-        let data = try await send("auth/v1/verify", method: "POST", body: ["email": email, "token": code, "type": "email"], token: nil)
-        try persist(decoder.decode(CommunitySession.self, from: data))
     }
     func signOut() async throws {
         do {
@@ -168,6 +161,7 @@ final class CommunityAPI {
 final class CommunityStore: ObservableObject {
     @Published private(set) var user: CommunityUser?
     @Published private(set) var profile: CommunityProfile?
+    @Published private(set) var identityLoaded = false
     @Published private(set) var posts: [CommunityPost] = []
     @Published private(set) var moderator = false
     @Published private(set) var busy = false
@@ -178,9 +172,22 @@ final class CommunityStore: ObservableObject {
     @Published var mine = false
     private let api: CommunityAPI?
     private var started = false
-    var configured: Bool { api != nil }
+    // Simulator-only UI fixtures have no tokens, transport or production access.
+    private var previewIdentity = false
+    var configured: Bool { api != nil || previewIdentity }
     init() {
         api = CommunityConfiguration.current.map { CommunityAPI(url: $0.0, key: $0.1) }
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--ui-testing") && arguments.contains("--community-member-preview") {
+            previewIdentity = true; started = true; restoring = false; identityLoaded = true
+            let id = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+            user = CommunityUser(id: id, email: nil)
+            if arguments.contains("--community-existing-profile") {
+                profile = CommunityProfile(userId: id, displayName: "Preview parent")
+            }
+        }
+        #endif
     }
     @discardableResult
     func perform(_ operation: (CommunityAPI) async throws -> Void) async -> Bool {
@@ -191,7 +198,7 @@ final class CommunityStore: ObservableObject {
         do { try await operation(api); return true }
         catch {
             self.error = error as? CommunityFailure ?? .network
-            if api.session == nil { profile = nil; posts = []; moderator = false }
+            if api.session == nil { profile = nil; posts = []; moderator = false; identityLoaded = false }
             return false
         }
     }
@@ -216,12 +223,10 @@ final class CommunityStore: ObservableObject {
     private func loadIdentity(_ api: CommunityAPI) async throws {
         guard let id = api.session?.user.id else { throw CommunityFailure.signIn }
         let profiles = try await api.rows("community_profiles", query: [URLQueryItem(name: "user_id", value: "eq." + id.uuidString)], as: [CommunityProfile].self)
+        let isModerator = try await api.rpc("community_is_moderator", as: Bool.self)
         profile = profiles.first
-        moderator = try await api.rpc("community_is_moderator", as: Bool.self)
-    }
-    func sendCode(_ email: String) async -> Bool { await perform { try await $0.sendCode(email: email) } }
-    func verify(_ email: String, code: String) async -> Bool {
-        await perform { api in try await api.verify(email: email, code: code); try await loadIdentity(api); try await fetchFeed(api, more: false) }
+        moderator = isModerator
+        identityLoaded = true
     }
     func saveNickname(_ nickname: String) async -> Bool {
         guard CommunityValidation.validNickname(nickname) else { error = .invalid; return false }
@@ -242,7 +247,10 @@ final class CommunityStore: ObservableObject {
         if more { let existing = Set(posts.map(\.id)); posts += result.filter { !existing.contains($0.id) } }
         else { posts = result }
     }
-    func refresh(more: Bool = false) async { await perform { api in try await loadIdentity(api); try await fetchFeed(api, more: more) } }
+    func refresh(more: Bool = false) async {
+        guard !previewIdentity else { return }
+        await perform { api in try await loadIdentity(api); try await fetchFeed(api, more: more) }
+    }
     func savePost(id: UUID? = nil, topic: CommunityTopic, title: String, body: String) async -> Bool {
         guard CommunityValidation.validPost(title: title, body: body) else { error = .invalid; return false }
         return await perform { api in
@@ -272,12 +280,12 @@ final class CommunityStore: ObservableObject {
         await perform { api in try await api.mutate("community_blocks", method: "POST", body: ["blocked_id": id.uuidString]); posts = [] }
     }
     func signOut() async -> Bool {
-        await perform { api in try await api.signOut(); profile = nil; posts = []; moderator = false }
+        await perform { api in try await api.signOut(); profile = nil; posts = []; moderator = false; identityLoaded = false }
     }
     func deleteAccount() async -> Bool {
         await perform { api in
             _ = try await api.rpc("community_delete_account", as: Bool.self)
-            try api.clearSession(); profile = nil; posts = []; moderator = false
+            try api.clearSession(); profile = nil; posts = []; moderator = false; identityLoaded = false
         }
     }
 }

@@ -22,6 +22,13 @@ struct ResourcesView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
+                NavigationLink { ParentCommunityView(community: store.community) } label: {
+                    Card {
+                        Label(store.t("Parent conversations", "家長交流"), systemImage: "bubble.left.and.bubble.right").font(.headline).foregroundStyle(Brand.blue)
+                        Text(store.t("Ask a question or share an experience with other parents using your CareVoice account.", "使用你的 CareVoice 帳戶，與其他家長交流問題及經驗。")).font(.subheadline).foregroundStyle(Color.secondary)
+                        Label(store.t("Open conversations", "進入交流"), systemImage: "arrow.right").font(.subheadline.weight(.semibold))
+                    }
+                }.buttonStyle(.plain).accessibilityIdentifier("openParentCommunity")
                 Text(store.t("Official resources & support", "官方資源與支援")).font(.subheadline.weight(.semibold)).foregroundStyle(Color.secondary)
                 VStack(spacing: 0) {
                     resource("Child Assessment Service (CAS)", "兒童體能智力測驗服務（CAS）", "stethoscope", "https://www.dhcas.gov.hk/en/faq.html", chinese: "https://www.dhcas.gov.hk/tc/faq.html")
