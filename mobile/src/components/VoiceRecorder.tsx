@@ -1,3 +1,4 @@
+import { BrowserVoiceRecorder } from "./BrowserVoiceRecorder";
 import { translator } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { Mic, Square } from "lucide-react";
@@ -20,7 +21,7 @@ const errors: Record<ErrorKey, [string, string]> = {
 
 const MIME_OPTIONS = ["audio/webm", "audio/mp4", "audio/ogg"];
 
-export function VoiceRecorder({ language, text, onTranscript, onActiveChange }: {
+export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChange }: {
   language: Language;
   text: string;
   onTranscript: (text: string) => void;
@@ -61,6 +62,7 @@ export function VoiceRecorder({ language, text, onTranscript, onActiveChange }: 
   useEffect(() => () => { cancelledRef.current = true; clearTimer(); stopRecorder(); stopStream(); setActive(false); }, []);
 
   const finish = async () => {
+    if (cancelledRef.current) return;
     clearTimer();
     stopStream();
     const mimeType = recorderRef.current?.mimeType || "audio/webm";
@@ -71,12 +73,14 @@ export function VoiceRecorder({ language, text, onTranscript, onActiveChange }: 
     setStatus("transcribing");
     try {
       const result = await transcribe(blob, locale, `recording.${ext}`);
+      if (cancelledRef.current) return;
       const got = (result.text || "").trim();
       if (!got) { setStatus("error"); setError("no-speech"); setActive(false); return; }
       const separator = baseTextRef.current && got ? "\n" : "";
       callbacks.current.onTranscript((baseTextRef.current + separator + got).slice(0, 10000));
       setStatus("review"); setActive(false);
     } catch {
+      if (cancelledRef.current) return;
       setStatus("error"); setError("network"); setActive(false);
     }
   };
@@ -153,4 +157,11 @@ export function VoiceRecorder({ language, text, onTranscript, onActiveChange }: 
     </button>}
     <p className="voice-privacy">{t("Your voice is transcribed by CareVoice’s service and is not stored. Review the text before saving.", "你嘅語音會由 CareVoice 嘅服務轉寫，唔會儲存。儲存前請核對文字。")}</p>
   </div>;
+}
+
+// Production retains browser speech entry until a hosted backend is configured.
+export function VoiceRecorder(props: Parameters<typeof AzureVoiceRecorder>[0]) {
+  return (import.meta as ImportMeta & { env?: { VITE_BACKEND_URL?: string } }).env?.VITE_BACKEND_URL
+    ? <AzureVoiceRecorder {...props}/>
+    : <BrowserVoiceRecorder {...props}/>;
 }
