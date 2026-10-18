@@ -67,7 +67,8 @@ final class CareVoiceUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Send sign-in code"].exists)
         let join = app.buttons["saveCommunityProfile"]
         XCTAssertFalse(join.isEnabled)
-        nickname.tap(); nickname.typeText("Parent")
+        nickname.tap(); nickname.typeText("Parent\n")
+        XCTAssertFalse(app.keyboards.firstMatch.exists)
         XCTAssertFalse(join.isEnabled)
         app.swipeUp()
         let agreement = app.switches["acceptCommunityGuidelines"]

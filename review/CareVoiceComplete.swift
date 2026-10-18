@@ -2133,6 +2133,8 @@ struct ParentCommunityView: View {
                 }
             }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
         }
+        .background(Brand.background)
+        .scrollDismissesKeyboard(.interactively)
         .refreshable { if community.user != nil { await community.refresh() } }
         .task { await community.start(); if community.user != nil { await community.refresh() } }
         .onChange(of: community.mine) { _, _ in Task { await community.refresh() } }
@@ -2151,13 +2153,17 @@ struct CommunityAccountView: View {
     @State private var name = ""
     @State private var deleteAccount = false
     @State private var acceptedGuidelines = false
+    @FocusState private var nicknameFocused: Bool
     var body: some View {
         Group {
             if embedded { content }
-            else { ScrollView { content.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity) } }
+            else {
+                ScrollView { content.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity) }
+                    .scrollDismissesKeyboard(.interactively)
+                    .navigationTitle(store.t("Community account", "社區帳戶"))
+                    .navigationBarTitleDisplayMode(.inline)
+            }
         }
-        .navigationTitle(embedded ? store.t("Community", "社區") : store.t("Community account", "社區帳戶"))
-        .navigationBarTitleDisplayMode(.inline)
         .task { await community.start(); if community.user != nil { await community.refresh() }; name = community.profile?.displayName ?? "" }
         .onChange(of: community.profile?.displayName) { _, value in name = value ?? "" }
         .alert(store.t("Delete your CareVoice account?", "刪除 CareVoice 帳戶？"), isPresented: $deleteAccount) {
@@ -2192,6 +2198,8 @@ struct CommunityAccountView: View {
                     Text(store.t("Your public nickname", "你的公開暱稱")).font(.headline)
                     TextField(store.t("Choose a nickname", "選擇暱稱"), text: $name).textFieldStyle(.roundedBorder)
                         .textContentType(.nickname).accessibilityIdentifier("communityNickname")
+                        .focused($nicknameFocused).submitLabel(.done)
+                        .onSubmit { nicknameFocused = false }
                     Text(store.t("Use 2–40 characters. This is separate from your child's profile and appears beside posts and replies.", "請使用 2–40 個字元。此暱稱與孩子的檔案分開，並會顯示於帖子及回覆旁。"))
                         .font(.caption).foregroundStyle(.secondary)
                     if community.profile == nil {
