@@ -19,9 +19,15 @@ class Safety(BaseModel):
     contact: Optional[str] = None
 
 
+class HistoryMessage(BaseModel):
+    role: str  # "user" | "assistant"
+    content: str
+
+
 class AskRequest(BaseModel):
     language: str = "en"  # "en" | "zh" | "zh-Hans"
     message: str
+    history: list[HistoryMessage] = []
 
 
 class AskResponse(BaseModel):

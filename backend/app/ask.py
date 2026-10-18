@@ -25,8 +25,9 @@ def ask(req: AskRequest) -> AskResponse:
     if not LLM_API_KEY:
         raise HTTPException(status_code=503, detail="LLM is not configured")
 
-    # 2. Prompt (system + directory digest) + 3. LLM call.
-    messages = prompt.build_messages(message, req.language)
+    # 2. Prompt (system + directory digest + few-shot + history) + 3. LLM call.
+    history = [{"role": h.role, "content": h.content} for h in req.history]
+    messages = prompt.build_messages(message, req.language, history)
     try:
         raw = llm.complete(messages)
     except Exception as exc:  # noqa: BLE001 - surface provider errors to the client

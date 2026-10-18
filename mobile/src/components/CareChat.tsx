@@ -2,7 +2,7 @@ import {useEffect, useRef, useState} from 'react';
 import {ArrowLeft, Send, Share2, MessageCircle, ExternalLink} from 'lucide-react';
 import {translator} from '../i18n';
 import type {Language} from '../domain';
-import {ask, isAskConfigured, type AskResponse} from '../platform/ask';
+import {ask, isAskConfigured, type AskResponse, type HistoryMessage} from '../platform/ask';
 
 type Turn = { user: string; response: AskResponse | null; loading: boolean; error: boolean | string };
 
@@ -23,10 +23,15 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
   const submit=async(text:string)=>{
     const message=text.trim();
     if(!message||busy||!isAskConfigured)return;
+    const history:HistoryMessage[]=[];
+    for(const turn of turns){
+      history.push({role:'user',content:turn.user});
+      if(!turn.loading&&turn.response?.reply)history.push({role:'assistant',content:turn.response.reply});
+    }
     setInput('');setBusy(true);
     setTurns(prev=>[...prev,{user:message,response:null,loading:true,error:false}]);
     try{
-      const response=await ask(message,language);
+      const response=await ask(message,language,history);
       setTurns(prev=>prev.map((turn,i)=>i===prev.length-1?{...turn,response,loading:false}:turn));
     }catch(error){
       setTurns(prev=>prev.map((turn,i)=>i===prev.length-1?{...turn,response:{suggestions:[]},loading:false,error:error instanceof Error?error.message:true}:turn));

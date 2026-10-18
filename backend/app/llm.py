@@ -1,12 +1,17 @@
 from openai import OpenAI
 
-from .config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+from .config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, LLM_MAX_TOKENS, LLM_TEMPERATURE
 
 
 def complete(messages: list[dict], json_mode: bool = True) -> str:
     """Call the LLM (DeepSeek, OpenAI-compatible) and return the text content."""
     client = OpenAI(api_key=LLM_API_KEY, base_url=LLM_BASE_URL, timeout=45, max_retries=0)
-    kwargs: dict = {"model": LLM_MODEL, "messages": messages}
+    kwargs: dict = {
+        "model": LLM_MODEL,
+        "messages": messages,
+        "temperature": LLM_TEMPERATURE,
+        "max_tokens": LLM_MAX_TOKENS,
+    }
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
     resp = client.chat.completions.create(**kwargs)

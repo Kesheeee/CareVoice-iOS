@@ -6,11 +6,13 @@ const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || "http://localh
 
 export const isAskConfigured = true;
 
-export async function ask(message: string, language: string): Promise<AskResponse> {
+export type HistoryMessage = { role: "user" | "assistant"; content: string };
+
+export async function ask(message: string, language: string, history: HistoryMessage[] = []): Promise<AskResponse> {
   const res = await fetch(`${BACKEND_URL}/ask`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ language, message }),
+    body: JSON.stringify({ language, message, history }),
   });
   if (!res.ok) {
     const detail = await res.text().catch(() => "");

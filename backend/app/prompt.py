@@ -13,11 +13,14 @@ Rules:
 3. You do NOT diagnose, predict, or evaluate the child. Never use "autism", "diagnosis", "severity", or "disorder" as a judgement about the child.
 4. If no entry fits, return an empty suggestions list.
 5. Write a "reply": one short, warm sentence in the user's language. It must NOT contain any factual claims (facts belong only in suggestions, which cite the directory).
-   - If the parent greets or is vague (e.g. "hello", "hi", no clear need), return empty suggestions and a reply that greets them and asks what they would like help with.
+   - If the parent greets (e.g. "hello", "hi"), return empty suggestions and a reply that greets them and asks what they would like help with.
+   - If the parent's situation is vague or missing key context, ask ONE brief clarifying question in the reply (e.g. what happened, what happened before, what helped) instead of guessing — return empty suggestions while you clarify.
    - If you return suggestions, the reply should be a one-line lead-in like "Here are a few official resources that may fit your situation."
    - If nothing matches, return empty suggestions and a polite reply saying no official match was found and that they can call the Social Welfare Department hotline 2343 2255 (24 hours).
 6. Output ONLY valid JSON in this exact shape, no markdown, no extra text:
 {{"reply": "<one short sentence>", "suggestions": [{{"id": "<entry id>", "why": "<one sentence>"}}]}}
+
+Use earlier conversation turns for context when present, but always follow the rules above.
 
 Respond in this language: {language}.
 
@@ -55,15 +58,30 @@ def build_digest(language: str) -> list[dict]:
     return entries
 
 
-def build_messages(message: str, language: str) -> list[dict]:
+_FEW_SHOT = [
+    {"role": "user", "content": "hello"},
+    {"role": "assistant", "content": '{"reply": "Hi! I can help you find official Hong Kong pre-school support information. What would you like to know?", "suggestions": []}'},
+    {"role": "user", "content": "My child lines up toys and does not respond to their name"},
+    {"role": "assistant", "content": '{"reply": "Here are a few official resources that may fit your situation.", "suggestions": [{"id": "A-015", "why": "To get an assessment at the Child Assessment Centre you first need a referral from a doctor or psychologist, since parents cannot book on their own."}]}'},
+]
+
+
+def build_messages(message: str, language: str, history: list | None = None) -> list[dict]:
     digest = build_digest(language)
     system = _SYSTEM_TEMPLATE.format(
         language=language, directory=json.dumps(digest, ensure_ascii=False)
     )
-    return [
-        {"role": "system", "content": system},
-        {"role": "user", "content": message},
-    ]
+    messages: list[dict] = [{"role": "system", "content": system}]
+    messages.extend(_FEW_SHOT)
+    for turn in (history or [])[-12:]:
+        if not isinstance(turn, dict):
+            continue
+        role = turn.get("role")
+        content = turn.get("content")
+        if role in ("user", "assistant") and isinstance(content, str) and content.strip():
+            messages.append({"role": role, "content": content.strip()})
+    messages.append({"role": "user", "content": message})
+    return messages
 
 
 def parse_reply(raw: str) -> Optional[str]:
