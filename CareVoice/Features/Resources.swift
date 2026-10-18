@@ -54,6 +54,10 @@ struct ResourcesView: View {
                         Text(store.t("Official resources", "官方資源")).font(.title2.bold())
                         Text(store.t("Browse service information from the Department of Health and Social Welfare Department.", "瀏覽衛生署及社會福利署嘅服務資料。"))
                             .font(.subheadline).foregroundStyle(.secondary)
+                        NavigationLink { ServiceTypesView() } label: { Label(store.t("Service types", "服務種類"), systemImage: "square.grid.2x2").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
+                        NavigationLink { ServiceDirectoryView() } label: { Label(store.t("Find a centre · waiting times", "尋找中心・輪候時間"), systemImage: "mappin.and.ellipse").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
+                        NavigationLink { GlossaryView() } label: { Label(store.t("Glossary", "術語對照"), systemImage: "character.book.closed").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
+                        NavigationLink { CitableFactsView() } label: { Label(store.t("Cited information", "可引用資料"), systemImage: "checkmark.seal").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
                         ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
                         sourceNote
                     } else { parentsContent }

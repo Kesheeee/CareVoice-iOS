@@ -1,6 +1,8 @@
 .DS_Store
 .build/
 .swiftpm/
+.codegraph/
+.serena/
 DerivedData/
 build/
 *.xcuserstate
@@ -16,3 +18,5 @@ xcuserdata/
 *.cer
 family-data.json
 ui-test-data.json
+.codegraph
+.serena

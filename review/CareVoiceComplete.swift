@@ -194,6 +194,7 @@ final class AppStore: ObservableObject {
     @Published var errorMessage: String?
     @Published private(set) var storageUnavailable = false
     let questions: [Question]
+    let content = GovernmentContent.load()
     private let fileURL: URL
     private let isUITest: Bool
     var language: AppLanguage { data.language }
@@ -1046,6 +1047,10 @@ struct ResourcesView: View {
                         Text(store.t("Official resources", "官方資源")).font(.title2.bold())
                         Text(store.t("Browse service information from the Department of Health and Social Welfare Department.", "瀏覽衛生署及社會福利署嘅服務資料。"))
                             .font(.subheadline).foregroundStyle(.secondary)
+                        NavigationLink { ServiceTypesView() } label: { Label(store.t("Service types", "服務種類"), systemImage: "square.grid.2x2").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
+                        NavigationLink { ServiceDirectoryView() } label: { Label(store.t("Find a centre · waiting times", "尋找中心・輪候時間"), systemImage: "mappin.and.ellipse").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
+                        NavigationLink { GlossaryView() } label: { Label(store.t("Glossary", "術語對照"), systemImage: "character.book.closed").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
+                        NavigationLink { CitableFactsView() } label: { Label(store.t("Cited information", "可引用資料"), systemImage: "checkmark.seal").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
                         ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
                         sourceNote
                     } else { parentsContent }
@@ -1845,4 +1850,4944 @@ struct NativeBackupControls: View {
             Button(store.t("Restore", "還原"), role: .destructive) { if let data = pending { store.update { $0 = data } }; pending = nil }
         } message: { Text(store.t("This replaces your profile, records and answers with the selected backup.", "呢個操作會以備份取代檔案、記錄同問卷答案。")) }
     }
+}
+
+
+// MARK: - Merged Phase 1: CareVoice/Core/ContentModels.swift
+
+/// Pick the English text when the language is English, else fall back to TC.
+func localized(_ en: String?, _ tc: String?, _ language: AppLanguage) -> String {
+    if language == .english, let en, !en.isEmpty { return en }
+    return tc ?? en ?? ""
+}
+
+struct CitableAssertion: Codable, Identifiable {
+    let assertionId: String
+    let topic: String
+    let quote: String
+    let plainTc: String
+    let locator: String?
+    let org: String
+    let titleTc: String
+    let url: String
+    let capturedOn: String
+    let sourceStatus: String
+    let plainEn: String?
+    let quoteEn: String?
+    let locatorEn: String?
+    let orgEn: String?
+    let titleEn: String?
+    var id: String { assertionId }
+
+    enum CodingKeys: String, CodingKey {
+        case assertionId = "assertion_id"
+        case topic, quote
+        case plainTc = "plain_tc"
+        case locator, org
+        case titleTc = "title_tc"
+        case url
+        case capturedOn = "captured_on"
+        case sourceStatus = "source_status"
+        case plainEn = "plain_en"
+        case quoteEn = "quote_en"
+        case locatorEn = "locator_en"
+        case orgEn = "org_en"
+        case titleEn = "title_en"
+    }
+}
+
+struct ServiceType: Codable, Identifiable {
+    let code: String
+    let aliasTc: String?
+    let aliasEn: String?
+    let nameTc: String
+    let nameEn: String?
+    let ageMinM: Int?
+    let ageMaxM: Int?
+    let intensityTc: String?
+    let targetTc: String?
+    let referralTc: String?
+    let feeTc: String?
+    let waitNoteTc: String?
+    let sourceId: String?
+    let notesTc: String?
+    let intensityEn: String?
+    let targetEn: String?
+    let referralEn: String?
+    let feeEn: String?
+    let waitNoteEn: String?
+    let notesEn: String?
+    var id: String { code }
+
+    enum CodingKeys: String, CodingKey {
+        case code
+        case aliasTc = "alias_tc"
+        case aliasEn = "alias_en"
+        case nameTc = "name_tc"
+        case nameEn = "name_en"
+        case ageMinM = "age_min_m"
+        case ageMaxM = "age_max_m"
+        case intensityTc = "intensity_tc"
+        case targetTc = "target_tc"
+        case referralTc = "referral_tc"
+        case feeTc = "fee_tc"
+        case waitNoteTc = "wait_note_tc"
+        case sourceId = "source_id"
+        case notesTc = "notes_tc"
+        case intensityEn = "intensity_en"
+        case targetEn = "target_en"
+        case referralEn = "referral_en"
+        case feeEn = "fee_en"
+        case waitNoteEn = "wait_note_en"
+        case notesEn = "notes_en"
+    }
+}
+
+struct ServiceUnit: Codable, Identifiable {
+    let unitId: String
+    let nameTc: String
+    let nameEn: String?
+    let serviceCode: String?
+    let operatorName: String?
+    let district: String?
+    let address: String?
+    let phone: String?
+    let capacity: Int?
+    let sourceId: String?
+    let status: String?
+    let districtEn: String?
+    var id: String { unitId }
+
+    enum CodingKeys: String, CodingKey {
+        case unitId = "unit_id"
+        case nameTc = "name_tc"
+        case nameEn = "name_en"
+        case serviceCode = "service_code"
+        case operatorName = "operator"
+        case district, address, phone, capacity
+        case sourceId = "source_id"
+        case status
+        case districtEn = "district_en"
+    }
+}
+
+struct WaitingSnapshot: Codable, Identifiable {
+    let snapshotId: String
+    let asOf: String
+    let unitId: String
+    let unitNameRaw: String?
+    let serviceCode: String?
+    let lastMatchApply: String?
+    let derivedWaitM: Int?
+    let sourceId: String?
+    let runId: String?
+    var id: String { snapshotId }
+
+    enum CodingKeys: String, CodingKey {
+        case snapshotId = "snapshot_id"
+        case asOf = "as_of"
+        case unitId = "unit_id"
+        case unitNameRaw = "unit_name_raw"
+        case serviceCode = "service_code"
+        case lastMatchApply = "last_match_apply"
+        case derivedWaitM = "derived_wait_m"
+        case sourceId = "source_id"
+        case runId = "run_id"
+    }
+}
+
+struct GlossaryTerm: Codable, Identifiable {
+    let term: String
+    let fullTc: String
+    let code: String?
+    let plainTc: String
+    let sourceId: String?
+    let termEn: String?
+    let fullEn: String?
+    let plainEn: String?
+    var id: String { term }
+
+    enum CodingKeys: String, CodingKey {
+        case term
+        case fullTc = "full_tc"
+        case code
+        case plainTc = "plain_tc"
+        case sourceId = "source_id"
+        case termEn = "term_en"
+        case fullEn = "full_en"
+        case plainEn = "plain_en"
+    }
+}
+
+struct PathwayStep: Codable, Identifiable {
+    let stepNo: Int
+    let nameTc: String
+    let whoActsTc: String?
+    let preconditions: String?
+    let durationNote: String?
+    let frictionTc: String?
+    let plainTc: String?
+    let status: String?
+    let nameEn: String?
+    let whoActsEn: String?
+    let preconditionsEn: String?
+    let durationNoteEn: String?
+    let frictionEn: String?
+    let plainEn: String?
+    var id: Int { stepNo }
+
+    enum CodingKeys: String, CodingKey {
+        case stepNo = "step_no"
+        case nameTc = "name_tc"
+        case whoActsTc = "who_acts_tc"
+        case preconditions
+        case durationNote = "duration_note"
+        case frictionTc = "friction_tc"
+        case plainTc = "plain_tc"
+        case status
+        case nameEn = "name_en"
+        case whoActsEn = "who_acts_en"
+        case preconditionsEn = "preconditions_en"
+        case durationNoteEn = "duration_note_en"
+        case frictionEn = "friction_en"
+        case plainEn = "plain_en"
+    }
+}
+
+struct ChecklistItem: Codable, Identifiable {
+    let itemId: String
+    let stepNo: Int
+    let nameTc: String
+    let required: Int?
+    let originTc: String?
+    let validityTc: String?
+    let sortOrder: Int?
+    let sourceId: String?
+    let notesTc: String?
+    let nameEn: String?
+    let originEn: String?
+    let validityEn: String?
+    let notesEn: String?
+    var id: String { itemId }
+
+    enum CodingKeys: String, CodingKey {
+        case itemId = "item_id"
+        case stepNo = "step_no"
+        case nameTc = "name_tc"
+        case required
+        case originTc = "origin_tc"
+        case validityTc = "validity_tc"
+        case sortOrder = "sort_order"
+        case sourceId = "source_id"
+        case notesTc = "notes_tc"
+        case nameEn = "name_en"
+        case originEn = "origin_en"
+        case validityEn = "validity_en"
+        case notesEn = "notes_en"
+    }
+}
+
+struct RedFlag: Codable, Identifiable {
+    let flagId: String
+    let signalTc: String
+    let routeTc: String
+    let routeContact: String?
+    let neverSayTc: String
+    let sourceId: String?
+    let status: String?
+    let signalEn: String?
+    let routeEn: String?
+    let routeContactEn: String?
+    let neverSayEn: String?
+    var id: String { flagId }
+
+    enum CodingKeys: String, CodingKey {
+        case flagId = "flag_id"
+        case signalTc = "signal_tc"
+        case routeTc = "route_tc"
+        case routeContact = "route_contact"
+        case neverSayTc = "never_say_tc"
+        case sourceId = "source_id"
+        case status
+        case signalEn = "signal_en"
+        case routeEn = "route_en"
+        case routeContactEn = "route_contact_en"
+        case neverSayEn = "never_say_en"
+    }
+}
+
+struct ContentManifest: Codable {
+    let builtOn: String?
+    let dbFile: String?
+    let contentFingerprint: String?
+    let counts: [String: Int]?
+
+    enum CodingKeys: String, CodingKey {
+        case builtOn = "built_on"
+        case dbFile = "db_file"
+        case contentFingerprint = "content_fingerprint"
+        case counts
+    }
+}
+
+struct GovernmentContent {
+    let assertions: [CitableAssertion]
+    let serviceTypes: [ServiceType]
+    let serviceUnits: [ServiceUnit]
+    let waiting: [WaitingSnapshot]
+    let glossary: [GlossaryTerm]
+    let pathwaySteps: [PathwayStep]
+    let checklistItems: [ChecklistItem]
+    let redFlags: [RedFlag]
+    let manifest: ContentManifest?
+
+    static func load() -> GovernmentContent {
+        func decode<T: Decodable>(_ name: String, _ type: T.Type) -> T? {
+            guard let json = EmbeddedGovernmentContent.files[name] else { return nil }
+            let data = Data(json.utf8)
+            return try? JSONDecoder().decode(T.self, from: data)
+        }
+        return GovernmentContent(
+            assertions: decode("citable_assertions", [CitableAssertion].self) ?? [],
+            serviceTypes: decode("service_types", [ServiceType].self) ?? [],
+            serviceUnits: decode("service_units", [ServiceUnit].self) ?? [],
+            waiting: decode("waiting_snapshot", [WaitingSnapshot].self) ?? [],
+            glossary: decode("glossary", [GlossaryTerm].self) ?? [],
+            pathwaySteps: decode("pathway_steps", [PathwayStep].self) ?? [],
+            checklistItems: decode("checklist_items", [ChecklistItem].self) ?? [],
+            redFlags: decode("red_flags", [RedFlag].self) ?? [],
+            manifest: decode("manifest", ContentManifest.self)
+        )
+    }
+
+    func waitMonths(for unitId: String) -> Int? {
+        waiting.first { $0.unitId == unitId }?.derivedWaitM
+    }
+
+    func serviceType(code: String?) -> ServiceType? {
+        guard let code else { return nil }
+        return serviceTypes.first { $0.code == code }
+    }
+
+    var districts: [String] {
+        let values = serviceUnits.compactMap { $0.district }.filter { !$0.isEmpty }
+        return Array(Set(values)).sorted()
+    }
+
+    var serviceCodes: [String] {
+        let values = serviceUnits.compactMap { $0.serviceCode }.filter { !$0.isEmpty }
+        return Array(Set(values)).sorted()
+    }
+}
+
+// MARK: - Merged Phase 1: CareVoice/Features/ContentViews.swift
+
+// MARK: - Service types
+
+struct ServiceTypesView: View {
+    @EnvironmentObject var store: AppStore
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text(store.t("What the letters mean", "這些代號是甚麼")).font(.system(.title, design: .rounded).bold())
+                Text(store.t("Government-funded pre-school rehabilitation services, in plain words.", "政府資助的學前康復服務，用淺白的話解釋。")).foregroundStyle(.secondary)
+                ForEach(store.content.serviceTypes) { type in
+                    Card {
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(localized(type.aliasEn, type.aliasTc, store.language)).font(.title3.bold()).foregroundStyle(Brand.blue)
+                            Text(localized(type.nameEn, type.nameTc, store.language)).font(.subheadline.weight(.semibold))
+                            Spacer()
+                        }
+                        if let target = type.targetTc { row(store.t("Who it's for", "服務對象"), localized(type.targetEn, target, store.language)) }
+                        if let intensity = type.intensityTc { row(store.t("What it is", "服務形式"), localized(type.intensityEn, intensity, store.language)) }
+                        if let referral = type.referralTc { row(store.t("How to get it", "轉介方式"), localized(type.referralEn, referral, store.language)) }
+                        if let fee = type.feeTc { row(store.t("Fee", "費用"), localized(type.feeEn, fee, store.language)) }
+                        if let wait = type.waitNoteTc { row(store.t("Typical wait", "輪候情況"), localized(type.waitNoteEn, wait, store.language)) }
+                    }
+                }
+                sourceNote()
+            }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
+        }.background(Brand.background).navigationTitle(store.t("Service types", "服務種類")).navigationBarTitleDisplayMode(.inline)
+    }
+    private func row(_ label: String, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label).font(.caption.weight(.semibold)).foregroundStyle(Brand.teal)
+            Text(value).font(.subheadline).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+    private func sourceNote() -> some View {
+        Text(store.t("Compiled from official Social Welfare Department and Department of Health pages. Details are confirmed by the service provider.", "資料整理自社會福利署及衞生署官方網頁，詳情以服務機構確認為準。"))
+            .font(.caption).foregroundStyle(.secondary)
+    }
+}
+
+// MARK: - Glossary
+
+struct GlossaryView: View {
+    @EnvironmentObject var store: AppStore
+    @State private var search = ""
+
+    private var filtered: [GlossaryTerm] {
+        guard !search.isEmpty else { return store.content.glossary }
+        return store.content.glossary.filter { t in
+            t.term.localizedCaseInsensitiveContains(search)
+            || (t.termEn ?? "").localizedCaseInsensitiveContains(search)
+            || t.fullTc.localizedCaseInsensitiveContains(search)
+            || (t.fullEn ?? "").localizedCaseInsensitiveContains(search)
+            || t.plainTc.localizedCaseInsensitiveContains(search)
+            || (t.plainEn ?? "").localizedCaseInsensitiveContains(search)
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(store.t("Jargon, decoded", "行話對照")).font(.system(.title, design: .rounded).bold())
+                if filtered.isEmpty {
+                    ContentUnavailableView(store.t("No matching terms", "沒有符合的詞語"), systemImage: "magnifyingglass")
+                }
+                ForEach(filtered) { term in
+                    Card {
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(localized(term.termEn, term.term, store.language)).font(.headline).foregroundStyle(Brand.blue)
+                            Text(localized(term.fullEn, term.fullTc, store.language)).font(.subheadline.weight(.semibold))
+                        }
+                        Text(localized(term.plainEn, term.plainTc, store.language)).font(.subheadline).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
+        }.background(Brand.background).navigationTitle(store.t("Glossary", "術語對照")).navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $search, prompt: store.t("Search terms", "搜尋詞語"))
+    }
+}
+
+// MARK: - Service directory
+
+struct ServiceDirectoryView: View {
+    @EnvironmentObject var store: AppStore
+    @State private var search = ""
+    @State private var district = "all"
+    @State private var serviceCode = "all"
+
+    private var filtered: [ServiceUnit] {
+        var units = store.content.serviceUnits
+        if district != "all" { units = units.filter { $0.district == district } }
+        if serviceCode != "all" { units = units.filter { $0.serviceCode == serviceCode } }
+        if !search.isEmpty {
+            units = units.filter { $0.nameTc.localizedCaseInsensitiveContains(search) || ($0.nameEn ?? "").localizedCaseInsensitiveContains(search) }
+        }
+        return units.sorted { ($0.district ?? "") < ($1.district ?? "") }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 10) {
+                    Menu {
+                        Picker(store.t("District", "地區"), selection: $district) {
+                            Text(store.t("All districts", "所有地區")).tag("all")
+                            ForEach(store.content.districts, id: \.self) { d in
+                                Text(districtName(d)).tag(d)
+                            }
+                        }
+                    } label: {
+                        Label(district == "all" ? store.t("District", "地區") : districtName(district), systemImage: "mappin.and.ellipse")
+                    }
+                    Menu {
+                        Picker(store.t("Service", "服務"), selection: $serviceCode) {
+                            Text(store.t("All services", "所有服務")).tag("all")
+                            ForEach(store.content.serviceCodes, id: \.self) { c in
+                                Text(serviceLabel(c)).tag(c)
+                            }
+                        }
+                    } label: {
+                        Label(serviceCode == "all" ? store.t("Service", "服務") : serviceLabel(serviceCode), systemImage: "building.2")
+                    }
+                    Spacer()
+                }.font(.subheadline)
+                ForEach(filtered) { unit in
+                    Card {
+                        HStack(alignment: .top, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(localized(unit.nameEn, unit.nameTc, store.language)).font(.subheadline.weight(.semibold))
+                            }
+                            Spacer()
+                            if let code = unit.serviceCode {
+                                Text(serviceLabel(code))
+                                    .font(.caption.bold()).foregroundStyle(Brand.teal)
+                                    .padding(.horizontal, 8).padding(.vertical, 3)
+                                    .background(Brand.teal.opacity(0.12), in: Capsule())
+                            }
+                        }
+                        if let d = unit.district { Text(localized(unit.districtEn, d, store.language)).font(.caption).foregroundStyle(.secondary) }
+                        if let address = unit.address, !address.isEmpty { Text(address).font(.subheadline) }
+                        HStack(spacing: 16) {
+                            if let phone = unit.phone, !phone.isEmpty {
+                                Link(destination: URL(string: "tel:\(phone.replacingOccurrences(of: " ", with: ""))")!) {
+                                    Label(phone, systemImage: "phone").font(.subheadline).foregroundStyle(Brand.blue)
+                                }
+                            }
+                            if let wait = store.content.waitMonths(for: unit.unitId) {
+                                Label(store.t("\(wait) mo wait", "輪候約 \(wait) 個月"), systemImage: "clock").font(.caption).foregroundStyle(.orange)
+                            }
+                        }
+                    }
+                }
+                if filtered.isEmpty {
+                    ContentUnavailableView(store.t("No centres match", "沒有符合的中心"), systemImage: "magnifyingglass")
+                }
+                Text(store.t("Waiting figures are a snapshot (as of 2026-08-31) recalculated from official datasets — not live availability.", "輪候數字為截至 2026-08-31 的快照，由官方數據集逐間復算，並非實時名額。"))
+                    .font(.caption).foregroundStyle(.secondary)
+            }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
+        }.background(Brand.background).navigationTitle(store.t("Find a centre", "服務機構・輪候")).navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func serviceLabel(_ code: String) -> String {
+        guard let st = store.content.serviceType(code: code) else { return code }
+        return localized(st.aliasEn, st.aliasTc, store.language)
+    }
+
+    private func districtName(_ d: String) -> String {
+        if store.language == .english {
+            if let unit = store.content.serviceUnits.first(where: { $0.district == d }), let en = unit.districtEn, !en.isEmpty { return en }
+        }
+        return d
+    }
+}
+
+// MARK: - Citable facts
+
+struct CitableFactsView: View {
+    @EnvironmentObject var store: AppStore
+    @State private var search = ""
+
+    private var topics: [String] {
+        Array(Set(store.content.assertions.map { $0.topic })).sorted()
+    }
+
+    private var searchResults: [CitableAssertion] {
+        guard !search.isEmpty else { return [] }
+        return store.content.assertions.filter { a in
+            localized(a.plainEn, a.plainTc, store.language).localizedCaseInsensitiveContains(search)
+            || localized(a.quoteEn, a.quote, store.language).localizedCaseInsensitiveContains(search)
+            || localized(a.titleEn, a.titleTc, store.language).localizedCaseInsensitiveContains(search)
+            || localized(a.orgEn, a.org, store.language).localizedCaseInsensitiveContains(search)
+        }
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text(store.t("Every fact, with its source", "每條資料都有出處")).font(.system(.title, design: .rounded).bold())
+                Text(store.t("These are verbatim official statements, each linking back to the original page.", "以下為官方原文逐字摘錄，每條均可點回原始網頁。")).foregroundStyle(.secondary)
+                if store.language == .english {
+                    Text(store.t("English text is a translation, not an official quote.", "英文內容為翻譯，並非官方原文。"))
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                if search.isEmpty {
+                    ForEach(topics, id: \.self) { topic in
+                        let items = store.content.assertions.filter { $0.topic == topic }
+                        DisclosureGroup {
+                            VStack(alignment: .leading, spacing: 14) {
+                                ForEach(items) { a in assertionCard(a) }
+                            }.padding(.top, 6)
+                        } label: {
+                            HStack {
+                                Text(topicLabel(topic, store.language)).font(.headline)
+                                Spacer()
+                                Text("\(items.count)").font(.caption).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } else {
+                    if searchResults.isEmpty {
+                        ContentUnavailableView(store.t("No matching information", "沒有符合的資料"), systemImage: "magnifyingglass")
+                    }
+                    ForEach(searchResults) { a in assertionCard(a, showTopic: true) }
+                }
+            }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
+        }.background(Brand.background).navigationTitle(store.t("Cited information", "可引用資料")).navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $search, prompt: store.t("Search cited information", "搜尋可引用資料"))
+    }
+
+    private func assertionCard(_ a: CitableAssertion, showTopic: Bool = false) -> some View {
+        Card {
+            if showTopic {
+                Text(topicLabel(a.topic, store.language)).font(.caption.bold()).foregroundStyle(Brand.teal)
+            }
+            Text(localized(a.plainEn, a.plainTc, store.language)).font(.subheadline).fixedSize(horizontal: false, vertical: true)
+            Divider()
+            Text("「\(localized(a.quoteEn, a.quote, store.language))」").font(.footnote).foregroundStyle(.secondary)
+            HStack(spacing: 6) {
+                Text(localized(a.orgEn, a.org, store.language)).font(.caption.bold()).foregroundStyle(Brand.teal)
+                Text(localized(a.titleEn, a.titleTc, store.language)).font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                if !a.url.isEmpty {
+                    Link(store.t("Source", "來源"), destination: URL(string: a.url)!).font(.caption).foregroundStyle(Brand.blue)
+                }
+            }
+        }
+    }
+}
+
+private func topicLabel(_ topic: String, _ l: AppLanguage) -> String {
+    switch topic {
+    case "waiting": return l.text("Waiting times", "輪候時間")
+    case "waiting_support": return l.text("Support while waiting", "輪候期間支援")
+    case "subsidy": return l.text("Subsidy", "津貼")
+    case "eligibility": return l.text("Eligibility", "資格")
+    case "service": return l.text("Services", "服務")
+    case "cost": return l.text("Cost", "費用")
+    case "transition": return l.text("Transition support", "過渡支援")
+    case "referral_route": return l.text("Referral", "轉介")
+    case "materials": return l.text("Documents", "所需材料")
+    case "right": return l.text("Rights", "權益")
+    case "redflag": return l.text("Red flags", "紅旗")
+    default: return topic
+    }
+}
+
+enum EmbeddedGovernmentContent {
+    static let files: [String: String] = [
+"checklist_items": #"""
+[
+  {
+    "item_id": "CI-001",
+    "step_no": 3,
+    "name_tc": "醫生或心理學家之介紹信",
+    "required": 1,
+    "origin_tc": "開信者：私家醫生／醫院／心理學家",
+    "validity_tc": "待核实",
+    "sort_order": 10,
+    "source_id": "SRC-014",
+    "notes_tc": "★ 没有这封信，第 3 步根本走不了。这是家长最常缺的第一样东西",
+    "name_en": "Referral letter from a doctor or psychologist",
+    "origin_en": "Issued by: private doctor / hospital / psychologist",
+    "validity_en": "To be confirmed",
+    "notes_en": "Without this letter, step 3 can't proceed. It's the first thing parents most often lack."
+  },
+  {
+    "item_id": "CI-008",
+    "step_no": 5,
+    "name_tc": "心理報告／醫生報告（由轉介人附帶提交）",
+    "required": 1,
+    "origin_tc": "評估團隊／醫生／轉介人",
+    "validity_tc": "待核实",
+    "sort_order": 10,
+    "source_id": "SRC-014",
+    "notes_tc": "家长不需要自己准备，但要确认转介人有把它一起交上去",
+    "name_en": "Psychological report / medical report (submitted by the referrer)",
+    "origin_en": "Assessment team / doctor / referrer",
+    "validity_en": "To be confirmed",
+    "notes_en": "Parents don't prepare this themselves, but should confirm the referrer submitted it along."
+  },
+  {
+    "item_id": "CI-010",
+    "step_no": 6,
+    "name_tc": "學習訓練津貼（T位）申請表連所需文件副本",
+    "required": 0,
+    "origin_tc": "社署發信邀請後由家長填交",
+    "validity_tc": "—",
+    "sort_order": 10,
+    "source_id": "SRC-005",
+    "notes_tc": "不主动申请就没有；社署会发信邀请合资格家庭，但要家长自己交表。可网上或邮寄递交",
+    "name_en": "Training Subsidy (T-place) application form with copies of required documents",
+    "origin_en": "Filled in and submitted by the parent after SWD sends an invitation letter",
+    "validity_en": "—",
+    "notes_en": "You won't get it unless you apply; SWD invites eligible families by letter, but parents must submit the form. Can be submitted online or by post."
+  },
+  {
+    "item_id": "CI-002",
+    "step_no": 3,
+    "name_tc": "兒童出世紙或身份證（必須為正本）",
+    "required": 1,
+    "origin_tc": "家長自行保管",
+    "validity_tc": "—",
+    "sort_order": 20,
+    "source_id": "SRC-014",
+    "notes_tc": "官方要求正本，不接受影印本",
+    "name_en": "Child's birth certificate or identity card (original required)",
+    "origin_en": "Kept by the parent",
+    "validity_en": "—",
+    "notes_en": "Official requirement is the original; photocopies not accepted."
+  },
+  {
+    "item_id": "CI-009",
+    "step_no": 5,
+    "name_tc": "服務類別（E／S／I／O）及中心地區偏好",
+    "required": 1,
+    "origin_tc": "家長在登記時提供",
+    "validity_tc": "—",
+    "sort_order": 20,
+    "source_id": "SRC-004",
+    "notes_tc": "★ 官方明写编配时按「申請日期先後及地區選擇」排序——所以地区偏好填错会直接影响什么时候拿到服务",
+    "name_en": "Service type (E/S/I/O) and centre district preference",
+    "origin_en": "Provided by the parent at registration",
+    "validity_en": "—",
+    "notes_en": "Official text states allocation is by 'application date and district preference' — so a wrong district preference directly affects when you get a place."
+  },
+  {
+    "item_id": "CI-003",
+    "step_no": 3,
+    "name_tc": "父親及母親身份證（或影印本）",
+    "required": 1,
+    "origin_tc": "家長自行保管",
+    "validity_tc": "—",
+    "sort_order": 30,
+    "source_id": "SRC-014",
+    "notes_tc": null,
+    "name_en": "Father's and mother's identity cards (or photocopies)",
+    "origin_en": "Kept by the parent",
+    "validity_en": "—"
+  },
+  {
+    "item_id": "CI-004",
+    "step_no": 3,
+    "name_tc": "兒童半身近照 1 張",
+    "required": 1,
+    "origin_tc": "家長自備",
+    "validity_tc": "—",
+    "sort_order": 40,
+    "source_id": "SRC-014",
+    "notes_tc": "这条最容易漏，而且临时补拍来不及",
+    "name_en": "1 recent half-length photo of the child",
+    "origin_en": "Prepared by the parent",
+    "validity_en": "—",
+    "notes_en": "Most easily forgotten, and hard to retake at the last minute."
+  },
+  {
+    "item_id": "CI-005",
+    "step_no": 3,
+    "name_tc": "健康院紀錄簿／防疫注射紀錄／所有專科覆診咭",
+    "required": 1,
+    "origin_tc": "衞生署母嬰健康院／醫院",
+    "validity_tc": "—",
+    "sort_order": 50,
+    "source_id": "SRC-014",
+    "notes_tc": "记录孩子一路以来的发展监察数据，对评估有用",
+    "name_en": "Health centre record book / immunisation record / all specialist follow-up cards",
+    "origin_en": "Department of Health Maternal & Child Health Centre / hospital",
+    "validity_en": "—",
+    "notes_en": "Records the child's developmental surveillance data over time; useful for assessment."
+  },
+  {
+    "item_id": "CI-006",
+    "step_no": 3,
+    "name_tc": "住址證明（或影印本）",
+    "required": 1,
+    "origin_tc": "家長自備",
+    "validity_tc": "—",
+    "sort_order": 60,
+    "source_id": "SRC-014",
+    "notes_tc": "决定分派到哪个地区的测验中心",
+    "name_en": "Proof of address (or photocopy)",
+    "origin_en": "Prepared by the parent",
+    "validity_en": "—",
+    "notes_en": "Determines which district's assessment centre you are assigned to."
+  },
+  {
+    "item_id": "CI-007",
+    "step_no": 3,
+    "name_tc": "專科門診費用（首次 $135、其後每次 $80）或有效的綜援醫療費用豁免證明書",
+    "required": 1,
+    "origin_tc": "現場繳付",
+    "validity_tc": "—",
+    "sort_order": 70,
+    "source_id": "SRC-022",
+    "notes_tc": "✅ 金額與綜援豁免證明已改掛衞生署一手來源（SRC-022 登記表格 PDF）；原 SRC-014（非官方次級來源）不再作為本條依據。⚠️ 檔名帶 170803 版本標記、未確認是否最新版；對外只寫「衞生署登記表格所列」，不寫「現行收費」。若家庭有綜援豁免證明，可免",
+    "name_en": "Specialist clinic fee (first visit $135, subsequent $80) or a valid CSSA medical fee waiver certificate",
+    "origin_en": "Paid on site",
+    "validity_en": "—",
+    "notes_en": "Amount and CSSA waiver now cite a Department of Health first-hand source (SRC-022 registration form PDF). Filename carries a version tag; externally state 'as listed on the Department of Health registration form', not 'current fee'. Families with a CSSA waiver are exempt."
+  }
+]
+"""#,
+"citable_assertions": #"""
+[
+  {
+    "assertion_id": "A-005",
+    "topic": "cost",
+    "quote": "經由社工或康復服務單位的工作人員轉介至社署康復服務中央轉介系統。有關申請不會收取任何費用。",
+    "plain_tc": "申请走中央转介系统、由社工或康复单位的人转介；申请不收钱，服务本身也是免费的。",
+    "locator": "申請手續",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "Applications go through the Central Referral System, referred by a social worker or rehabilitation unit staff; applying is free, and the service itself is free.",
+    "quote_en": "Referred to the SWD Central Referral System for Rehabilitation Services by a social worker or a staff member of a rehabilitation service unit. No fee is charged for the application.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Application procedures"
+  },
+  {
+    "assertion_id": "A-027",
+    "topic": "cost",
+    "quote": "免費。",
+    "plain_tc": "这项服务本身免费。",
+    "locator": "費用",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "The service itself is free.",
+    "quote_en": "Free of charge.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Fee"
+  },
+  {
+    "assertion_id": "A-003",
+    "topic": "eligibility",
+    "quote": "年齡介乎2歲至6歲以下未開始接受小學教育，並有下列任何1項發展障礙的兒童：",
+    "plain_tc": "能排 S 位的是 2 到 6 岁以下、还没上小学的孩子，而且要有中度至严重的障碍——其中一项明确包括自闭症。",
+    "locator": "服務對象",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "A child can be placed in an S-place if they are aged 2 to under 6, not yet in primary school, and have a moderate to severe disability — one of which is explicitly autism.",
+    "quote_en": "Children aged 2 to under 6 who have not yet started primary education and have any one of the following developmental disabilities:",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Service targets"
+  },
+  {
+    "assertion_id": "A-004",
+    "topic": "eligibility",
+    "quote": "康復服務中央轉介系統接受家長為2歲以下的兒童預早登記輪候此項服務，但當有服務空缺時，這些兒童必須符合基本入讀條件，包括年齡已屆2歲，方能合資格獲得服務編配。",
+    "plain_tc": "孩子还没满 2 岁，就可以先去登记排队；但真的有空位要分配时，孩子必须已经满 2 岁才能拿到。",
+    "locator": "服務對象（末段）",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "A child under 2 can register to queue in advance, but when a vacancy comes up the child must already have turned 2 to be offered a place.",
+    "quote_en": "The Central Referral System for Rehabilitation Services accepts parents to register in advance for this service for children under the age of 2, but when a vacancy arises, these children must meet the basic admission conditions, including having reached the age of 2, before a place can be allocated.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Service targets (last paragraph)"
+  },
+  {
+    "assertion_id": "A-007",
+    "topic": "eligibility",
+    "quote": "Central Referral System for Rehabilitation Services (the System) accepts parents to register application for Special Child Care Centre or Integrated Programme in Kindergarten-cum-Child Care Centre services for children from below the age of two in advance.",
+    "plain_tc": "没满 2 岁的孩子，家长可以先去中央转介系统预早登记排队 S 位或 I 位。",
+    "locator": "Remarks (1)",
+    "org": "社署",
+    "title_tc": "康復服務中央轉介系統 — 輪候資料更新",
+    "url": "https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/crsrehabwa",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "For a child under 2, parents can register in advance on the Central Referral System to queue for an S-place or I-place.",
+    "quote_en": "Central Referral System for Rehabilitation Services (the System) accepts parents to register application for Special Child Care Centre or Integrated Programme in Kindergarten-cum-Child Care Centre services for children from below the age of two in advance.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Central Referral System for Rehabilitation Services — Waiting List Information Updates"
+  },
+  {
+    "assertion_id": "A-021",
+    "topic": "eligibility",
+    "quote": "並無接受任何資助學前康復服務，包括「過渡性早期教育及訓練中心」或「學前康復服務–校本支援模式」",
+    "plain_tc": "要拿 T 位津贴，前提是孩子「没有在接受任何资助学前康复服务」，其中包括「过渡性 E 位」。",
+    "locator": "第4頁．受惠對象條件(2)",
+    "org": "社署",
+    "title_tc": "《為輪候資助學前康復服務的兒童提供學習訓練津貼》簡介（2026年10月修訂版）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/TSP%20Service%20Brief_Chi_202610.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "To get the T-place subsidy, the child must not be receiving any subsidised pre-school rehabilitation service, including the 'transitional E-place'.",
+    "quote_en": "Not receiving any subsidised pre-school rehabilitation service, including the 'Transitional Early Education and Training Centre' or the 'Pre-school Rehabilitation Service – School-based Support Model'.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Training Subsidy Programme Brief (Oct 2026 revision)",
+    "locator_en": "p.4 Eligibility conditions (2)"
+  },
+  {
+    "assertion_id": "A-022",
+    "topic": "eligibility",
+    "quote": "中度或嚴重智障；",
+    "plain_tc": "障碍条件之一：中度或严重智障。",
+    "locator": "服務對象",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "One of the disability conditions: moderate or severe intellectual disability.",
+    "quote_en": "Moderate or severe intellectual disability;",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Service targets"
+  },
+  {
+    "assertion_id": "A-023",
+    "topic": "eligibility",
+    "quote": "中度或嚴重肢體傷殘；",
+    "plain_tc": "障碍条件之一：中度或严重肢体伤残。",
+    "locator": "服務對象",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "One of the disability conditions: moderate or severe physical disability.",
+    "quote_en": "Moderate or severe physical disability;",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Service targets"
+  },
+  {
+    "assertion_id": "A-024",
+    "topic": "eligibility",
+    "quote": "失聰或嚴重至極度嚴重聽覺受損；",
+    "plain_tc": "障碍条件之一：失聪或严重至极严重听觉受损。",
+    "locator": "服務對象",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "One of the disability conditions: deafness or severe to profound hearing impairment.",
+    "quote_en": "Deafness or severe to profound hearing impairment;",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Service targets"
+  },
+  {
+    "assertion_id": "A-025",
+    "topic": "eligibility",
+    "quote": "失明或嚴重視覺受損；或",
+    "plain_tc": "障碍条件之一：失明或严重视觉受损。",
+    "locator": "服務對象",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "One of the disability conditions: blindness or severe visual impairment.",
+    "quote_en": "Blindness or severe visual impairment; or",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Service targets"
+  },
+  {
+    "assertion_id": "A-026",
+    "topic": "eligibility",
+    "quote": "行為/情緒上有嚴重問題、有過度活躍傾向或患有自閉症。",
+    "plain_tc": "障碍条件之一：行为或情绪上有严重问题、有过度活跃倾向，或患有自闭症——「自闭症孩子走 S 线」的官方依据就在这一条。",
+    "locator": "服務對象",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "One of the disability conditions: serious behavioural or emotional problems, hyperactivity, or autism — the official basis for 'a child with autism goes down the S-route'.",
+    "quote_en": "Serious behavioural/emotional problems, a tendency to hyperactivity, or autism.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Service targets"
+  },
+  {
+    "assertion_id": "A-015",
+    "topic": "referral_route",
+    "quote": "兒童可經專業人士（如醫生、心理學家）或經醫院直接轉介（例如：早產兒）。",
+    "plain_tc": "想去测验中心做评估，得先有医生或心理学家这类专业人士的转介，或者由医院直接转介。家长自己是不能直接预约的。",
+    "locator": "一．服務對象",
+    "org": "衞生署",
+    "title_tc": "兒童體能智力測驗服務《服務範圍》",
+    "url": "http://www.dhcas.gov.hk/tc/scope.html",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "To get an assessment at the Child Assessment Centre, you first need a referral from a professional such as a doctor or psychologist, or a direct hospital referral. Parents cannot book on their own.",
+    "quote_en": "Children may be referred by professionals (such as doctors or psychologists) or directly through a hospital (e.g. premature infants).",
+    "org_en": "Department of Health",
+    "title_en": "Child Assessment Service — Scope of Service",
+    "locator_en": "1. Service targets"
+  },
+  {
+    "assertion_id": "A-002",
+    "topic": "service",
+    "quote": "提供全日的訓練和照顧予中度至嚴重程度殘疾的幼兒，以協助他們發展及成長，讓他們為小學教育作好準備。",
+    "plain_tc": "S 位是全日制的：孩子白天一整天都在中心，由专业团队做训练和照顾，目标是为上小学做准备。",
+    "locator": "簡介段",
+    "org": "社署",
+    "title_tc": "特殊幼兒中心（服務頁）",
+    "url": "https://www.swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/specialchi/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "An S-place is full-day: the child spends the whole day at the centre receiving training and care from a professional team, with the goal of preparing for primary school.",
+    "quote_en": "Providing full-day training and care to children with moderate to severe disabilities, to help them develop and grow and prepare them for primary education.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Special Child Care Centre (service page)",
+    "locator_en": "Introduction paragraph"
+  },
+  {
+    "assertion_id": "A-009",
+    "topic": "service",
+    "quote": "As of the end of January 2025, there are 50 Special Child Care Centres (SCCCs), including six Residential Special Child Care Centres, across the territory providing full-day training and care for children aged two to six with moderate to severe disabilities.",
+    "plain_tc": "全香港有 50 所 S 位中心，其中 6 所有住宿，为 2 到 6 岁中度至严重残疾的孩子提供全天训练和照顾。",
+    "locator": "Reply (1)",
+    "org": "立法會",
+    "title_tc": "LCQ22: Special child care centres（2025-03-19 書面答覆．英文版）",
+    "url": "https://www.info.gov.hk/gia/general/202503/19/P2025031900214.htm",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "There are 50 S-place centres in Hong Kong, 6 of which are residential, providing full-day training and care for children aged 2–6 with moderate to severe disabilities.",
+    "quote_en": "As of the end of January 2025, there are 50 Special Child Care Centres (SCCCs), including six Residential Special Child Care Centres, across the territory providing full-day training and care for children aged two to six with moderate to severe disabilities.",
+    "org_en": "Legislative Council",
+    "title_en": "LCQ22: Special child care centres (19 Mar 2025 written reply, English version)"
+  },
+  {
+    "assertion_id": "A-032",
+    "topic": "service",
+    "quote": "服務透過非政府機構營辦的跨專業服務團隊（服務隊）（成員包括職業治療師、物理治療師、言語治療師、臨床／教育心理學家、社工、以及特殊幼兒工作員）以校本綜合模式提供到校訓練及支援服務予就讀於參與「到校學前康復服務」的幼稚園或幼稚園暨幼兒中心，而年齡為6歲以下，並被評估為輕度殘疾或懷疑有特殊需要的兒童。",
+    "plain_tc": "O 位（到校学前康复服务）是 NGO 的跨专业团队直接到幼儿园给孩子做训练和支援，收 6 岁以下、被评估为轻度残疾或怀疑有特殊需要的孩子。",
+    "locator": "服務簡介．第4段",
+    "org": "社署",
+    "title_tc": "到校學前康復服務（OPRS）",
+    "url": "https://swd.gov.hk/oprs/index_tc.htm",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "The O-place (on-site pre-school rehabilitation service) is delivered by an NGO multidisciplinary team directly at the kindergarten, for children under 6 assessed with mild disabilities or suspected special needs.",
+    "quote_en": "The service is provided by a multidisciplinary service team operated by a non-governmental organisation (comprising occupational therapists, physiotherapists, speech therapists, clinical/educational psychologists, social workers and special child care workers) through a school-based integrated model, delivering on-site training and support to children under 6 attending a kindergarten or kindergarten-cum-child care centre participating in the 'On-site Pre-school Rehabilitation Service', who have been assessed with mild disabilities or are suspected of having special needs.",
+    "org_en": "Social Welfare Department",
+    "title_en": "On-site Pre-school Rehabilitation Services (OPRS)",
+    "locator_en": "Service introduction, paragraph 4"
+  },
+  {
+    "assertion_id": "A-011",
+    "topic": "subsidy",
+    "quote": "學習訓練津貼不會直接發放給父母／監護人，而是發放給認可服務機構，並根據兒童的殘疾程度提供以下兩個水平的資助：",
+    "plain_tc": "T 位津贴不是发现金给家长。社署按孩子的残疾程度分两档，钱直接付给认可服务机构，家长拿到的是机构提供的训练服务。",
+    "locator": "第1頁．資助水平及服務",
+    "org": "社署",
+    "title_tc": "《為輪候資助學前康復服務的兒童提供學習訓練津貼》簡介（2026年10月修訂版）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/TSP%20Service%20Brief_Chi_202610.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "The T-place subsidy is not paid in cash to parents. SWD pays it in two tiers, based on the child's disability, directly to recognised service operators; parents receive the training services those operators provide.",
+    "quote_en": "The Training Subsidy is not paid directly to the parent/guardian, but to recognised service operators, and is provided at the following two levels according to the child's degree of disability:",
+    "org_en": "Social Welfare Department",
+    "title_en": "Training Subsidy Programme Brief (Oct 2026 revision)",
+    "locator_en": "p.1 Subsidy levels and services"
+  },
+  {
+    "assertion_id": "A-012",
+    "topic": "subsidy",
+    "quote": "由於「到校學前康復服務」已達致零等候，因此由2026年10月1日起，新申請「到校學前康復服務」的兒童並不是「學習訓練津貼」的受惠對象。",
+    "plain_tc": "从 2026 年 10 月 1 日起，新申请 O 位（到校学前康复服务）的孩子，不能再申请 T 位津贴了——因为 O 位已经做到零等候。",
+    "locator": "註一",
+    "org": "社署",
+    "title_tc": "為輪候資助學前康復服務的兒童提供學習訓練津貼（服務頁）",
+    "url": "https://swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/tsp/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "From 1 Oct 2026, new applicants for the O-place (on-site pre-school rehabilitation service) can no longer apply for the T-place subsidy — because the O-place has reached zero waiting.",
+    "quote_en": "As the 'On-site Pre-school Rehabilitation Service' has reached zero waiting, from 1 October 2026 children newly applying for the 'On-site Pre-school Rehabilitation Service' are not beneficiaries of the 'Training Subsidy Programme'.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Training Subsidy Programme (service page)",
+    "locator_en": "Note 1"
+  },
+  {
+    "assertion_id": "A-013",
+    "topic": "subsidy",
+    "quote": "隨着「校本支援模式」逐步推行，「幼稚園暨幼兒中心兼收計劃」的合資格兒童將可直接透過校本支援模式獲得服務，無需經中央轉介系統輪候。因此，由2027年4月1日起，新申請「幼稚園暨幼兒中心兼收計劃」的兒童並不是「學習訓練津貼」的受惠對象。",
+    "plain_tc": "从 2027 年 4 月 1 日起，新申请 I 位（兼收计划）的孩子也不再是 T 位津贴的受惠对象——因为 I 位会改由校本支援模式直接提供服务，不用再排队。",
+    "locator": "註二",
+    "org": "社署",
+    "title_tc": "為輪候資助學前康復服務的兒童提供學習訓練津貼（服務頁）",
+    "url": "https://swd.gov.hk/tc/pubsvc/rehab/cat_serpresch/tsp/",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "From 1 Apr 2027, new applicants for the I-place (integrated programme) are no longer eligible for the T-place subsidy — because the I-place will be served directly through the school-based support model without queueing.",
+    "quote_en": "With the progressive implementation of the 'School-based Support Model', eligible children of the 'Integrated Programme in Kindergarten-cum-Child Care Centre' will receive services directly through the school-based support model without going through the Central Referral System. Therefore, from 1 April 2027, children newly applying for the 'Integrated Programme in Kindergarten-cum-Child Care Centre' are not beneficiaries of the 'Training Subsidy Programme'.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Training Subsidy Programme (service page)",
+    "locator_en": "Note 2"
+  },
+  {
+    "assertion_id": "A-016",
+    "topic": "subsidy",
+    "quote": "每月六節共六小時由特殊幼兒工作員、臨床／教育心理學家或職業／物理／言語治療師提供的個別或小組訓練／治療服務（包括有父母／監護人／照顧者同時參與的平衡小組），其中包括每六個月最少十八小時由職業／物理／言語治療師提供的訓練／治療服務；",
+    "plain_tc": "高额津贴（等 S 位的孩子）实际买到的是：每月 6 节共 6 小时训练或治疗，其中每 6 个月至少 18 小时由职业／物理／言语治疗师提供。",
+    "locator": "第1頁．資助水平及服務（高額津貼）",
+    "org": "社署",
+    "title_tc": "《為輪候資助學前康復服務的兒童提供學習訓練津貼》簡介（2026年10月修訂版）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/TSP%20Service%20Brief_Chi_202610.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "The higher subsidy (for children waiting for an S-place) buys: 6 sessions totalling 6 hours per month of individual or group training/therapy, including at least 18 hours every 6 months by occupational/physiotherapists or speech therapists.",
+    "quote_en": "Six sessions totalling six hours per month of individual or group training/therapy services provided by special child care workers, clinical/educational psychologists or occupational/physiotherapists/speech therapists (including balanced groups with parents/guardians/carers), of which at least eighteen hours every six months are provided by occupational/physiotherapists/speech therapists;",
+    "org_en": "Social Welfare Department",
+    "title_en": "Training Subsidy Programme Brief (Oct 2026 revision)",
+    "locator_en": "p.1 Subsidy levels and services (higher subsidy)"
+  },
+  {
+    "assertion_id": "A-018",
+    "topic": "subsidy",
+    "quote": "按家庭人數釐定的家庭住戶每月收入中位數 (港元) (二零二六年第二季) (只適用於申請「學習訓練津貼」的入息審查)\n1｜$8,250\n2｜$18,000\n3｜$30,300\n4｜$40,800\n5或以上｜$39,225",
+    "plain_tc": "申请 T 位津贴的入息门槛是「家庭每月收入不超过住户每月收入中位数的 75%」。2026 年第二季的数字：1 人 $8,250、2 人 $18,000、3 人 $30,300、4 人 $40,800、5 人或以上 $39,225。等 S 位的家庭免入息审查。",
+    "locator": "單頁表格（逐格抄錄，非連續句子）",
+    "org": "社署（資料源自政府統計處）",
+    "title_tc": "按家庭人數釐定的家庭住戶每月收入中位數——百分之七十五（二零二六年第二季）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/MMDHI_2026Q2_CHI.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "The income threshold for the T-place subsidy is 'household monthly income not exceeding 75% of the median monthly household income'. 2026 Q2 figures: 1 person $8,250, 2 people $18,000, 3 people $30,300, 4 people $40,800, 5 or more $39,225. Families waiting for an S-place are exempt from the means test.",
+    "quote_en": "Median monthly household income by household size (HK$) (2026 Q2) (for the means test of the 'Training Subsidy Programme' only)\n1 | $8,250\n2 | $18,000\n3 | $30,300\n4 | $40,800\n5 or more | $39,225",
+    "org_en": "Social Welfare Department (source: Census and Statistics Department)",
+    "title_en": "Household Monthly Income Median by household size — 75th percentile (2026 Q2)",
+    "locator_en": "Single-page table (transcribed cell by cell, not a continuous sentence)"
+  },
+  {
+    "assertion_id": "A-020",
+    "topic": "subsidy",
+    "quote": "每月四節共三小時由特殊幼兒工作員、臨床／教育心理學家或職業／物理／言語治療師提供的個別或小組訓練／治療服務（包括有父母／監護人／照顧者同時參與的平衡小組）；",
+    "plain_tc": "普通津贴（等 E 位／I 位的孩子）实际买到的是：每月 4 节共 3 小时训练或治疗。",
+    "locator": "第1頁．資助水平及服務（普通津貼）",
+    "org": "社署",
+    "title_tc": "《為輪候資助學前康復服務的兒童提供學習訓練津貼》簡介（2026年10月修訂版）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/TSP%20Service%20Brief_Chi_202610.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "The normal subsidy (for children waiting for an E-place/I-place) buys: 4 sessions totalling 3 hours per month of training or therapy.",
+    "quote_en": "Four sessions totalling three hours per month of individual or group training/therapy services provided by special child care workers, clinical/educational psychologists or occupational/physiotherapists/speech therapists (including balanced groups with parents/guardians/carers);",
+    "org_en": "Social Welfare Department",
+    "title_en": "Training Subsidy Programme Brief (Oct 2026 revision)",
+    "locator_en": "p.1 Subsidy levels and services (normal subsidy)"
+  },
+  {
+    "assertion_id": "A-030",
+    "topic": "subsidy",
+    "quote": "為輪候資助學前康復服務的兒童提供學習訓練津貼提供高額津貼名額服務之認可服務機構名單",
+    "plain_tc": "社署公布过认可服务机构名单：领高额津贴（等 S 位）的孩子，可以按这份名单选机构用学习训练津贴；名单最后更新于 2026 年 10 月。",
+    "locator": "每頁頁首標題（共12頁）",
+    "org": "社署",
+    "title_tc": "學習訓練津貼認可服務機構名單（高額津貼）（最後更新 2026年10月）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/Centre%20List_HLS%28CHI%29_20261001.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "SWD has published a list of recognised service operators: children receiving the higher subsidy (waiting for an S-place) can choose an operator from this list to use the Training Subsidy; the list was last updated in October 2026.",
+    "quote_en": "List of recognised service operators providing higher-subsidy places under the Training Subsidy Programme for children waiting for subsidised pre-school rehabilitation services.",
+    "org_en": "Social Welfare Department",
+    "title_en": "List of Recognised Service Operators for the Training Subsidy (higher subsidy) (last updated Oct 2026)",
+    "locator_en": "Page-header title (12 pages)"
+  },
+  {
+    "assertion_id": "A-031",
+    "topic": "subsidy",
+    "quote": "為輪候資助學前康復服務的兒童提供學習訓練津貼提供普通額津貼名額服務之認可服務機構名單",
+    "plain_tc": "社署公布过认可服务机构名单：领普通额津贴（等 E 位／I 位）的孩子，可以按这份名单选机构用学习训练津贴；名单最后更新于 2026 年 10 月。",
+    "locator": "每頁頁首標題（共12頁）",
+    "org": "社署",
+    "title_tc": "學習訓練津貼認可服務機構名單（普通津貼）（最後更新 2026年10月）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/Centre%20List_NLS%28CHI%29_20261001.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "SWD has published a list of recognised service operators: children receiving the normal subsidy (waiting for an E-place/I-place) can choose an operator from this list to use the Training Subsidy; the list was last updated in October 2026.",
+    "quote_en": "List of recognised service operators providing normal-subsidy places under the Training Subsidy Programme for children waiting for subsidised pre-school rehabilitation services.",
+    "org_en": "Social Welfare Department",
+    "title_en": "List of Recognised Service Operators for the Training Subsidy (normal subsidy) (last updated Oct 2026)",
+    "locator_en": "Page-header title (12 pages)"
+  },
+  {
+    "assertion_id": "A-008",
+    "topic": "transition",
+    "quote": "輪候特殊幼兒中心而並未接受上述過渡服務的兒童，可無須經過家庭入息審查申請「為輪候資助學前康復服務的兒童提供學習訓練津貼」。他們可運用津貼使用認可服務機構營辦的自負盈虧的學前康復服務，盡早接受訓練。",
+    "plain_tc": "在等 S 位、而且没有在用 E 位或 O 位做过渡的孩子，可以免入息审查申请学习训练津贴（T 位）；用这笔钱去买认可机构的训练服务，早点开始训练。",
+    "locator": "第(一)及(二)部分",
+    "org": "立法會",
+    "title_tc": "立法會二十二題：特殊幼兒中心（2025-03-19 書面答覆）",
+    "url": "https://www.info.gov.hk/gia/general/202503/19/P2025031900202.htm",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "Children waiting for an S-place who are not using transition services can apply for the Training Subsidy (T-place) without a means test, and use the subsidy to buy self-financed pre-school rehabilitation services from recognised operators to start training sooner.",
+    "quote_en": "Children waiting for a Special Child Care Centre who are not receiving the above transition services may apply for the 'Training Subsidy Programme for children waiting for subsidised pre-school rehabilitation services' without a household means test. They can use the subsidy to access self-financed pre-school rehabilitation services operated by recognised service operators to start training as early as possible.",
+    "org_en": "Legislative Council",
+    "title_en": "Legislative Council Question 22: Special child care centres (19 Mar 2025 written reply)",
+    "locator_en": "Parts (1) and (2)"
+  },
+  {
+    "assertion_id": "A-010",
+    "topic": "transition",
+    "quote": "為了讓有特殊需要的兒童盡早獲得訓練及支援，他們可在輪候特殊幼兒中心服務期間同時申請及接受早期教育及訓練中心或到校學前康復服務過渡服務，直至獲得編配特殊幼兒中心服務。",
+    "plain_tc": "在排队等 S 位的这段时间，孩子可以同时申请和接受 E 位或 O 位的过渡服务，一直用到 S 位有位置为止。也就是说，孩子不用干等。",
+    "locator": "第(一)及(二)部分",
+    "org": "立法會",
+    "title_tc": "立法會二十二題：特殊幼兒中心（2025-03-19 書面答覆）",
+    "url": "https://www.info.gov.hk/gia/general/202503/19/P2025031900202.htm",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "While queueing for an S-place, the child can simultaneously apply for and receive an E-place or O-place transition service, until an S-place is allocated. In other words, the child doesn't have to wait idle.",
+    "quote_en": "To allow children with special needs to receive training and support as early as possible, they may, while waiting for a Special Child Care Centre place, simultaneously apply for and receive transition services from an Early Education and Training Centre or the On-site Pre-school Rehabilitation Service, until they are allocated a Special Child Care Centre place.",
+    "org_en": "Legislative Council",
+    "title_en": "Legislative Council Question 22: Special child care centres (19 Mar 2025 written reply)",
+    "locator_en": "Parts (1) and (2)"
+  },
+  {
+    "assertion_id": "A-006",
+    "topic": "waiting",
+    "quote": "Upon receipt of vacancy reports from service units, the System will select eligible children on the waiting list for admission to the services according to the order of their dates of application and location preference normally.",
+    "plain_tc": "轮候是按申请日期的先后排序的（再加上地区选择）。所以早一天登记，就是排在前面一天。",
+    "locator": "Remarks (1)",
+    "org": "社署",
+    "title_tc": "康復服務中央轉介系統 — 輪候資料更新",
+    "url": "https://www.swd.gov.hk/en/pubsvc/rehab/cat_crsrehab/crsrehabwa",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "Waiting is ordered by application date (plus district preference). So registering one day earlier puts you one place ahead.",
+    "quote_en": "Upon receipt of vacancy reports from service units, the System will select eligible children on the waiting list for admission to the services according to the order of their dates of application and location preference normally.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Central Referral System for Rehabilitation Services — Waiting List Information Updates"
+  },
+  {
+    "assertion_id": "A-014",
+    "topic": "waiting",
+    "quote": "二○一八／一九年度，各類資助學前康復服務的平均輪候時間如下：\n早期教育及訓練中心｜16.6\n幼稚園暨幼兒中心兼收計劃｜12.6\n特殊幼兒中心｜18.4\n到校學前康復服務｜不適用（註）",
+    "plain_tc": "官方自己算过平均轮候：2018/19 年度，E 位 16.6 个月、I 位 12.6 个月、S 位 18.4 个月。",
+    "locator": "回覆(二)及(三)．學前康復服務表",
+    "org": "立法會",
+    "title_tc": "立法會十八題：支援有特殊需要的兒童（2020-02-26 書面答覆）",
+    "url": "https://www.info.gov.hk/gia/general/202002/26/P2020022600495.htm",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "Officially computed average waits: in 2018/19, E-place 16.6 months, I-place 12.6 months, S-place 18.4 months.",
+    "quote_en": "In 2018/19, the average waiting times of various subsidised pre-school rehabilitation services were as follows:\nEarly Education and Training Centre | 16.6\nIntegrated Programme in Kindergarten-cum-Child Care Centre | 12.6\nSpecial Child Care Centre | 18.4\nOn-site Pre-school Rehabilitation Service | Not applicable (note)",
+    "org_en": "Legislative Council",
+    "title_en": "Legislative Council Question 18: Support for children with special needs (26 Feb 2020 written reply)",
+    "locator_en": "Reply (2) and (3), Pre-school rehabilitation services table"
+  },
+  {
+    "assertion_id": "A-019",
+    "topic": "waiting",
+    "quote": "惟受惠兒童拒絕接受中央轉介系統編配的服務後，其資助學前康復服務的申請將會從輪候名單中移除。",
+    "plain_tc": "在使用 T 位津贴期间，如果孩子被编配到服务而你拒绝了，资助学前康复服务的申请会被从轮候名单中移除——等于要重新排队。",
+    "locator": "第1頁．經中央轉介系統編配服務",
+    "org": "社署",
+    "title_tc": "《為輪候資助學前康復服務的兒童提供學習訓練津貼》簡介（2026年10月修訂版）",
+    "url": "https://www.swd.gov.hk/storage/asset/section/306/tc/TSP%20Service%20Brief_Chi_202610.pdf",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "While using the T-place subsidy, if you are allocated a service and refuse it, the child's subsidised pre-school rehabilitation application will be removed from the waiting list — meaning you have to queue again.",
+    "quote_en": "However, if a beneficiary child refuses a service allocated through the Central Referral System, the child's application for subsidised pre-school rehabilitation services will be removed from the waiting list.",
+    "org_en": "Social Welfare Department",
+    "title_en": "Training Subsidy Programme Brief (Oct 2026 revision)",
+    "locator_en": "p.1 Service allocation via the Central Referral System"
+  },
+  {
+    "assertion_id": "A-028",
+    "topic": "waiting",
+    "quote": "註：平均輪候時間是按財政年度計算（即由每年的四月一日至翌年的三月三十一日），由於到校學前康復服務於二○一八年十月常規化，因此沒有整個二○一八至一九年度的統計數字。",
+    "plain_tc": "表下注：平均轮候时间按财政年度计算（每年 4 月 1 日到翌年 3 月 31 日）；因为到校学前康复服务 2018 年 10 月才常规化，所以没有 2018/19 全年度的统计数字。",
+    "locator": "回覆(二)及(三)．學前康復服務表下註",
+    "org": "立法會",
+    "title_tc": "立法會十八題：支援有特殊需要的兒童（2020-02-26 書面答覆）",
+    "url": "https://www.info.gov.hk/gia/general/202002/26/P2020022600495.htm",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "Note under the table: average waiting time is computed by financial year (1 Apr to 31 Mar); because the On-site Pre-school Rehabilitation Service was regularised in October 2018, there is no full 2018/19 figure.",
+    "quote_en": "Note: Average waiting time is computed by financial year (i.e. from 1 April each year to 31 March the following year). As the On-site Pre-school Rehabilitation Service was regularised in October 2018, there is no full-year 2018/19 figure.",
+    "org_en": "Legislative Council",
+    "title_en": "Legislative Council Question 18: Support for children with special needs (26 Feb 2020 written reply)",
+    "locator_en": "Note under the pre-school rehabilitation services table, Reply (2) and (3)"
+  },
+  {
+    "assertion_id": "A-001",
+    "topic": "waiting_support",
+    "quote": "測驗服務亦會為家長提供短期過渡性支援服務，例如講座、工作坊及訓練課程等，加深家長對子女情況的認識，協助他們掌握更有效的方法照顧子女，從而進行家居訓練，協助兒童發展成長。",
+    "plain_tc": "在等候评估和服务的这段时间，官方提供的是讲座、工作坊、训练课程这类过渡支援；而在家给孩子做训练，是由家长自己承担的。",
+    "locator": "第六段（儿童体能智力测验服务一节）",
+    "org": "政府新聞網（食衞局）",
+    "title_tc": "《齊心支援 讓兒童健康成長》",
+    "url": "https://www.news.gov.hk/chi/2019/10/20191003/20191003_110945_673.html",
+    "captured_on": "2026-10-07",
+    "source_status": "active",
+    "plain_en": "While waiting for assessment and services, the official support is transition support such as talks, workshops and training courses; home training for the child is the parents' own responsibility.",
+    "quote_en": "The Assessment Service also provides parents with short-term transitional support services, such as talks, workshops and training courses, to deepen parents' understanding of their child's condition and help them master more effective ways of caring for their child, so as to carry out home training and support the child's development.",
+    "org_en": "Government news portal (Food and Health Bureau)",
+    "title_en": "Supporting children to grow up healthy",
+    "locator_en": "Paragraph 6 (Child Assessment Service section)"
+  }
+]
+"""#,
+"glossary": #"""
+[
+  {
+    "term": "CAC／測驗中心",
+    "full_tc": "衞生署兒童體能智力測驗中心",
+    "code": "CAS",
+    "plain_tc": "做评估的地方，不是做训练的地方。全港有 7 间，按住址分地区。要医生或心理学家写转介信才能去。",
+    "source_id": "SRC-001",
+    "full_en": "Child Assessment Centre, Department of Health",
+    "plain_en": "Where assessment happens, not training. 7 across Hong Kong, by district. You need a referral letter from a doctor or psychologist.",
+    "term_en": "CAC"
+  },
+  {
+    "term": "EETC",
+    "full_tc": "早期教育及訓練中心",
+    "code": "E",
+    "plain_tc": "早期教育及訓練中心的英文缩写，官方轮候数据集用这个名，就是「E位」。",
+    "source_id": "SRC-012",
+    "full_en": "Early Education and Training Centre",
+    "plain_en": "The English abbreviation for Early Education and Training Centre, used in the official waiting dataset — the 'E-place'.",
+    "term_en": "EETC"
+  },
+  {
+    "term": "E位",
+    "full_tc": "早期教育及訓練中心",
+    "code": "E",
+    "plain_tc": "像补习班：每星期去几次，每次一小时左右，由治疗师或特殊幼儿老师做个别训练。适合程度较轻、还在家里或普通幼儿园的孩子。",
+    "source_id": "SRC-003",
+    "full_en": "Early Education and Training Centre",
+    "plain_en": "Like tutoring: a few visits a week, about an hour each, one-to-one training by therapists or special child care workers. For children with milder needs who are at home or in a mainstream kindergarten.",
+    "term_en": "EETC"
+  },
+  {
+    "term": "I位",
+    "full_tc": "幼稚園暨幼兒中心兼收計劃",
+    "code": "I",
+    "plain_tc": "在普通幼儿园里给轻度弱能的孩子加训练和照顾，让孩子跟一般孩子一起上学。",
+    "source_id": "SRC-009",
+    "full_en": "Integrated Programme in Kindergarten-cum-Child Care Centre",
+    "plain_en": "Adds training and care for mildly disabled children within a mainstream kindergarten, so they attend with typically developing peers.",
+    "term_en": "ICCC"
+  },
+  {
+    "term": "OPRS",
+    "full_tc": "到校學前康復服務",
+    "code": "O",
+    "plain_tc": "到校學前康復服務的英文缩写，家长口中的「O位」就是它。",
+    "source_id": "SRC-007",
+    "full_en": "On-site Pre-school Rehabilitation Services",
+    "plain_en": "The abbreviation for On-site Pre-school Rehabilitation Services — the 'O-place'.",
+    "term_en": "OPRS"
+  },
+  {
+    "term": "O位",
+    "full_tc": "到校學前康復服務",
+    "code": "O",
+    "plain_tc": "NGO 的跨专业团队直接到幼儿园给孩子做训练，家长不用自己带孩子跑中心。已经做到零等候。",
+    "source_id": "SRC-007",
+    "full_en": "On-site Pre-school Rehabilitation Services",
+    "plain_en": "An NGO multidisciplinary team delivers training directly at the kindergarten, so parents don't shuttle children to a centre. Already at 'zero waiting'.",
+    "term_en": "OPRS"
+  },
+  {
+    "term": "SCCC",
+    "full_tc": "特殊幼兒中心",
+    "code": "S",
+    "plain_tc": "特殊幼兒中心的英文缩写，官方轮候数据集用这个名，就是「S位」。",
+    "source_id": "SRC-013",
+    "full_en": "Special Child Care Centre",
+    "plain_en": "The abbreviation for Special Child Care Centre, used in the official waiting dataset — the 'S-place'.",
+    "term_en": "SCCC"
+  },
+  {
+    "term": "S位",
+    "full_tc": "特殊幼兒中心",
+    "code": "S",
+    "plain_tc": "像全日制特教幼儿园：孩子每天去，全天由跨专业团队做训练和照顾。收 2–6 岁中度至严重的残疾儿童，自闭症通常在评估后归到这条线。",
+    "source_id": "SRC-003",
+    "full_en": "Special Child Care Centre",
+    "plain_en": "Like a full-day special kindergarten: the child attends daily for all-day training and care by a multidisciplinary team. For ages 2–6 with moderate to severe disabilities; autism is usually placed here after assessment.",
+    "term_en": "SCCC"
+  },
+  {
+    "term": "S位＋住宿",
+    "full_tc": "住宿特殊幼兒中心",
+    "code": "SR",
+    "plain_tc": "跟 S 位一样，但连住宿也包。全港只有 6 所，轮候通常更久。",
+    "source_id": "SRC-008",
+    "full_en": "Residential Special Child Care Centre",
+    "plain_en": "Same as S-place but with residential care. Only 6 territory-wide; waits are usually longer.",
+    "term_en": "RSCCC"
+  },
+  {
+    "term": "TSP",
+    "full_tc": "學習訓練津貼",
+    "code": "T",
+    "plain_tc": "學習訓練津貼的英文缩写，就是「T位」。",
+    "source_id": "SRC-005",
+    "full_en": "Training Subsidy Programme",
+    "plain_en": "The abbreviation for the Training Subsidy Programme — the 'T-place'.",
+    "term_en": "TSP"
+  },
+  {
+    "term": "T位",
+    "full_tc": "學習訓練津貼",
+    "code": "T",
+    "plain_tc": "不是服务，是钱。在排队的期间，用现金津贴去买认可机构的训练课。分普通和高额两档。",
+    "source_id": "SRC-005",
+    "full_en": "Training Subsidy Programme",
+    "plain_en": "Not a service, but money. While queueing, use the cash subsidy to buy training sessions from recognised operators. Two tiers: normal and higher.",
+    "term_en": "TSP"
+  },
+  {
+    "term": "中央轉介系統／CRSRS",
+    "full_tc": "康復服務中央轉介系統（學前兒童康復服務子系統）",
+    "code": null,
+    "plain_tc": "排队的那个系统。所有政府资助的学前康复服务都从这里分配。★「排上队」＝在这里完成登记，不是看完医生就算。",
+    "source_id": "SRC-004",
+    "full_en": "Central Referral System for Rehabilitation Services (pre-school children sub-system)",
+    "plain_en": "The queueing system. All government-subsidised pre-school rehabilitation services are allocated here. 'Getting on the list' means completing registration here, not merely seeing a doctor.",
+    "term_en": "Central Referral System (CRSRS)"
+  },
+  {
+    "term": "住宿S位",
+    "full_tc": "住宿特殊幼兒中心",
+    "code": null,
+    "plain_tc": "连住宿也包的特殊幼儿中心，全港只有6所，轮候通常更久。",
+    "source_id": "SRC-008",
+    "full_en": "Residential Special Child Care Centre",
+    "plain_en": "A special child care centre that also provides residential care. Only 6 territory-wide; waits usually longer.",
+    "term_en": "RSCCC"
+  },
+  {
+    "term": "個案工作員",
+    "full_tc": "社會福利署／非政府機構之個案工作員",
+    "code": null,
+    "plain_tc": "帮你办手续的社工。转介信、中央转介系统登记，多数由他们手上过。",
+    "source_id": "SRC-009",
+    "full_en": "Case worker of the Social Welfare Department / NGO",
+    "plain_en": "The social worker who handles your paperwork. Referral letters and Central Referral System registration mostly pass through them.",
+    "term_en": "Case worker"
+  },
+  {
+    "term": "兼收計劃",
+    "full_tc": "幼稚園暨幼兒中心兼收計劃",
+    "code": null,
+    "plain_tc": "让轻度弱能的孩子在普通幼儿园里边上学边接受训练。",
+    "source_id": "SRC-005",
+    "full_en": "Integrated Programme in Kindergarten-cum-Child Care Centre",
+    "plain_en": "Lets mildly disabled children attend a mainstream kindergarten while receiving training.",
+    "term_en": "Integrated Programme"
+  },
+  {
+    "term": "普通津貼",
+    "full_tc": "學習訓練津貼（普通津貼）",
+    "code": null,
+    "plain_tc": "T位津贴的普通档，给入息稍高的家庭。",
+    "source_id": "SRC-018",
+    "full_en": "Training Subsidy Programme (normal subsidy)",
+    "plain_en": "The normal tier of the T-place subsidy, for households with slightly higher income.",
+    "term_en": "Normal subsidy"
+  },
+  {
+    "term": "輪候期間的過渡服務",
+    "full_tc": "過渡性服務",
+    "code": null,
+    "plain_tc": "等 S 位的时候，同时间可以用 E 位或 O 位顶上，一直用到 S 位有位。★ 很多家长完全不知道这条。",
+    "source_id": "SRC-008",
+    "full_en": "Transitional services",
+    "plain_en": "While waiting for an S-place, you can simultaneously use an E-place or O-place until an S-place opens. Many parents don't know this at all.",
+    "term_en": "Transitional services"
+  },
+  {
+    "term": "醫務社工",
+    "full_tc": "社署／醫院管理局之醫務社會工作員",
+    "code": null,
+    "plain_tc": "驻在医院的社工。如果孩子走的是医院那条线，通常是他们帮你转介，并附带心理报告、医生报告。",
+    "source_id": "SRC-014",
+    "full_en": "Medical social worker of the Social Welfare Department / Hospital Authority",
+    "plain_en": "A social worker based in a hospital. If your child is on the hospital route, they usually make the referral with psychological and medical reports.",
+    "term_en": "Medical social worker"
+  },
+  {
+    "term": "預早登記",
+    "full_tc": "預早登記計劃",
+    "code": null,
+    "plain_tc": "未满2岁就可以先排队的机制，不用等到2岁才入队。",
+    "source_id": "SRC-003",
+    "full_en": "Advance registration scheme",
+    "plain_en": "A mechanism to join the queue before age 2, so you don't wait until the child turns 2.",
+    "term_en": "Advance registration"
+  },
+  {
+    "term": "高額津貼",
+    "full_tc": "學習訓練津貼（高額津貼）",
+    "code": null,
+    "plain_tc": "T位津贴的高额档，给入息较低的家庭。",
+    "source_id": "SRC-017",
+    "full_en": "Training Subsidy Programme (higher subsidy)",
+    "plain_en": "The higher tier of the T-place subsidy, for households with lower income.",
+    "term_en": "Higher subsidy"
+  }
+]
+"""#,
+"manifest": #"""
+{
+  "built_on": "2026-10-16",
+  "db_file": "phase1.db",
+  "content_fingerprint": "0ae157aa8e0a22c8",
+  "fingerprint_note": "内容指纹＝schema.sql ＋ 全部 seed CSV 的 sha256 前 16 位。算法：按文件名排序，每个文件先写入文件名、再写入文件内容，最后取 sha256 的前 16 位。同样的 seed 一定得到同样的指纹，与生成时间无关。交付或答辩时报出这个值，即可证明双方手上是同一版数据。",
+  "contract": "本目錄為只讀快照。開發同學請勿寫入；發現資料問題請回報，由資料層重新建庫導出。",
+  "counts": {
+    "source": 23,
+    "assertion": 32,
+    "service_type": 7,
+    "service_unit": 124,
+    "waiting_snapshot": 124,
+    "pathway_step": 7,
+    "checklist_item": 10,
+    "glossary": 20,
+    "red_flag": 5
+  },
+  "only_active_guarantee": "citable_assertions.json 只含 status=active 且來源 active 的條目；未核對的一律不出現在產品輸出裡。"
+}
+"""#,
+"pathway_steps": #"""
+[
+  {
+    "step_no": 1,
+    "name_tc": "察覺不對路（語言／社交／行為里程碑落後）",
+    "who_acts_tc": "家長／照顧者／幼稚園老師",
+    "preconditions": "—",
+    "duration_note": "家长多在孩子 1.5–4 岁之间开始起疑",
+    "friction_tc": "不知道这算不算问题、算不算严重；怕被说是坏家长；身边人说「大个就会好」",
+    "plain_tc": "这一步没有任何官方入口。家长全靠自己判断——所以最容易被拖几个月。",
+    "status": "active",
+    "name_en": "Noticing something is off (delays in language / social / behavioural milestones)",
+    "who_acts_en": "Parent / carer / kindergarten teacher",
+    "preconditions_en": "—",
+    "duration_note_en": "Parents usually start to wonder between 1.5 and 4 years old",
+    "friction_en": "Not sure whether it counts as a problem or how serious it is; fear of being seen as a bad parent; others saying 'they'll grow out of it'",
+    "plain_en": "This step has no official entry point. Parents are entirely on their own to judge — so it is easiest to be delayed by months."
+  },
+  {
+    "step_no": 2,
+    "name_tc": "找專業人士開轉介信",
+    "who_acts_tc": "家長 → 私家醫生／家庭醫生／心理學家／母嬰健康院",
+    "preconditions": "孩子的發展疑慮已向專業人士提出",
+    "duration_note": "取决于能否约到医生",
+    "friction_tc": "不知道「要医生转介才能评估」这条规则，白等；平日看开的家庭医生不一定愿意写",
+    "plain_tc": "要带孩子去做评估，先得有一封医生或心理学家写的转介信。家长自己不能直接去测验中心排队。",
+    "status": "active",
+    "name_en": "Getting a referral letter from a professional",
+    "who_acts_en": "Parent → private doctor / family doctor / psychologist / Maternal & Child Health Centre",
+    "preconditions_en": "The child's developmental concerns have been raised with a professional",
+    "duration_note_en": "Depends on whether you can get a doctor's appointment",
+    "friction_en": "Not knowing the rule that 'a doctor's referral is required for assessment', and waiting in vain; the usual family doctor may not be willing to write one",
+    "plain_en": "To take a child for assessment, you first need a referral letter from a doctor or psychologist. Parents cannot queue at the assessment centre directly."
+  },
+  {
+    "step_no": 3,
+    "name_tc": "到衞生署兒童體能智力測驗中心登記及評估",
+    "who_acts_tc": "家長帶孩子前往；測驗中心跨專業團隊執行",
+    "preconditions": "已持有專業人士轉介信",
+    "duration_note": "官方口径：新症登記後三個星期內獲約見（2019年数字）",
+    "friction_tc": "不知道要带哪些文件、不知道首次要收费、不知道要带孩子近照和健康院纪录簿",
+    "plain_tc": "带齐材料到所属地区的测验中心登记，中心会安排时间给孩子做全面评估。",
+    "status": "active",
+    "name_en": "Registering and assessment at the Department of Health Child Assessment Centre",
+    "who_acts_en": "Parent brings the child; the centre's multidisciplinary team carries it out",
+    "preconditions_en": "Already holds a professional referral letter",
+    "duration_note_en": "Official figure: an appointment within three weeks of registration for new cases (2019 figure)",
+    "friction_en": "Not knowing which documents to bring, that the first visit has a fee, and to bring a recent photo and the health centre record book",
+    "plain_en": "Bring all the documents to register at the assessment centre for your district; the centre will arrange a time for a comprehensive assessment."
+  },
+  {
+    "step_no": 4,
+    "name_tc": "評估結果與轉介決定",
+    "who_acts_tc": "測驗中心評估團隊",
+    "preconditions": "評估已完成",
+    "duration_note": "—",
+    "friction_tc": "不知道评估之后会发生什么、要等多久、会不会有跟进",
+    "plain_tc": "评估完，医生会按孩子的情况决定把他转介去哪条服务线——这一步决定了后面排哪条队。",
+    "status": "active",
+    "name_en": "Assessment result and referral decision",
+    "who_acts_en": "The assessment centre's assessment team",
+    "preconditions_en": "Assessment completed",
+    "duration_note_en": "—",
+    "friction_en": "Not knowing what happens after assessment, how long to wait, or whether there will be follow-up",
+    "plain_en": "After assessment, the doctor decides which service route to refer the child to — this step determines which queue you join next."
+  },
+  {
+    "step_no": 5,
+    "name_tc": "在康復服務中央轉介系統（CRSRS）登記入隊",
+    "who_acts_tc": "轉介人（社工／醫務社工／康復服務單位工作人員）代為登記",
+    "preconditions": "已有評估結果（附心理報告／醫生報告）",
+    "duration_note": "—",
+    "friction_tc": "★ 家长常常以为「看完医生就等于排上队了」，其实要等社工完成中央转介系统登记才算；中间的空档没人告知",
+    "plain_tc": "由社工把你的申请录进中央转介系统，这才是真正「排上队」的时刻。★ 入队用时这个指标，就量到这里。",
+    "status": "active",
+    "name_en": "Registering on the Central Referral System (CRSRS)",
+    "who_acts_en": "The referrer (social worker / medical social worker / rehabilitation unit staff) registers on the family's behalf",
+    "preconditions_en": "Assessment result already available (with psychological/medical reports)",
+    "duration_note_en": "—",
+    "friction_en": "Parents often think 'seeing the doctor means you're on the list', but you're only on the list once a social worker completes Central Referral System registration; nobody tells you about the gap in between",
+    "plain_en": "A social worker enters your application into the Central Referral System — this is the moment you are truly 'on the list'. The 'time to get on the list' metric is measured up to here."
+  },
+  {
+    "step_no": 6,
+    "name_tc": "輪候期間的過渡安排（E位／O位／T位津貼）",
+    "who_acts_tc": "家長申請；社工協助",
+    "preconditions": "已列入中央轉介系統輪候名單",
+    "duration_note": "最长可持续到 S 位有位置为止",
+    "friction_tc": "★ 绝大多数家长不知道：等 S 位期间可以同时上 E 位或 O 位；没在用过渡服务的还可以免入息审查领 T 位津贴",
+    "plain_tc": "在等 S 位的这段时间，孩子可以同时申请 E 位或 O 位过渡；如果没用过渡服务，还可以申请学习训练津贴（T 位）去买训练。孩子不用干等。",
+    "status": "active",
+    "name_en": "Transition arrangements while waiting (E-place / O-place / T-place subsidy)",
+    "who_acts_en": "Parent applies; social worker assists",
+    "preconditions_en": "Already on the Central Referral System waiting list",
+    "duration_note_en": "Can last until an S-place becomes available",
+    "friction_en": "Most parents don't know: while waiting for an S-place you can simultaneously use an E-place or O-place; and if not using a transition service you can receive the T-place subsidy without a means test",
+    "plain_en": "While waiting for an S-place, the child can simultaneously apply for an E-place or O-place transition; and if not using a transition service, you can apply for the Training Subsidy (T-place) to buy training. The child doesn't have to wait idle."
+  },
+  {
+    "step_no": 7,
+    "name_tc": "獲編配服務（或變更服務類別／中心選擇）",
+    "who_acts_tc": "中央轉介系統按申請日期先後及地區選擇編配",
+    "preconditions": "輪候名單中、符合基本入讀條件（含年滿2歲）",
+    "duration_note": "—",
+    "friction_tc": "不知道中间可以更改服务类别或中心选择；不知道搬家／转区要重新排队与否",
+    "plain_tc": "有位置了，系统会按你申请日期的先后、加上你选的地区来分配。",
+    "status": "active",
+    "name_en": "Service allocation (or changing service type / centre choice)",
+    "who_acts_en": "The Central Referral System allocates by application date and district preference",
+    "preconditions_en": "On the waiting list and meeting basic admission conditions (including age 2)",
+    "duration_note_en": "—",
+    "friction_en": "Not knowing you can change service type or centre choice midway; not knowing whether moving house / changing district requires requeueing",
+    "plain_en": "When a place opens, the system allocates it by your application date order plus your district preference."
+  }
+]
+"""#,
+"red_flags": #"""
+[
+  {
+    "flag_id": "RF-001",
+    "signal_tc": "孩子出現自傷行為（撞頭、咬自己、抓傷自己）或對他人有攻擊行為",
+    "route_tc": "立即聯絡孩子的主診醫生；情況緊急時到就近急症室或致電 999",
+    "route_contact": "999（緊急）｜社署熱線 2343 2255（24 小時）",
+    "never_say_tc": "絕對不可以說「這是自閉症的典型行為，忍一忍就好」或「大個就會好」。系統不判斷行為的成因，只把家長帶到真人專業支援。",
+    "source_id": "SRC-020",
+    "status": "active",
+    "signal_en": "The child shows self-injury (head-banging, biting, scratching) or aggression toward others",
+    "route_en": "Contact the child's treating doctor immediately; in an emergency go to the nearest A&E or call 999",
+    "route_contact_en": "999 (emergency) | SWD hotline 2343 2255 (24 hours)",
+    "never_say_en": "Never say 'this is typical autistic behaviour, just endure it' or 'they'll grow out of it'. The system does not judge the cause of the behaviour; it only directs the parent to real human professional support."
+  },
+  {
+    "flag_id": "RF-002",
+    "signal_tc": "孩子出現抽搐、意識改變、突然無法喚醒或呼吸異常",
+    "route_tc": "立即致電 999 或前往急症室",
+    "route_contact": "999",
+    "never_say_tc": "不要作任何解釋性或安撫性的判斷。系統只做轉送，不評論症狀。",
+    "source_id": "SRC-020",
+    "status": "active",
+    "signal_en": "The child has convulsions, altered consciousness, suddenly cannot be woken, or abnormal breathing",
+    "route_en": "Call 999 or go to A&E immediately",
+    "route_contact_en": "999",
+    "never_say_en": "Do not make any explanatory or reassuring judgement. The system only routes, and does not comment on symptoms."
+  },
+  {
+    "flag_id": "RF-003",
+    "signal_tc": "孩子出現能力倒退——本來會講的字詞、本來會做的動作消失了",
+    "route_tc": "盡快約見家庭醫生或母嬰健康院，並要求轉介至衞生署兒童體能智力測驗服務評估",
+    "route_contact": "衞生署兒童體能智力測驗服務（需醫生或心理學家轉介）",
+    "never_say_tc": "不可以說「退步是正常的」或「等等看」。能力倒退需要真人評估，不需要系統意見。",
+    "source_id": "SRC-001",
+    "status": "active",
+    "signal_en": "The child shows skill regression — previously spoken words or performed actions disappear",
+    "route_en": "See a family doctor or Maternal & Child Health Centre soon and ask for referral to the Department of Health Child Assessment Service",
+    "route_contact_en": "Department of Health Child Assessment Service (referral by doctor or psychologist required)",
+    "never_say_en": "Do not say 'regression is normal' or 'wait and see'. Skill regression needs real human assessment, not an app's opinion."
+  },
+  {
+    "flag_id": "RF-004",
+    "signal_tc": "照顧者出現自傷念頭、情緒崩潰、或表示「撐不下去」",
+    "route_tc": "即時尋求真人支援：社署熱線、醫院管理局精神健康專線、防止自殺會熱線，或前往就近急症室",
+    "route_contact": "社署熱線 2343 2255（24 小時）｜醫院管理局精神健康專線 2466 7350（24 小時）｜生命熱線 2382 0000（24 小時）｜香港撒瑪利亞防止自殺會 2389 2222（24 小時）｜明愛向晴軒 18288（24 小時）｜緊急：999／急症室",
+    "never_say_tc": "絕對不可以評價家長（例如「你要正面啲」）。家長在崩潰時最不需要的就是被評判——這是本项目文案的第一条红线。",
+    "source_id": "SRC-021",
+    "status": "active",
+    "signal_en": "The caregiver has thoughts of self-harm, emotional breakdown, or says they 'can't carry on'",
+    "route_en": "Seek real human support immediately: SWD hotline, Hospital Authority mental health hotline, suicide prevention hotline, or go to the nearest A&E",
+    "route_contact_en": "SWD hotline 2343 2255 (24h) | HA Mental Health Direct 2466 7350 (24h) | Suicide Prevention Services 2382 0000 (24h) | The Samaritans HK 2389 2222 (24h) | Caritas Family Crisis Line 18288 (24h) | Emergency: 999 / A&E",
+    "never_say_en": "Never judge the parent (e.g. 'think positive'). The last thing a parent in breakdown needs is to be judged — this is the first red line of this project's copy."
+  },
+  {
+    "flag_id": "RF-005",
+    "signal_tc": "家長要求系統判斷「我的孩子是不是自閉症」",
+    "route_tc": "明確表示不做診斷，並導向衞生署兒童體能智力測驗服務的正式評估（需經醫生或心理學家轉介）",
+    "route_contact": "衞生署兒童體能智力測驗服務",
+    "never_say_tc": "不可以說「你的孩子應該是自閉症」或任何暗示診斷的表述。系統只整理事實、呈現資訊；判斷權在專業評估。",
+    "source_id": "SRC-001",
+    "status": "active",
+    "signal_en": "The parent asks the system to judge 'is my child autistic'",
+    "route_en": "Clearly state that the app does not diagnose, and direct to formal assessment at the Department of Health Child Assessment Service (referral by doctor or psychologist required)",
+    "route_contact_en": "Department of Health Child Assessment Service",
+    "never_say_en": "Do not say 'your child is probably autistic' or any expression implying diagnosis. The system only organises facts and presents information; the judgement belongs to professional assessment."
+  }
+]
+"""#,
+"service_types": #"""
+[
+  {
+    "code": "CAS",
+    "alias_tc": "CAC／測驗中心",
+    "name_tc": "衞生署兒童體能智力測驗服務",
+    "name_en": "Child Assessment Service (CAS), Department of Health",
+    "age_min_m": 0,
+    "age_max_m": 143,
+    "intensity_tc": "評估與診斷（非訓練）",
+    "target_tc": "12歲以下有發展障礙或行為問題的兒童",
+    "referral_tc": "經專業人士（如醫生、心理學家）或經醫院直接轉介",
+    "fee_tc": "待核实",
+    "wait_note_tc": "官方口径：新症登記後三個星期內獲得約見（2019年数字，须标年份）",
+    "source_id": "SRC-001",
+    "notes_tc": "★ 这是整条家长旅程的第一道门。服务对象是12岁以下，但往社署学前康复服务的转介只覆盖6岁以下——0-6口径的由来",
+    "target_en": "Children under 12 with developmental disabilities or behavioural problems",
+    "intensity_en": "Assessment and diagnosis (not training)",
+    "referral_en": "Referral by a professional (e.g. doctor, psychologist) or directly through a hospital",
+    "fee_en": "To be confirmed",
+    "wait_note_en": "Official figure: new registrations are offered an appointment within three weeks (2019 figure — state the year)",
+    "notes_en": "The first door of the whole parent journey. The service covers children under 12, but referral to SWD pre-school rehabilitation only covers under 6 — the origin of the 0–6 scope.",
+    "alias_en": "CAS"
+  },
+  {
+    "code": "E",
+    "alias_tc": "E位",
+    "name_tc": "早期教育及訓練中心",
+    "name_en": "Early Education and Training Centre (EETC)",
+    "age_min_m": 0,
+    "age_max_m": 71,
+    "intensity_tc": "部分時間制（每次以小時計，如補習堂形式）",
+    "target_tc": "初生至6歲以下、程度相對較輕的發展障礙兒童（0至2歲亦接受）",
+    "referral_tc": "經社工或康復服務單位工作人員轉介至社署康復服務中央轉介系統",
+    "fee_tc": "待核实（官方页未取到收费表述）",
+    "wait_note_tc": "2026-08 逐间复算：64 间中心中 38 间显示当月派位，中位数 0 个月，最长 6 个月",
+    "source_id": "SRC-012",
+    "notes_tc": "家长圈最重要的行话之一。E位可作等 S 位期间的过渡服务",
+    "target_en": "Children from birth to under 6 with relatively mild developmental disabilities (ages 0–2 also accepted)",
+    "intensity_en": "Part-time (hourly sessions, like tutoring)",
+    "referral_en": "Referral by a social worker or rehabilitation service unit staff to the SWD Central Referral System",
+    "fee_en": "To be confirmed (no fee statement captured from the official page)",
+    "wait_note_en": "Recalculated per centre (Aug 2026): 38 of 64 centres show a placement that month; median 0 months, longest 6 months",
+    "notes_en": "One of the most important terms in parent circles. E-place can be used as a transition service while waiting for an S-place.",
+    "alias_en": "EETC"
+  },
+  {
+    "code": "I",
+    "alias_tc": "I位",
+    "name_tc": "幼稚園暨幼兒中心兼收計劃",
+    "name_en": "Integrated Programme in Kindergarten-cum-Child Care Centre (ICCC)",
+    "age_min_m": 24,
+    "age_max_m": 71,
+    "intensity_tc": "在普通幼稚園／幼兒中心內提供訓練和照顧",
+    "target_tc": "輕度弱能兒童",
+    "referral_tc": "經中央轉介系統",
+    "fee_tc": "待核实",
+    "wait_note_tc": "官方口径 2018/19 年度平均輪候 12.6 個月（历史数字，须标年份）",
+    "source_id": "SRC-009",
+    "notes_tc": "⚠️ 由2027-04-01起新申請者不再是學習訓練津貼受惠對象（见 SRC-005 注二）",
+    "target_en": "Children with mild disabilities",
+    "intensity_en": "Training and care within a mainstream kindergarten/child care centre",
+    "referral_en": "Via the Central Referral System",
+    "fee_en": "To be confirmed",
+    "wait_note_en": "Official figure: average wait 12.6 months in 2018/19 (historical — state the year)",
+    "notes_en": "From 1 Apr 2027 new applicants are no longer eligible for the Training Subsidy (see SRC-005 note 2).",
+    "alias_en": "ICCC"
+  },
+  {
+    "code": "O",
+    "alias_tc": "O位",
+    "name_tc": "到校學前康復服務",
+    "name_en": "On-site Pre-school Rehabilitation Services (OPRS)",
+    "age_min_m": 0,
+    "age_max_m": 71,
+    "intensity_tc": "由 NGO 跨專業團隊到校提供訓練、諮詢及教師／家長支援",
+    "target_tc": "懷疑有特殊需要的兒童（包括正輪候CAS評估者），及經評估為輕度殘疾的兒童",
+    "referral_tc": "第一層支援無需經中央轉介系統；經認可專業人士評估者，由指定服務單位社工轉介至中央轉介系統",
+    "fee_tc": "免費",
+    "wait_note_tc": "已達致「零等候」（官方口径，见 SRC-005 注一）",
+    "source_id": "SRC-007",
+    "notes_tc": "★ 由2026-10-01起新申請者不再是學習訓練津貼受惠對象——因已达零等候。此条同时是「规则有生效日」的最佳教学案例",
+    "target_en": "Children suspected of special needs (including those awaiting CAS assessment), and children assessed with mild disabilities",
+    "intensity_en": "On-site training, consultation and teacher/parent support by an NGO multidisciplinary team",
+    "referral_en": "First-tier support does not require the Central Referral System; those assessed by recognised professionals are referred by a designated service unit social worker",
+    "fee_en": "Free",
+    "wait_note_en": "Has reached 'zero waiting' (official — see SRC-005 note 1)",
+    "notes_en": "From 1 Oct 2026 new applicants are no longer eligible for the Training Subsidy — because zero waiting has been reached. This is also the best example of a rule having an effective date.",
+    "alias_en": "OPRS"
+  },
+  {
+    "code": "S",
+    "alias_tc": "S位",
+    "name_tc": "特殊幼兒中心",
+    "name_en": "Special Child Care Centre (SCCC)",
+    "age_min_m": 24,
+    "age_max_m": 71,
+    "intensity_tc": "全日訓練及照顧（如全日制幼儿园，全天有专业团队）",
+    "target_tc": "2歲至6歲以下、中度至嚴重程度殘疾的幼兒，包含「患有自閉症」",
+    "referral_tc": "經由社工或康復服務單位的工作人員轉介至社署康復服務中央轉介系統",
+    "fee_tc": "免費",
+    "wait_note_tc": "2026-08 逐间复算：60 行服务单位、中位數 4 個月、28% 超 12 個月、最長 48 個月；官方口径 2023-24 年度平均輪候 19.2 個月",
+    "source_id": "SRC-003",
+    "notes_tc": "★ 与 E 位的落差是本项目最核心的原创发现（同一条街上两条队差十倍）",
+    "target_en": "Children aged 2 to under 6 with moderate to severe disabilities, including autism",
+    "intensity_en": "Full-day training and care (like a full-day kindergarten, with a professional team all day)",
+    "referral_en": "Referral by a social worker or rehabilitation service unit staff to the SWD Central Referral System",
+    "fee_en": "Free",
+    "wait_note_en": "Recalculated per centre (Aug 2026): 60 service units; median 4 months, 28% over 12 months, longest 48 months; official figure: average wait 19.2 months in 2023–24",
+    "notes_en": "The gap with E-place is this project's core original finding (two queues on the same street, ten times apart).",
+    "alias_en": "SCCC"
+  },
+  {
+    "code": "SR",
+    "alias_tc": "S位（住宿）",
+    "name_tc": "住宿特殊幼兒中心",
+    "name_en": "Residential Special Child Care Centre",
+    "age_min_m": 24,
+    "age_max_m": 71,
+    "intensity_tc": "持續訓練及住宿照顧",
+    "target_tc": "中度或嚴重殘疾而無需經常接受醫療／醫院護理，或家庭環境不適宜照顧的兒童",
+    "referral_tc": "同 S 位，經中央轉介系統",
+    "fee_tc": "待核实",
+    "wait_note_tc": "官方口径：全港 6 所住宿特殊幼兒中心（50 所 SCCC 之中）",
+    "source_id": "SRC-008",
+    "notes_tc": "数量少、轮候通常更久；2026-08 复算中最长 48 个月即出现在此类",
+    "target_en": "Children with moderate or severe disabilities who do not need frequent medical/hospital care, or whose home environment is unsuitable for care",
+    "intensity_en": "Continuous training and residential care",
+    "referral_en": "Same as S-place, via the Central Referral System",
+    "fee_en": "To be confirmed",
+    "wait_note_en": "Official figure: 6 residential special child care centres territory-wide (out of 50 SCCCs)",
+    "notes_en": "Few in number, usually longer waits; the longest 48-month figure in the Aug 2026 recalculation appears in this category.",
+    "alias_en": "RSCCC"
+  },
+  {
+    "code": "T",
+    "alias_tc": "T位",
+    "name_tc": "為輪候資助學前康復服務的兒童提供學習訓練津貼",
+    "name_en": "Training Subsidy Programme (TSP)",
+    "age_min_m": 0,
+    "age_max_m": 71,
+    "intensity_tc": "現金津貼（用以购买认可机构的自负盈亏训练服务）",
+    "target_tc": "6歲以下、已列入中央轉介系統輪候名單、且並無接受任何資助學前康復服務的兒童",
+    "referral_tc": "由社署發信邀請合資格兒童的家長／監護人申請（非家长主动排队获得的项目）",
+    "fee_tc": "全免（申請不收費）",
+    "wait_note_tc": "不适用（本身不是排队型服务）",
+    "source_id": "SRC-005",
+    "notes_tc": "★ 普通津貼每月最高 $3,549（轮候E／I／O位，需入息审查）；高額津貼每月最高 $6,904（轮候S位，免入息审查）。等待是有价签的\"——这条是 pitch 素材\"",
+    "target_en": "Children under 6 who are on the Central Referral System waiting list and not receiving any subsidised pre-school rehabilitation service",
+    "intensity_en": "Cash subsidy (to buy self-financed training services from recognised operators)",
+    "referral_en": "SWD sends letters inviting eligible children's parents/guardians to apply (not obtained by parents proactively queueing)",
+    "fee_en": "Fully free (no application fee)",
+    "wait_note_en": "Not applicable (not a queue-based service)",
+    "notes_en": "Normal subsidy: up to $3,549/month (waiting E/I/O, means-tested); higher subsidy: up to $6,904/month (waiting S-place, no means test). 'Waiting has a price tag' — pitch material.",
+    "alias_en": "TSP"
+  }
+]
+"""#,
+"service_units": #"""
+[
+  {
+    "unit_id": "PD001",
+    "name_tc": "香港聾人福利促進會尚德幼兒中心(為聽覺受損兒童而設）",
+    "name_en": "HKSD Sheung Tak Child Care Centre (for hearing impaired children)",
+    "service_code": "S",
+    "operator": null,
+    "district": "西貢",
+    "address": "新界將軍澳尚德邨尚美樓地下B座",
+    "phone": "2178 0838",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PD002",
+    "name_tc": "香港聾人福利促進會白普理幼兒中心(為聽覺受損兒童而設）",
+    "name_en": "HKSD Bradbury Child Care Centre (for hearing impaired children)",
+    "service_code": "S",
+    "operator": null,
+    "district": "九龍城",
+    "address": "九龍馬頭涌道135號聖三一座堂百週年紀念白普理大樓3樓",
+    "phone": "2768 7875",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Kowloon City"
+  },
+  {
+    "unit_id": "PE001",
+    "name_tc": "香港明愛樂幼學前教育及訓練中心",
+    "name_en": "Caritas Lok Yau Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "中西區",
+    "address": "香港堅道2號明愛大廈2樓201室",
+    "phone": "2114 0785",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Central and Western"
+  },
+  {
+    "unit_id": "PE002",
+    "name_tc": "協康會順利早期教育及訓練中心",
+    "name_en": "HHS Shun Lee Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍順利邨利富樓2樓109-112室",
+    "phone": "2342 5107",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PE003",
+    "name_tc": "協康會白田早期教育及訓練中心",
+    "name_en": "HHS Pak Tin Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗白田邨瑞田樓B座3樓3號室",
+    "phone": "2778 8308",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PE004",
+    "name_tc": "協康會長青早期教育及訓練中心",
+    "name_en": "HHS Cheung Ching Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "葵青",
+    "address": "新界長青邨青葵樓地下110-112室",
+    "phone": "2497 6262",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwai Tsing"
+  },
+  {
+    "unit_id": "PE005",
+    "name_tc": "協康會郭葉鍊洪早期教育及訓練中心",
+    "name_en": "HHS Kwok Yip Lin Houn Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田沙角邨沙燕樓3樓12-16號",
+    "phone": "2648 9968",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PE006",
+    "name_tc": "香港基督教服務處彩雲早期教育及訓練中心",
+    "name_en": "HKCS Choi Wan Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍黃大仙彩雲邨",
+    "phone": "2796 2722",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PE007C",
+    "name_tc": "監護者早期教育中心(以中文為母語的幼兒而設)",
+    "name_en": "Watchdog Early Education Centre (for Chinese-speaking children)",
+    "service_code": "E",
+    "operator": null,
+    "district": "中西區",
+    "address": "香港中環波老道12地下",
+    "phone": "2521 7364",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Central and Western"
+  },
+  {
+    "unit_id": "PE007E",
+    "name_tc": "監護者早期教育中心(以英語為母語的幼兒而設)",
+    "name_en": "Watchdog Early Education Centre (for English-speaking children)",
+    "service_code": "E",
+    "operator": null,
+    "district": "中西區",
+    "address": "香港中環波老道12地下",
+    "phone": "2521 7364",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Central and Western"
+  },
+  {
+    "unit_id": "PE008",
+    "name_tc": "協康會良景早期教育及訓練中心",
+    "name_en": "HHS Leung King Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門良景邨良智樓地下5-8室",
+    "phone": "2454 0268",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PE009",
+    "name_tc": "香港基督教服務處環翠早期教育及訓練中心",
+    "name_en": "HKCS Wan Tsui Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "東區",
+    "address": "香港柴灣環翠邨福翠樓地下102-107號",
+    "phone": "2898 9505",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Eastern"
+  },
+  {
+    "unit_id": "PE010",
+    "name_tc": "協康會海富中心(早期教育及訓練中心)",
+    "name_en": "HHS Hoi Fu Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "油尖旺",
+    "address": "九龍旺角海泓道海富苑海欣閣地下及一樓",
+    "phone": "2777 5588",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Yau Tsim Mong"
+  },
+  {
+    "unit_id": "PE011",
+    "name_tc": "香港明愛樂苗學前教育及訓練中心",
+    "name_en": "Caritas Lok Miu Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "東區",
+    "address": "香港北角福蔭道7號銅鑼灣社區中心1樓",
+    "phone": "2571 8524",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Eastern"
+  },
+  {
+    "unit_id": "PE012",
+    "name_tc": "香港基督教服務處屯門早期教育及訓練中心",
+    "name_en": "HKCS Tuen Mun Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門青山公路201號2樓",
+    "phone": "2451 6738",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PE013",
+    "name_tc": "香港耀能協會懷熙早期教育及訓練中心",
+    "name_en": "SAHK Chan Tseng Hsi Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍橫頭磡邨宏興樓地下101-106號",
+    "phone": "2336 6756",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PE014",
+    "name_tc": "協康會譚杜早期教育及訓練中心",
+    "name_en": "HHS Jessie & Thomas Tam Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔運頭塘邨運來樓地下14-15號",
+    "phone": "2638 8863",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PE015C",
+    "name_tc": "明德兒童啟育中心 (以中文為母語的幼兒而設)",
+    "name_en": "The Child Development Centre (for Chinese-speaking children)",
+    "service_code": "E",
+    "operator": null,
+    "district": "東區",
+    "address": "香港北角渣華道123號北角福利服務設施大樓3樓",
+    "phone": "2849 2018",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Eastern"
+  },
+  {
+    "unit_id": "PE015E",
+    "name_tc": "明德兒童啟育中心 (以英語為母語的幼兒而設)",
+    "name_en": "The Child Development Centre (for English-speaking children)",
+    "service_code": "E",
+    "operator": null,
+    "district": "東區",
+    "address": "香港北角渣華道123號北角福利服務設施大樓3樓",
+    "phone": "2849 2018",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Eastern"
+  },
+  {
+    "unit_id": "PE016",
+    "name_tc": "香港基督教服務處元朗早期教育及訓練中心",
+    "name_en": "HKCS Yuen Long Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "元朗",
+    "address": "新界元朗水邊圍邨碧水樓207-210號",
+    "phone": "2473 2989",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Yuen Long"
+  },
+  {
+    "unit_id": "PE017",
+    "name_tc": "宣美語言及聽覺訓練中心 (為聽覺受損兒童而設）",
+    "name_en": "Suen Mei Speech and Hearing Centre (for hearing impaired children)",
+    "service_code": "E",
+    "operator": null,
+    "district": "葵青",
+    "address": "新界荔景山路272號地下",
+    "phone": "2743 7377",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwai Tsing"
+  },
+  {
+    "unit_id": "PE018",
+    "name_tc": "協康會賽馬會早期教育及訓練中心",
+    "name_en": "HHS Jockey Club Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "北區",
+    "address": "新界上水龍運街2號北區社區中心1 樓",
+    "phone": "2670 4899",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "North"
+  },
+  {
+    "unit_id": "PE019",
+    "name_tc": "香港基督教服務處葵興早期教育及訓練中心",
+    "name_en": "HKCS Kwai Hing Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "葵青",
+    "address": "新界葵涌葵興邨興福樓地下4-9號",
+    "phone": "2423 1822",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwai Tsing"
+  },
+  {
+    "unit_id": "PE020",
+    "name_tc": "仁濟醫院圓玄學院早期教育及訓練中心",
+    "name_en": "YCH Yuen Yuen Institute Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "荃灣",
+    "address": "新界荃灣仁濟街18號",
+    "phone": "2409 1938",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tsuen Wan"
+  },
+  {
+    "unit_id": "PE021",
+    "name_tc": "香港耀能協會德田早期教育及訓練中心",
+    "name_en": "SAHK Tak Tin Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍藍田德田邨德康樓1樓1號",
+    "phone": "2952 6669",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PE022",
+    "name_tc": "基督教靈實協會梁烱初寶林早期教育及訓練中心",
+    "name_en": "HOHCS K.C. Liang Po Lam Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "西貢",
+    "address": "九龍將軍澳寶林邨寶儉樓地下",
+    "phone": "2246 3400",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PE023",
+    "name_tc": "協康會富昌中心(早期教育及訓練中心)",
+    "name_en": "HHS Fu Cheong Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍長沙灣富昌邨富萊樓B及C座地下",
+    "phone": "2353 4001",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PE024",
+    "name_tc": "協康會東涌中心 (早期教育及訓練中心)",
+    "name_en": "HHS Tung Chung Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "離島",
+    "address": "大嶼山東涌逸東邨逸東商場二期地下",
+    "phone": "2109 2262",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Islands"
+  },
+  {
+    "unit_id": "PE025",
+    "name_tc": "協康會大窩口中心 (早期教育及訓練中心)",
+    "name_en": "HHS Tai Wo Hau Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "荃灣",
+    "address": "新界荃灣大窩口邨富賢樓地下",
+    "phone": "2420 2222",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tsuen Wan"
+  },
+  {
+    "unit_id": "PE026",
+    "name_tc": "香港耀能協會鴨脷洲幼兒中心 (早期教育及訓練中心)",
+    "name_en": "SAHK Apleichau Pre-school Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "南區",
+    "address": "香港鴨脷洲鴨脷洲邨利怡樓地下1-16號",
+    "phone": "2554 5019",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PE027",
+    "name_tc": "香港耀能協會石硤尾幼兒中心 (早期教育及訓練中心)",
+    "name_en": "SAHK Shek Kip Mei Pre-school Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗石硤尾邨第23座116-130號地下",
+    "phone": "2778 1773",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PE028",
+    "name_tc": "香港耀能協會隆亨幼兒中心 (早期教育及訓練中心)",
+    "name_en": "SAHK Lung Hang Pre-school Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田隆亨邨善心樓118-125,",
+    "phone": "2604 2798",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PE029",
+    "name_tc": "匡智會匡智松嶺學前兒童中心 (早期教育及訓練中心)",
+    "name_en": "HCA Hong Chi Pinehill Pre-school Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔南坑頌雅路松嶺村",
+    "phone": "2689 0588",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PE030",
+    "name_tc": "香港聾人福利促進會何文田中心 (早期教育及訓練中心) (為聽覺受損兒童而設）(在四個位於北角、將軍澳、何文田及屯門的服務單位提供機構為本的服務)",
+    "name_en": "The Hong Kong Society for the Deaf Ho Man Tin Centre (EETC) (for hearing impaired children) (providing agency-based service at 4 service units in North Point, TKO, Ho Man Tin and Tuen Mun)",
+    "service_code": "E",
+    "operator": null,
+    "district": "九龍城",
+    "address": "中心地址：九龍何文田愛民村嘉民樓",
+    "phone": "2715 0755",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kowloon City"
+  },
+  {
+    "unit_id": "PE031",
+    "name_tc": "香港基督教服務處摩理臣山兒童發展中心 (早期教育及訓練中心)",
+    "name_en": "HKCS Morrison Hill Child Development Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "灣仔",
+    "address": "香港灣仔皇后大道東282號",
+    "phone": "3553 3638",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Wan Chai"
+  },
+  {
+    "unit_id": "PE032",
+    "name_tc": "香港耀能協會象山幼兒中心 (早期教育及訓練中心)",
+    "name_en": "SAHK Cheung Shan Pre-school Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "荃灣",
+    "address": "新界荃灣象山邨秀山樓地下21-25號",
+    "phone": "2492 1109",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tsuen Wan"
+  },
+  {
+    "unit_id": "PE033",
+    "name_tc": "保良局倪文玲(元朗)兒童發展中心 (早期教育及訓練中心)",
+    "name_en": "Po Leung Kuk Malina Ngai (Yuen Long) Child Development Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "元朗",
+    "address": "新界元朗水邊圍邨盈水樓215-220室",
+    "phone": "2479 1901",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Yuen Long"
+  },
+  {
+    "unit_id": "PE034",
+    "name_tc": "東華三院馬孔令琦兒童發展中心",
+    "name_en": "TWGHs Ma Kung Lin Chi Child Development Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "油尖旺",
+    "address": "九龍旺角嘉禮大廈2樓A-D室",
+    "phone": "2396 2050",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Yau Tsim Mong"
+  },
+  {
+    "unit_id": "PE035",
+    "name_tc": "協康會裕明中心 (早期教育及訓練中心)",
+    "name_en": "HHS Yu Ming Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "西貢",
+    "address": "九龍將軍澳裕明苑裕昌閣地下",
+    "phone": "3590 5116",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PE036",
+    "name_tc": "鄰舍輔導會啟康幼兒中心（早期教育及訓練中心）",
+    "name_en": "NAAC Child Enlightenment Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田博康邨博泰樓地下B翼",
+    "phone": "2635 9668",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PE037",
+    "name_tc": "保良局曹金霖幼兒學習中心(早期教育及訓練中心)",
+    "name_en": "PLK Chao King Lin Early Learning Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍黃大仙竹園南邨",
+    "phone": "2322 3030",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PE038",
+    "name_tc": "鄰舍輔導會陳蔭川欣康幼兒中心 (早期教育及訓練中心)",
+    "name_en": "NAAC Chan Yin Chuen Child Enrichment Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍黃大仙鳳德邨硃鳳樓地下B翼",
+    "phone": "2567 2880",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PE039",
+    "name_tc": "香港耀能協會白田幼兒中心 (早期教育及訓練中心)",
+    "name_en": "SAHK Pak Tin Pre-school Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍石硤尾白田邨",
+    "phone": "2779 2168",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PE040",
+    "name_tc": "東華三院廖烈武伉儷兒童發展中心 (早期教育及訓練中心)",
+    "name_en": "TWGHs Mr and Mrs Liu Lit Mo Child Development Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "元朗",
+    "address": "新界元朗天水圍天晴邨",
+    "phone": "2461 2622",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Yuen Long"
+  },
+  {
+    "unit_id": "PE041",
+    "name_tc": "協康會鯉魚門中心 (早期教育訓練中心)",
+    "name_en": "Heep Hong Society Lei Yue Mun Centre (EETC section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍觀塘鯉魚門邨鯉旺樓平台一號單位",
+    "phone": "2682 2203",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PE042",
+    "name_tc": "香港耀能協會葵盛早期教育及訓練中心",
+    "name_en": "SAHK Kwai Shing Early Education & Training Cenre",
+    "service_code": "E",
+    "operator": null,
+    "district": "葵青",
+    "address": "新界葵涌葵盛西邨第8座",
+    "phone": "2493 0363",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwai Tsing"
+  },
+  {
+    "unit_id": "PE043",
+    "name_tc": "保良局梁安琪兒童發展中心",
+    "name_en": "PLK Angela Leong On Kei Child Development Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田美田邨美全樓地下C翼",
+    "phone": "2663 1254",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PE044",
+    "name_tc": "協康會上海總會油麗中心",
+    "name_en": "HHS Shanghai Fraternity Association Yau Lai Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍觀塘油塘道9號油麗邨停車場大廈5樓",
+    "phone": "2415 2077",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PE045",
+    "name_tc": "協康會環翠中心 (早期教育及訓練中心)",
+    "name_en": "HHS Wan Tsui Centre (EETC section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "東區",
+    "address": "香港柴灣環翠邨澤翠樓地下102-113號",
+    "phone": "3568 4145",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Eastern"
+  },
+  {
+    "unit_id": "PE046",
+    "name_tc": "鄰舍輔導會景康幼兒中心 (早期教育及訓練中心)",
+    "name_en": "NAAC Child Advancement Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門山景邨景樂樓地下A翼",
+    "phone": "2426 0122",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PE047",
+    "name_tc": "匡智會匡智廣福學前兒童中心 (早期教育及訓練中心)",
+    "name_en": "HCA Hong Chi Kwong Fuk Pre-School Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔廣福邨廣祐樓地下118-125室",
+    "phone": "3708 8664",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PE048",
+    "name_tc": "協康會大口環早期教育及訓練中心",
+    "name_en": "HHS Sandy Bay Early Education & Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "南區",
+    "address": "香港薄扶林大口環道19號5樓及6樓",
+    "phone": "3158 8368",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PE049",
+    "name_tc": "保良局慧妍雅集兒童發展中心",
+    "name_en": "PLK Wai Yin Association Child Development Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔寶鄉邨地下G07",
+    "phone": "2769 0208",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PE050",
+    "name_tc": "香港耀能協會安泰幼兒中心(早期教育及訓練中心)",
+    "name_en": "SAHK On Tai Pre-school Centre (EETC section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍觀塘安秀道23號",
+    "phone": "2362 2688",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PE051",
+    "name_tc": "保良局倪文玲(深水埗)兒童發展中心 (早期教育及訓練中心)",
+    "name_en": "Po Leung Kuk Malina Ngai (Sham Shui Po) Child Development Centre (EETC section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗蘇屋邨社區綜合服務大樓二樓",
+    "phone": "2955 1622",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PE052",
+    "name_tc": "香港小童群益會「樂航」兒童早期發展中心(東涌)",
+    "name_en": "BGCA \"SAIL\" Early Child Development Centre (Tung Chung)",
+    "service_code": "E",
+    "operator": null,
+    "district": "離島",
+    "address": "香港大嶼山東涌滿東村滿樂坊105及106號",
+    "phone": "2580 0013",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Islands"
+  },
+  {
+    "unit_id": "PE053",
+    "name_tc": "路德會凝趣兒童發展中心",
+    "name_en": "Amazing Lutheran Child Development Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍黃大仙富山邨富暉樓1樓102室",
+    "phone": "2363 6636",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PE054",
+    "name_tc": "協康會雍明中心 (早期教育及訓練中心)",
+    "name_en": "HHS Yung Ming Centre (EETC section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "西貢",
+    "address": "將軍澳至善街5號",
+    "phone": "2915 8433",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PE055",
+    "name_tc": "救世軍駿洋幼兒中心（早期教育及訓練中心）",
+    "name_en": "The Salvation Army Chun Yeung Child Care Centre (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界火炭駿洋邨駿逸樓地下 G02 室",
+    "phone": "2520 0181",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PE056",
+    "name_tc": "仁濟醫院嚴徐玉珊早期教育及訓練中心",
+    "name_en": "Yan Chai Hospital Yim Tsui Yuk Shan Early Education and Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔富蝶邨綜合社會服務大樓2樓",
+    "phone": "3695 0292",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PE057",
+    "name_tc": "保良局倪文玲(海達)兒童發展中心 (早期教育及訓練中心）",
+    "name_en": "PLK Malina Ngai (Hoi Tat) Child Development Centre  (EETC Section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗深旺道38號",
+    "phone": "2590 0203",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PE058",
+    "name_tc": "路德會凝悅兒童發展中心",
+    "name_en": "Bravo Lutheran Child Development Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗海壇街218號",
+    "phone": "2126 7600",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PE059",
+    "name_tc": "協康會上海總會菁田中心（早期教育及訓練中心）",
+    "name_en": "HHS Shanghai Fraternity Association Ching Tin Center (EETC) ",
+    "service_code": "E",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門欣寶路10號菁田邨菁信樓1樓部份樓層",
+    "phone": "2818 1300",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PE060",
+    "name_tc": "香港耀能協會康城早期教育及訓練中心",
+    "name_en": "SAHK LOHAS Park Early Education and Training Centre",
+    "service_code": "E",
+    "operator": null,
+    "district": "西貢",
+    "address": "將軍澳康城路1號日出康城第XII期政府樓宇「早期教育及訓練中心」",
+    "phone": "3153 2557",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PE061",
+    "name_tc": "仁濟醫院童夢兒童成長發展中心",
+    "name_en": "YCH Dreamland Child Development Centre ",
+    "service_code": "E",
+    "operator": null,
+    "district": "葵青",
+    "address": "新界青衣青衣路18號青富苑青隆閣LG1樓",
+    "phone": "2808 0001",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Kwai Tsing"
+  },
+  {
+    "unit_id": "PE062",
+    "name_tc": "香港小童群益會「樂航」兒童早期發展中心 (馬鞍山) (早期教育及訓練中心)",
+    "name_en": "BGCA \"SAIL\" Early Child Development Centre (Ma On Shan) (EETC section)",
+    "service_code": "E",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田馬鞍山恆智街3號欣安商場2期2樓",
+    "phone": "2670 6488",
+    "capacity": null,
+    "source_id": "SRC-012",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PR001",
+    "name_tc": "匡智會匡智松嶺學前兒童中心 (住宿）",
+    "name_en": "HCA Hong Chi Pinehill Pre-school Centre (Residential)",
+    "service_code": "SR",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔南坑頌雅路松嶺村匡智賽馬會松嶺學前及兒童服務大樓",
+    "phone": "2689 0588",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PR007",
+    "name_tc": "香港耀能協會鴨脷洲幼兒中心 (設有住宿部份）",
+    "name_en": "SAHK Apleichau Pre-school Centre (Residential)",
+    "service_code": "SR",
+    "operator": null,
+    "district": "南區",
+    "address": "香港鴨脷洲鴨脷洲邨利怡樓地下1-16號",
+    "phone": "2554 5019",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PR018",
+    "name_tc": "香港耀能協會賽馬會方心淑引導式教育中心 (住宿部份) (請自行向中心申請)",
+    "name_en": "SAHK Jockey Club Marion Fang Conductive Learning Centre (Residential) (Direct application to the centre)",
+    "service_code": "SR",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍橫頭磡邨宏亮樓6-17號地下",
+    "phone": "2336 2011",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PR019",
+    "name_tc": "母親的抉擇特殊幼兒住宿中心 (住宿）",
+    "name_en": "Mother's Choice Wee Care Home (Residential)",
+    "service_code": "SR",
+    "operator": null,
+    "district": "中西區",
+    "address": "香港中環寶雲道5號",
+    "phone": "2313 5650",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Central and Western"
+  },
+  {
+    "unit_id": "PR024",
+    "name_tc": "仁濟醫院羅氏基金護幼中心暨宿舍 (住宿)",
+    "name_en": "YCH Law's Foundation Child Care Centre cum Hostel (Residential)",
+    "service_code": "SR",
+    "operator": null,
+    "district": "荃灣",
+    "address": "新界荃灣仁濟街18號仁濟醫院綜合服務大樓1樓",
+    "phone": "2615 1714",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tsuen Wan"
+  },
+  {
+    "unit_id": "PR025",
+    "name_tc": "心光幼兒中心 (住宿) (為患有中度至嚴重視覺受損或失明的兒童而設)",
+    "name_en": "Ebenezer Child Care Centre (Residential)(for children with moderate to severe visual impairment or blindness)",
+    "service_code": "SR",
+    "operator": null,
+    "district": "南區",
+    "address": "香港薄扶林道131號",
+    "phone": "3159 5403",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PR026",
+    "name_tc": "心光幼兒中心 (住宿) (為中度至嚴重殘疾而患有懷疑或輕度視覺受損的兒童而設)",
+    "name_en": "Ebenezer Child Care Centre (Residential section) (for children of moderate to severe disabilities with suspected or mild visual impairment)",
+    "service_code": "SR",
+    "operator": null,
+    "district": "南區",
+    "address": "香港薄扶林道131號",
+    "phone": "3159 5403",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PS001",
+    "name_tc": "香港明愛樂興幼兒中心",
+    "name_en": "Caritas Lok Hing Child Care Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門大興邨興盛樓22號地下",
+    "phone": "2465 6388",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PS002",
+    "name_tc": "協康會慶華中心 (特殊幼兒中心)",
+    "name_en": "HHS Catherine Lo Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "南區",
+    "address": "香港薄扶林大口環道19號綜合服務大樓2-4樓",
+    "phone": "3158 8315",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PS003",
+    "name_tc": "協康會王石崇傑紀念中心",
+    "name_en": "HHS Mary Wong Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍牛頭角彩霞邨彩星樓5號地下",
+    "phone": "2755 8118",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PS004",
+    "name_tc": "協康會大窩口中心 (特殊幼兒中心)",
+    "name_en": "HHS Tai Wo Hau Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "荃灣",
+    "address": "新界荃灣大窩口邨富賢樓地下",
+    "phone": "2420 2222",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tsuen Wan"
+  },
+  {
+    "unit_id": "PS005",
+    "name_tc": "協康會秦石中心",
+    "name_en": "HHS Chun Shek Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田秦石邨石玉樓11-18A地下",
+    "phone": "2697 3620",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PS007",
+    "name_tc": "香港耀能協會鴨脷洲幼兒中心 (日間特殊幼兒中心)",
+    "name_en": "SAHK Apleichau Pre-school Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "南區",
+    "address": "香港鴨脷洲鴨脷洲邨利怡樓地下1-16號",
+    "phone": "2554 5019",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PS008",
+    "name_tc": "香港耀能協會橫頭磡幼兒中心",
+    "name_en": "SAHK Wang Tau Hom Pre-school Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍橫頭磡邨宏富樓8-14號地下",
+    "phone": "2338 3555",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PS009",
+    "name_tc": "香港耀能協會石圍角幼兒中心",
+    "name_en": "SAHK Shek Wai Kok Pre-school Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "荃灣",
+    "address": "新界荃灣石圍角邨石荷樓地下101-119號",
+    "phone": "2427 0741",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tsuen Wan"
+  },
+  {
+    "unit_id": "PS010",
+    "name_tc": "香港耀能協會石硤尾幼兒中心 (特殊幼兒中心)",
+    "name_en": "SAHK Shek Kip Mei Pre-school Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗石硤尾邨第23座116-130號地下",
+    "phone": "2778 1773",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PS011",
+    "name_tc": "香港耀能協會隆亨幼兒中心 (特殊幼兒中心)",
+    "name_en": "SAHK Lung Hang Pre-school Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田隆亨邨善心樓118-125, 127-130號地下",
+    "phone": "2604 2798",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PS013",
+    "name_tc": "協康會灣仔中心",
+    "name_en": "HHS Wan Chai Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "灣仔",
+    "address": "香港灣仔灣仔道185號康樂商業大廈1樓",
+    "phone": "2891 8011",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wan Chai"
+  },
+  {
+    "unit_id": "PS014",
+    "name_tc": "協康會天平中心",
+    "name_en": "HHS Tin Ping Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "北區",
+    "address": "新界上水天平邨天美樓地下11-15號",
+    "phone": "2673 0189",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "North"
+  },
+  {
+    "unit_id": "PS015",
+    "name_tc": "協康會環翠中心 (特殊幼兒中心)",
+    "name_en": "HHS Wan Tsui Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "東區",
+    "address": "香港柴灣環翠邨澤翠樓地下130-141號",
+    "phone": "2889 3919",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Eastern"
+  },
+  {
+    "unit_id": "PS016",
+    "name_tc": "中華基督教會香港區會屯門特殊幼兒中心",
+    "name_en": "HKCCCC Tuen Mun Special Child Care Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門井財街29號3樓",
+    "phone": "2450 8745",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PS017",
+    "name_tc": "協康會雷瑞德夫人中心",
+    "name_en": "HHS Alice Louey Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔富善邨善翠樓地下1號",
+    "phone": "2662 9733",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PS018",
+    "name_tc": "香港耀能協會賽馬會方心淑引導式教育中心 (日間特殊幼兒中心) (請自行向中心申請)",
+    "name_en": "SAHK Jockey Club Marion Fang Conductive Learning Centre (SCCC Section) (Direct application to the centre)",
+    "service_code": "S",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍橫頭磡邨宏亮樓6-17號地下",
+    "phone": "2336 2011",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PS020",
+    "name_tc": "香港基督教服務處祥華特殊幼兒中心",
+    "name_en": "HKCS Cheung Wah Special Child Care Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "北區",
+    "address": "新界粉嶺祥華邨祥智樓地下A翼",
+    "phone": "2676 2020",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "North"
+  },
+  {
+    "unit_id": "PS021",
+    "name_tc": "協康會水邊圍中心",
+    "name_en": "HHS Shui Pin Wai Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "元朗",
+    "address": "新界元朗水邊圍邨疊水樓地下2號",
+    "phone": "2478 8739",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Yuen Long"
+  },
+  {
+    "unit_id": "PS022",
+    "name_tc": "協康會長沙灣中心",
+    "name_en": "HHS Cheung Sha Wan Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍長沙灣道303號長沙灣政府合署1樓",
+    "phone": "2391 9696",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PS023",
+    "name_tc": "協康會陳宗漢紀念中心",
+    "name_en": "HHS Chan Chung Hon Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "西貢",
+    "address": "九龍將軍澳尚德邨尚義樓地下B及C翼",
+    "phone": "2178 2885",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PS024",
+    "name_tc": "協康會富昌中心 (特殊幼兒中心)",
+    "name_en": "HHS Fu Cheong Centre(SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍長沙灣富昌邨富萊樓B & C座地下",
+    "phone": "2353 4001",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PS025",
+    "name_tc": "協康會東涌中心 (特殊幼兒中心)",
+    "name_en": "HHS Tung Chung Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "離島",
+    "address": "東涌逸東邨逸東商場二期地下",
+    "phone": "2109 2262",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Islands"
+  },
+  {
+    "unit_id": "PS026",
+    "name_tc": "心光幼兒中心 (日間特殊幼兒中心) (為視覺受損兒童而設)",
+    "name_en": "Ebenezer Child Care Centre (SCCC Section) (for children with moderate to severe visual impairment or blindness)",
+    "service_code": "S",
+    "operator": null,
+    "district": "南區",
+    "address": "香港薄扶林道131號",
+    "phone": "3159 5403",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PS027",
+    "name_tc": "香港耀能協會象山幼兒中心 (特殊幼兒中心)",
+    "name_en": "SAHK Cheung Shan Pre-school Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "荃灣",
+    "address": "新界荃灣象山邨秀山樓21-25號地下",
+    "phone": "2492 1109",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tsuen Wan"
+  },
+  {
+    "unit_id": "PS028",
+    "name_tc": "香港基督教服務處摩理臣山兒童發展中心 (特殊幼兒中心)",
+    "name_en": "HKCS Morrison Hill Child Development Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "灣仔",
+    "address": "香港灣仔皇后大道東282號鄧肇堅醫院社區日間醫療中心一樓",
+    "phone": "3553 3638",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wan Chai"
+  },
+  {
+    "unit_id": "PS029",
+    "name_tc": "保良局倪文玲(元朗)兒童發展中心 (特殊幼兒中心)",
+    "name_en": "Po Leung Kuk Malina Ngai (Yuen Long) Child Development Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "元朗",
+    "address": "新界元朗水邊圍邨盈水樓215-220室",
+    "phone": "2479 1901",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Yuen Long"
+  },
+  {
+    "unit_id": "PS030",
+    "name_tc": "協康會裕明中心 (特殊幼兒中心)",
+    "name_en": "HHS Yu Ming Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "西貢",
+    "address": "九龍將軍澳裕明苑裕昌閣地下",
+    "phone": "3590 5116",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PS031",
+    "name_tc": "鄰舍輔導會啟康幼兒中心(特殊幼兒中心)",
+    "name_en": "NAAC Child Enlightenment Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "沙田",
+    "address": "沙田博康邨博泰樓地下B翼",
+    "phone": "2635 9668",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PS032",
+    "name_tc": "保良局曹金霖幼兒學習中心 (特殊幼兒中心)",
+    "name_en": "PLK Chao King Lin Early Learning Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍黃大仙竹園南邨華園樓地下121-140室",
+    "phone": "2322 3030",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PS033",
+    "name_tc": "鄰舍輔導會陳蔭川欣康幼兒中心(特殊幼兒中心)",
+    "name_en": "NAAC Chan Yin Chuen Child Enrichment Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍黃大仙鳳德邨硃鳳樓地下B翼",
+    "phone": "2567 2880",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PS034",
+    "name_tc": "香港耀能協會白田幼兒中心 (特殊幼兒中心)",
+    "name_en": "SAHK Pak Tin Pre-School Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍石硤尾白田邨白田社區綜合大樓2樓及3樓",
+    "phone": "2779 2168",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PS035",
+    "name_tc": "東華三院廖烈武伉儷兒童發展中心 (特殊幼兒中心)",
+    "name_en": "TWGHs Mr and Mrs Liu Lit Mo Child Development Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "元朗",
+    "address": "新界元朗天水圍天晴邨社區綜合服務大樓3樓302室",
+    "phone": "2461 2622",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Yuen Long"
+  },
+  {
+    "unit_id": "PS036",
+    "name_tc": "鄰舍輔導會景康幼兒中心 (特殊幼兒中心)",
+    "name_en": "NAAC Child Advancement Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門山景邨景樂樓A翼地下",
+    "phone": "2426 0122",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PS037",
+    "name_tc": "匡智會匡智廣福學前兒童中心 (特殊幼兒中心)",
+    "name_en": "HCA Hong Chi Kwong Fuk Pre-School Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔廣福邨廣祐樓地下118-125室",
+    "phone": "3708 8664",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PS038",
+    "name_tc": "協康會鯉魚門中心(特殊幼兒中心)",
+    "name_en": "Heep Hong Society Lei Yue Mun Centre (SCCC section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍觀塘鯉魚門邨鯉旺樓平台一號單位",
+    "phone": "2682 2203",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PS039",
+    "name_tc": "香港耀能協會安泰幼兒中心 (特殊幼兒中心)",
+    "name_en": "SAHK On Tai Pre-school Centre (SCCC section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "觀塘",
+    "address": "九龍觀塘安秀道23號安泰邨服務設施大樓1樓",
+    "phone": "2362 2688",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Kwun Tong"
+  },
+  {
+    "unit_id": "PS040",
+    "name_tc": "匡智松嶺學前兒童中心 (特殊幼兒中心)",
+    "name_en": "Hong Chi Pinehill Pre-school Centre (SCCC section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "大埔",
+    "address": "新界大埔南坑頌雅路松嶺村匡智賽馬會松嶺學前及兒童服務大樓",
+    "phone": "2689 0588",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tai Po"
+  },
+  {
+    "unit_id": "PS041",
+    "name_tc": "香港小童群益會「樂航」兒童早期發展中心(東涌) (特殊幼兒中心)",
+    "name_en": "BGCA “SAIL” Early Child Development Centre (Tung Chung) (SCCC section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "離島",
+    "address": "香港大嶼山滿東村滿樂坊105及106號",
+    "phone": "2580 0013",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Islands"
+  },
+  {
+    "unit_id": "PS042",
+    "name_tc": "保良局倪文玲(深水埗)兒童發展中心 (特殊幼兒中心)",
+    "name_en": "Po Leung Kuk Malina Ngai (Sham Shui Po) Child Development Centre (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗蘇屋邨社區綜合服務大樓二樓",
+    "phone": "2955 1622",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PS043",
+    "name_tc": "路德會凝趣兒童發展中心 (特殊幼兒中心)",
+    "name_en": "Amazing Lutheran Child Development Centre (SCCC section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "黃大仙",
+    "address": "九龍黃大仙富山邨富暉樓地下G01室(特殊幼兒中心)",
+    "phone": "2363 6636",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Wong Tai Sin"
+  },
+  {
+    "unit_id": "PS044",
+    "name_tc": "協康會雍明中心（特殊幼兒中心)",
+    "name_en": "HHS Yung Ming Centre (SCCC section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "西貢",
+    "address": "將軍澳至善街5號將軍澳南服務設施大樓3樓",
+    "phone": "2915 8433",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PS045",
+    "name_tc": "保良局倪文玲(海達)兒童發展中心（特殊幼兒中心）",
+    "name_en": "Po Leung Kuk Malina Ngai (Hoi Tat) Child Development Centre  (SCCC Section) ",
+    "service_code": "S",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗深旺道 38 號海達邨服務設施大樓地下",
+    "phone": "2590 0203",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PS046",
+    "name_tc": "救世軍駿洋幼兒中心（特殊幼兒中心）",
+    "name_en": "The Salvation Army Chun Yeung Child Care Centre  (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界火炭駿洋邨駿逸樓地下G01室",
+    "phone": "2520 0181",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PS047",
+    "name_tc": "路德會凝悅兒童發展中心(特殊幼兒中心)",
+    "name_en": "Bravo Lutheran Child Development Centre (SCCC Section) ",
+    "service_code": "S",
+    "operator": null,
+    "district": "深水埗",
+    "address": "九龍深水埗海壇街218號愛海頌第一座三樓",
+    "phone": "2126 7600",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sham Shui Po"
+  },
+  {
+    "unit_id": "PS048",
+    "name_tc": "東華三院北角兒童發展中心(以英語為母語的幼兒而設)",
+    "name_en": "TWGHs North Point Child Development Centre (for English-speaking children) ",
+    "service_code": "S",
+    "operator": null,
+    "district": "東區",
+    "address": "香港北角渣華道123號北角福利服務設施大樓2樓",
+    "phone": "3797 7355",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Eastern"
+  },
+  {
+    "unit_id": "PS049",
+    "name_tc": "心光幼兒中心 (日間特殊幼兒中心) (為中度至嚴重殘疾而患有懷疑或輕度視覺受損的兒童而設)",
+    "name_en": "Ebenezer Child Care Centre (SCCC Section) (for children of moderate to severe disabilities with suspected or mild visual impairment)",
+    "service_code": "S",
+    "operator": null,
+    "district": "南區",
+    "address": "香港薄扶林道131號",
+    "phone": "3159 5403",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Southern"
+  },
+  {
+    "unit_id": "PS050",
+    "name_tc": "協康會上海總會菁田中心（特殊幼兒中心）",
+    "name_en": "HHS Shanghai Fraternity Association Ching Tin Center (SCCC Section)",
+    "service_code": "S",
+    "operator": null,
+    "district": "屯門",
+    "address": "新界屯門欣寶路10號菁田邨菁信樓1樓部份樓層",
+    "phone": "2818 2009",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Tuen Mun"
+  },
+  {
+    "unit_id": "PS051",
+    "name_tc": "香港小童群益會「樂航」兒童早期發展中心 (馬鞍山) (特殊幼兒中心)",
+    "name_en": "BGCA \"SAIL\" Early Child Development Centre (Ma On Shan) (SCCC section) ",
+    "service_code": "S",
+    "operator": null,
+    "district": "沙田",
+    "address": "新界沙田馬鞍山恆智街3號欣安商場2期1樓",
+    "phone": "2670 6488",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sha Tin"
+  },
+  {
+    "unit_id": "PS052",
+    "name_tc": "香港聾人福利促進會尚德幼兒中心(為聽覺受損兒童而設）",
+    "name_en": "HKSD Sheung Tak Child Care Centre (for children of moderate to severe disabilities with suspected, mild or moderate hearing impairment) ",
+    "service_code": "S",
+    "operator": null,
+    "district": "西貢",
+    "address": "新界將軍澳尚德邨尚美樓地下B座",
+    "phone": "2178 0838",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sai Kung"
+  },
+  {
+    "unit_id": "PS053",
+    "name_tc": "仁濟醫院孫蔡吐媚兒童成長發展中心",
+    "name_en": "YCH Suen Choi To May Child Development Centre \n",
+    "service_code": "S",
+    "operator": null,
+    "district": "葵青",
+    "address": "新界青衣青衣路18號青富苑青隆閣LG1樓",
+    "phone": "2808 1718",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Kwai Tsing"
+  },
+  {
+    "unit_id": "PS054",
+    "name_tc": "香港聾人福利促進會尚德幼兒中心",
+    "name_en": "HKSD Sheung Tak Child Care Centre",
+    "service_code": "S",
+    "operator": null,
+    "district": "西貢",
+    "address": "新界將軍澳尚德邨尚美樓地下B座",
+    "phone": "2178 0838",
+    "capacity": null,
+    "source_id": "SRC-013",
+    "status": "active",
+    "district_en": "Sai Kung"
+  }
+]
+"""#,
+"waiting_snapshot": #"""
+[
+  {
+    "snapshot_id": "2026-08-31-PR026",
+    "as_of": "2026-08-31",
+    "unit_id": "PR026",
+    "unit_name_raw": "心光幼兒中心 (住宿) (為中度至嚴重殘疾而患有懷疑或輕度視覺受損的兒童而設)",
+    "service_code": "SR",
+    "last_match_apply": "08/2022",
+    "derived_wait_m": 48,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PR025",
+    "as_of": "2026-08-31",
+    "unit_id": "PR025",
+    "unit_name_raw": "心光幼兒中心 (住宿) (為患有中度至嚴重視覺受損或失明的兒童而設)",
+    "service_code": "SR",
+    "last_match_apply": "05/2023",
+    "derived_wait_m": 39,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS052",
+    "as_of": "2026-08-31",
+    "unit_id": "PS052",
+    "unit_name_raw": "香港聾人福利促進會尚德幼兒中心(為聽覺受損兒童而設）",
+    "service_code": "S",
+    "last_match_apply": "05/2024",
+    "derived_wait_m": 27,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS048",
+    "as_of": "2026-08-31",
+    "unit_id": "PS048",
+    "unit_name_raw": "東華三院北角兒童發展中心(以英語為母語的幼兒而設)",
+    "service_code": "S",
+    "last_match_apply": "07/2024",
+    "derived_wait_m": 25,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS035",
+    "as_of": "2026-08-31",
+    "unit_id": "PS035",
+    "unit_name_raw": "東華三院廖烈武伉儷兒童發展中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "09/2024",
+    "derived_wait_m": 23,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS021",
+    "as_of": "2026-08-31",
+    "unit_id": "PS021",
+    "unit_name_raw": "協康會水邊圍中心",
+    "service_code": "S",
+    "last_match_apply": "10/2024",
+    "derived_wait_m": 22,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS029",
+    "as_of": "2026-08-31",
+    "unit_id": "PS029",
+    "unit_name_raw": "保良局倪文玲(元朗)兒童發展中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "11/2024",
+    "derived_wait_m": 21,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS049",
+    "as_of": "2026-08-31",
+    "unit_id": "PS049",
+    "unit_name_raw": "心光幼兒中心 (日間特殊幼兒中心) (為中度至嚴重殘疾而患有懷疑或輕度視覺受損的兒童而設)",
+    "service_code": "S",
+    "last_match_apply": "03/2025",
+    "derived_wait_m": 17,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PR018",
+    "as_of": "2026-08-31",
+    "unit_id": "PR018",
+    "unit_name_raw": "香港耀能協會賽馬會方心淑引導式教育中心 (住宿部份) (請自行向中心申請)",
+    "service_code": "SR",
+    "last_match_apply": "03/2025",
+    "derived_wait_m": 17,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS018",
+    "as_of": "2026-08-31",
+    "unit_id": "PS018",
+    "unit_name_raw": "香港耀能協會賽馬會方心淑引導式教育中心 (日間特殊幼兒中心) (請自行向中心申請)",
+    "service_code": "S",
+    "last_match_apply": "03/2025",
+    "derived_wait_m": 17,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS020",
+    "as_of": "2026-08-31",
+    "unit_id": "PS020",
+    "unit_name_raw": "香港基督教服務處祥華特殊幼兒中心",
+    "service_code": "S",
+    "last_match_apply": "04/2025",
+    "derived_wait_m": 16,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS014",
+    "as_of": "2026-08-31",
+    "unit_id": "PS014",
+    "unit_name_raw": "協康會天平中心",
+    "service_code": "S",
+    "last_match_apply": "05/2025",
+    "derived_wait_m": 15,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS001",
+    "as_of": "2026-08-31",
+    "unit_id": "PS001",
+    "unit_name_raw": "香港明愛樂興幼兒中心",
+    "service_code": "S",
+    "last_match_apply": "05/2025",
+    "derived_wait_m": 15,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS036",
+    "as_of": "2026-08-31",
+    "unit_id": "PS036",
+    "unit_name_raw": "鄰舍輔導會景康幼兒中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "05/2025",
+    "derived_wait_m": 15,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS050",
+    "as_of": "2026-08-31",
+    "unit_id": "PS050",
+    "unit_name_raw": "協康會上海總會菁田中心（特殊幼兒中心）",
+    "service_code": "S",
+    "last_match_apply": "05/2025",
+    "derived_wait_m": 15,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PR007",
+    "as_of": "2026-08-31",
+    "unit_id": "PR007",
+    "unit_name_raw": "香港耀能協會鴨脷洲幼兒中心 (設有住宿部份）",
+    "service_code": "SR",
+    "last_match_apply": "06/2025",
+    "derived_wait_m": 14,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS016",
+    "as_of": "2026-08-31",
+    "unit_id": "PS016",
+    "unit_name_raw": "中華基督教會香港區會屯門特殊幼兒中心",
+    "service_code": "S",
+    "last_match_apply": "06/2025",
+    "derived_wait_m": 14,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS004",
+    "as_of": "2026-08-31",
+    "unit_id": "PS004",
+    "unit_name_raw": "協康會大窩口中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "08/2025",
+    "derived_wait_m": 12,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PD001",
+    "as_of": "2026-08-31",
+    "unit_id": "PD001",
+    "unit_name_raw": "香港聾人福利促進會尚德幼兒中心(為聽覺受損兒童而設）",
+    "service_code": "S",
+    "last_match_apply": "10/2025",
+    "derived_wait_m": 10,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS042",
+    "as_of": "2026-08-31",
+    "unit_id": "PS042",
+    "unit_name_raw": "保良局倪文玲(深水埗)兒童發展中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "10/2025",
+    "derived_wait_m": 10,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS053",
+    "as_of": "2026-08-31",
+    "unit_id": "PS053",
+    "unit_name_raw": "仁濟醫院孫蔡吐媚兒童成長發展中心",
+    "service_code": "S",
+    "last_match_apply": "10/2025",
+    "derived_wait_m": 10,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS039",
+    "as_of": "2026-08-31",
+    "unit_id": "PS039",
+    "unit_name_raw": "香港耀能協會安泰幼兒中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "11/2025",
+    "derived_wait_m": 9,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PD002",
+    "as_of": "2026-08-31",
+    "unit_id": "PD002",
+    "unit_name_raw": "香港聾人福利促進會白普理幼兒中心(為聽覺受損兒童而設）",
+    "service_code": "S",
+    "last_match_apply": "11/2025",
+    "derived_wait_m": 9,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS017",
+    "as_of": "2026-08-31",
+    "unit_id": "PS017",
+    "unit_name_raw": "協康會雷瑞德夫人中心",
+    "service_code": "S",
+    "last_match_apply": "11/2025",
+    "derived_wait_m": 9,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS038",
+    "as_of": "2026-08-31",
+    "unit_id": "PS038",
+    "unit_name_raw": "協康會鯉魚門中心(特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "12/2025",
+    "derived_wait_m": 8,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS025",
+    "as_of": "2026-08-31",
+    "unit_id": "PS025",
+    "unit_name_raw": "協康會東涌中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "01/2026",
+    "derived_wait_m": 7,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS003",
+    "as_of": "2026-08-31",
+    "unit_id": "PS003",
+    "unit_name_raw": "協康會王石崇傑紀念中心",
+    "service_code": "S",
+    "last_match_apply": "01/2026",
+    "derived_wait_m": 7,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS024",
+    "as_of": "2026-08-31",
+    "unit_id": "PS024",
+    "unit_name_raw": "協康會富昌中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "01/2026",
+    "derived_wait_m": 7,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE007E",
+    "as_of": "2026-08-31",
+    "unit_id": "PE007E",
+    "unit_name_raw": "監護者早期教育中心(以英語為母語的幼兒而設)",
+    "service_code": "E",
+    "last_match_apply": "02/2026",
+    "derived_wait_m": 6,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE040",
+    "as_of": "2026-08-31",
+    "unit_id": "PE040",
+    "unit_name_raw": "東華三院廖烈武伉儷兒童發展中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "02/2026",
+    "derived_wait_m": 6,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE016",
+    "as_of": "2026-08-31",
+    "unit_id": "PE016",
+    "unit_name_raw": "香港基督教服務處元朗早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "02/2026",
+    "derived_wait_m": 6,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE033",
+    "as_of": "2026-08-31",
+    "unit_id": "PE033",
+    "unit_name_raw": "保良局倪文玲(元朗)兒童發展中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "02/2026",
+    "derived_wait_m": 6,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS009",
+    "as_of": "2026-08-31",
+    "unit_id": "PS009",
+    "unit_name_raw": "香港耀能協會石圍角幼兒中心",
+    "service_code": "S",
+    "last_match_apply": "02/2026",
+    "derived_wait_m": 6,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE020",
+    "as_of": "2026-08-31",
+    "unit_id": "PE020",
+    "unit_name_raw": "仁濟醫院圓玄學院早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "04/2026",
+    "derived_wait_m": 4,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE059",
+    "as_of": "2026-08-31",
+    "unit_id": "PE059",
+    "unit_name_raw": "協康會上海總會菁田中心（早期教育及訓練中心）",
+    "service_code": "E",
+    "last_match_apply": "04/2026",
+    "derived_wait_m": 4,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PR024",
+    "as_of": "2026-08-31",
+    "unit_id": "PR024",
+    "unit_name_raw": "仁濟醫院羅氏基金護幼中心暨宿舍 (住宿)",
+    "service_code": "SR",
+    "last_match_apply": "04/2026",
+    "derived_wait_m": 4,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS046",
+    "as_of": "2026-08-31",
+    "unit_id": "PS046",
+    "unit_name_raw": "救世軍駿洋幼兒中心（特殊幼兒中心）",
+    "service_code": "S",
+    "last_match_apply": "04/2026",
+    "derived_wait_m": 4,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE011",
+    "as_of": "2026-08-31",
+    "unit_id": "PE011",
+    "unit_name_raw": "香港明愛樂苗學前教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE045",
+    "as_of": "2026-08-31",
+    "unit_id": "PE045",
+    "unit_name_raw": "協康會環翠中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE015C",
+    "as_of": "2026-08-31",
+    "unit_id": "PE015C",
+    "unit_name_raw": "明德兒童啟育中心 (以中文為母語的幼兒而設)",
+    "service_code": "E",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE031",
+    "as_of": "2026-08-31",
+    "unit_id": "PE031",
+    "unit_name_raw": "香港基督教服務處摩理臣山兒童發展中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE029",
+    "as_of": "2026-08-31",
+    "unit_id": "PE029",
+    "unit_name_raw": "匡智會匡智松嶺學前兒童中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE046",
+    "as_of": "2026-08-31",
+    "unit_id": "PE046",
+    "unit_name_raw": "鄰舍輔導會景康幼兒中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS054",
+    "as_of": "2026-08-31",
+    "unit_id": "PS054",
+    "unit_name_raw": "香港聾人福利促進會尚德幼兒中心",
+    "service_code": "S",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS030",
+    "as_of": "2026-08-31",
+    "unit_id": "PS030",
+    "unit_name_raw": "協康會裕明中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS027",
+    "as_of": "2026-08-31",
+    "unit_id": "PS027",
+    "unit_name_raw": "香港耀能協會象山幼兒中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS051",
+    "as_of": "2026-08-31",
+    "unit_id": "PS051",
+    "unit_name_raw": "香港小童群益會「樂航」兒童早期發展中心 (馬鞍山) (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "05/2026",
+    "derived_wait_m": 3,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE010",
+    "as_of": "2026-08-31",
+    "unit_id": "PE010",
+    "unit_name_raw": "協康會海富中心(早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE034",
+    "as_of": "2026-08-31",
+    "unit_id": "PE034",
+    "unit_name_raw": "東華三院馬孔令琦兒童發展中心",
+    "service_code": "E",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE058",
+    "as_of": "2026-08-31",
+    "unit_id": "PE058",
+    "unit_name_raw": "路德會凝悅兒童發展中心",
+    "service_code": "E",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE025",
+    "as_of": "2026-08-31",
+    "unit_id": "PE025",
+    "unit_name_raw": "協康會大窩口中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE008",
+    "as_of": "2026-08-31",
+    "unit_id": "PE008",
+    "unit_name_raw": "協康會良景早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE012",
+    "as_of": "2026-08-31",
+    "unit_id": "PE012",
+    "unit_name_raw": "香港基督教服務處屯門早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS041",
+    "as_of": "2026-08-31",
+    "unit_id": "PS041",
+    "unit_name_raw": "香港小童群益會「樂航」兒童早期發展中心(東涌) (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS032",
+    "as_of": "2026-08-31",
+    "unit_id": "PS032",
+    "unit_name_raw": "保良局曹金霖幼兒學習中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS005",
+    "as_of": "2026-08-31",
+    "unit_id": "PS005",
+    "unit_name_raw": "協康會秦石中心",
+    "service_code": "S",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS011",
+    "as_of": "2026-08-31",
+    "unit_id": "PS011",
+    "unit_name_raw": "香港耀能協會隆亨幼兒中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS037",
+    "as_of": "2026-08-31",
+    "unit_id": "PS037",
+    "unit_name_raw": "匡智會匡智廣福學前兒童中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "06/2026",
+    "derived_wait_m": 2,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE007C",
+    "as_of": "2026-08-31",
+    "unit_id": "PE007C",
+    "unit_name_raw": "監護者早期教育中心(以中文為母語的幼兒而設)",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE026",
+    "as_of": "2026-08-31",
+    "unit_id": "PE026",
+    "unit_name_raw": "香港耀能協會鴨脷洲幼兒中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE054",
+    "as_of": "2026-08-31",
+    "unit_id": "PE054",
+    "unit_name_raw": "協康會雍明中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE060",
+    "as_of": "2026-08-31",
+    "unit_id": "PE060",
+    "unit_name_raw": "香港耀能協會康城早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE057",
+    "as_of": "2026-08-31",
+    "unit_id": "PE057",
+    "unit_name_raw": "保良局倪文玲(海達)兒童發展中心 (早期教育及訓練中心）",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE019",
+    "as_of": "2026-08-31",
+    "unit_id": "PE019",
+    "unit_name_raw": "香港基督教服務處葵興早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE018",
+    "as_of": "2026-08-31",
+    "unit_id": "PE018",
+    "unit_name_raw": "協康會賽馬會早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE049",
+    "as_of": "2026-08-31",
+    "unit_id": "PE049",
+    "unit_name_raw": "保良局慧妍雅集兒童發展中心",
+    "service_code": "E",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS026",
+    "as_of": "2026-08-31",
+    "unit_id": "PS026",
+    "unit_name_raw": "心光幼兒中心 (日間特殊幼兒中心) (為視覺受損兒童而設)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS013",
+    "as_of": "2026-08-31",
+    "unit_id": "PS013",
+    "unit_name_raw": "協康會灣仔中心",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS028",
+    "as_of": "2026-08-31",
+    "unit_id": "PS028",
+    "unit_name_raw": "香港基督教服務處摩理臣山兒童發展中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS044",
+    "as_of": "2026-08-31",
+    "unit_id": "PS044",
+    "unit_name_raw": "協康會雍明中心（特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS008",
+    "as_of": "2026-08-31",
+    "unit_id": "PS008",
+    "unit_name_raw": "香港耀能協會橫頭磡幼兒中心",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS033",
+    "as_of": "2026-08-31",
+    "unit_id": "PS033",
+    "unit_name_raw": "鄰舍輔導會陳蔭川欣康幼兒中心(特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS043",
+    "as_of": "2026-08-31",
+    "unit_id": "PS043",
+    "unit_name_raw": "路德會凝趣兒童發展中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS010",
+    "as_of": "2026-08-31",
+    "unit_id": "PS010",
+    "unit_name_raw": "香港耀能協會石硤尾幼兒中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS022",
+    "as_of": "2026-08-31",
+    "unit_id": "PS022",
+    "unit_name_raw": "協康會長沙灣中心",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS034",
+    "as_of": "2026-08-31",
+    "unit_id": "PS034",
+    "unit_name_raw": "香港耀能協會白田幼兒中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS045",
+    "as_of": "2026-08-31",
+    "unit_id": "PS045",
+    "unit_name_raw": "保良局倪文玲(海達)兒童發展中心（特殊幼兒中心）",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS031",
+    "as_of": "2026-08-31",
+    "unit_id": "PS031",
+    "unit_name_raw": "鄰舍輔導會啟康幼兒中心(特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS040",
+    "as_of": "2026-08-31",
+    "unit_id": "PS040",
+    "unit_name_raw": "匡智松嶺學前兒童中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "07/2026",
+    "derived_wait_m": 1,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE001",
+    "as_of": "2026-08-31",
+    "unit_id": "PE001",
+    "unit_name_raw": "香港明愛樂幼學前教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE009",
+    "as_of": "2026-08-31",
+    "unit_id": "PE009",
+    "unit_name_raw": "香港基督教服務處環翠早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE015E",
+    "as_of": "2026-08-31",
+    "unit_id": "PE015E",
+    "unit_name_raw": "明德兒童啟育中心 (以英語為母語的幼兒而設)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE024",
+    "as_of": "2026-08-31",
+    "unit_id": "PE024",
+    "unit_name_raw": "協康會東涌中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE052",
+    "as_of": "2026-08-31",
+    "unit_id": "PE052",
+    "unit_name_raw": "香港小童群益會「樂航」兒童早期發展中心(東涌)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE048",
+    "as_of": "2026-08-31",
+    "unit_id": "PE048",
+    "unit_name_raw": "協康會大口環早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE002",
+    "as_of": "2026-08-31",
+    "unit_id": "PE002",
+    "unit_name_raw": "協康會順利早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE021",
+    "as_of": "2026-08-31",
+    "unit_id": "PE021",
+    "unit_name_raw": "香港耀能協會德田早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE041",
+    "as_of": "2026-08-31",
+    "unit_id": "PE041",
+    "unit_name_raw": "協康會鯉魚門中心 (早期教育訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE044",
+    "as_of": "2026-08-31",
+    "unit_id": "PE044",
+    "unit_name_raw": "協康會上海總會油麗中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE050",
+    "as_of": "2026-08-31",
+    "unit_id": "PE050",
+    "unit_name_raw": "香港耀能協會安泰幼兒中心(早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE022",
+    "as_of": "2026-08-31",
+    "unit_id": "PE022",
+    "unit_name_raw": "基督教靈實協會梁烱初寶林早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE035",
+    "as_of": "2026-08-31",
+    "unit_id": "PE035",
+    "unit_name_raw": "協康會裕明中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE006",
+    "as_of": "2026-08-31",
+    "unit_id": "PE006",
+    "unit_name_raw": "香港基督教服務處彩雲早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE013",
+    "as_of": "2026-08-31",
+    "unit_id": "PE013",
+    "unit_name_raw": "香港耀能協會懷熙早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE037",
+    "as_of": "2026-08-31",
+    "unit_id": "PE037",
+    "unit_name_raw": "保良局曹金霖幼兒學習中心(早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE038",
+    "as_of": "2026-08-31",
+    "unit_id": "PE038",
+    "unit_name_raw": "鄰舍輔導會陳蔭川欣康幼兒中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE053",
+    "as_of": "2026-08-31",
+    "unit_id": "PE053",
+    "unit_name_raw": "路德會凝趣兒童發展中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE030",
+    "as_of": "2026-08-31",
+    "unit_id": "PE030",
+    "unit_name_raw": "香港聾人福利促進會何文田中心 (早期教育及訓練中心) (為聽覺受損兒童而設）(在四個位於北角、將軍澳、何文田及屯門的服務單位提供機構為本的服務)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE003",
+    "as_of": "2026-08-31",
+    "unit_id": "PE003",
+    "unit_name_raw": "協康會白田早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE023",
+    "as_of": "2026-08-31",
+    "unit_id": "PE023",
+    "unit_name_raw": "協康會富昌中心(早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE027",
+    "as_of": "2026-08-31",
+    "unit_id": "PE027",
+    "unit_name_raw": "香港耀能協會石硤尾幼兒中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE039",
+    "as_of": "2026-08-31",
+    "unit_id": "PE039",
+    "unit_name_raw": "香港耀能協會白田幼兒中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE051",
+    "as_of": "2026-08-31",
+    "unit_id": "PE051",
+    "unit_name_raw": "保良局倪文玲(深水埗)兒童發展中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE017",
+    "as_of": "2026-08-31",
+    "unit_id": "PE017",
+    "unit_name_raw": "宣美語言及聽覺訓練中心 (為聽覺受損兒童而設）",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE042",
+    "as_of": "2026-08-31",
+    "unit_id": "PE042",
+    "unit_name_raw": "香港耀能協會葵盛早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE004",
+    "as_of": "2026-08-31",
+    "unit_id": "PE004",
+    "unit_name_raw": "協康會長青早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE061",
+    "as_of": "2026-08-31",
+    "unit_id": "PE061",
+    "unit_name_raw": "仁濟醫院童夢兒童成長發展中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE032",
+    "as_of": "2026-08-31",
+    "unit_id": "PE032",
+    "unit_name_raw": "香港耀能協會象山幼兒中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE005",
+    "as_of": "2026-08-31",
+    "unit_id": "PE005",
+    "unit_name_raw": "協康會郭葉鍊洪早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE028",
+    "as_of": "2026-08-31",
+    "unit_id": "PE028",
+    "unit_name_raw": "香港耀能協會隆亨幼兒中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE036",
+    "as_of": "2026-08-31",
+    "unit_id": "PE036",
+    "unit_name_raw": "鄰舍輔導會啟康幼兒中心（早期教育及訓練中心）",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE043",
+    "as_of": "2026-08-31",
+    "unit_id": "PE043",
+    "unit_name_raw": "保良局梁安琪兒童發展中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE055",
+    "as_of": "2026-08-31",
+    "unit_id": "PE055",
+    "unit_name_raw": "救世軍駿洋幼兒中心（早期教育及訓練中心）",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE062",
+    "as_of": "2026-08-31",
+    "unit_id": "PE062",
+    "unit_name_raw": "香港小童群益會「樂航」兒童早期發展中心 (馬鞍山) (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE014",
+    "as_of": "2026-08-31",
+    "unit_id": "PE014",
+    "unit_name_raw": "協康會譚杜早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE047",
+    "as_of": "2026-08-31",
+    "unit_id": "PE047",
+    "unit_name_raw": "匡智會匡智廣福學前兒童中心 (早期教育及訓練中心)",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PE056",
+    "as_of": "2026-08-31",
+    "unit_id": "PE056",
+    "unit_name_raw": "仁濟醫院嚴徐玉珊早期教育及訓練中心",
+    "service_code": "E",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-012",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PR019",
+    "as_of": "2026-08-31",
+    "unit_id": "PR019",
+    "unit_name_raw": "母親的抉擇特殊幼兒住宿中心 (住宿）",
+    "service_code": "SR",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS015",
+    "as_of": "2026-08-31",
+    "unit_id": "PS015",
+    "unit_name_raw": "協康會環翠中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS002",
+    "as_of": "2026-08-31",
+    "unit_id": "PS002",
+    "unit_name_raw": "協康會慶華中心 (特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS007",
+    "as_of": "2026-08-31",
+    "unit_id": "PS007",
+    "unit_name_raw": "香港耀能協會鴨脷洲幼兒中心 (日間特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS023",
+    "as_of": "2026-08-31",
+    "unit_id": "PS023",
+    "unit_name_raw": "協康會陳宗漢紀念中心",
+    "service_code": "S",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PS047",
+    "as_of": "2026-08-31",
+    "unit_id": "PS047",
+    "unit_name_raw": "路德會凝悅兒童發展中心(特殊幼兒中心)",
+    "service_code": "S",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  },
+  {
+    "snapshot_id": "2026-08-31-PR001",
+    "as_of": "2026-08-31",
+    "unit_id": "PR001",
+    "unit_name_raw": "匡智會匡智松嶺學前兒童中心 (住宿）",
+    "service_code": "SR",
+    "last_match_apply": "08/2026",
+    "derived_wait_m": 0,
+    "source_id": "SRC-013",
+    "run_id": "20261012-01"
+  }
+]
+"""#,
+    ]
 }

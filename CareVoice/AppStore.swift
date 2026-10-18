@@ -6,12 +6,14 @@ final class AppStore: ObservableObject {
     @Published var errorMessage: String?
     @Published private(set) var storageUnavailable = false
     let questions: [Question]
+    let content: GovernmentContent
     private let fileURL: URL
     private let isUITest: Bool
     var language: AppLanguage { data.language }
     func t(_ en: String, _ zh: String) -> String { language.text(en, zh) }
 
     init() {
+        content = GovernmentContent.load()
         isUITest = ProcessInfo.processInfo.arguments.contains("--ui-testing")
         let directory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("CareVoice", isDirectory: true)
         fileURL = directory.appendingPathComponent(isUITest ? "ui-test-data.json" : "family-data.json")
