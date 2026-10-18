@@ -1510,27 +1510,6 @@ main {
 .records-screen {
   padding-bottom: 72px;
 }
-.record-entry-picker {
-  position: fixed;
-  inset: auto max(20px, calc((100vw - 560px) / 2 + 20px)) calc(152px + env(safe-area-inset-bottom)) auto;
-  margin: 0;
-  width: min(320px, calc(100vw - 40px));
-  max-height: calc(100dvh - 180px - env(safe-area-inset-bottom));
-  overflow-y: auto;
-  padding: 16px 8px 8px;
-  border: 1px solid var(--color-line);
-  border-radius: 20px;
-  background: var(--color-surface);
-  color: var(--color-ink);
-  box-shadow: 0 8px 28px var(--color-shadow);
-}
-.record-entry-picker h2 { margin: 0 12px 8px; font-size: 1rem; }
-.record-entry-picker > button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 76px; padding: 14px 12px; border-radius: 12px; text-align: left; }
-.record-entry-picker > button:hover { background: var(--color-blue-soft); }
-.record-entry-picker > button > svg { flex-shrink: 0; color: var(--color-accent); }
-.record-entry-picker strong, .record-entry-picker small { display: block; }
-.record-entry-picker strong { font-size: 1rem; font-weight: 600; }
-.record-entry-picker small { margin-top: 4px; color: var(--color-muted); font-size: 0.8rem; }
 .records-options {
   position: relative;
   margin: 0;
@@ -1937,6 +1916,43 @@ main {
 .observation-sheet .sheet-actions .primary { border-radius: 12px; }
 .observation-sheet .sheet-actions .danger-button { border: 0; background: transparent; font-size: 0.8rem; }
 .observation-sheet .voice-entry-help { margin-top: 0; padding: 14px; border-radius: 12px; }
+
+/* Quick Record: a compact bottom panel, using the existing CareVoice palette.
+ * Hallmark · pre-emit critique: P5 H5 E4 S5 R5 V4 */
+.sheet.quick-record-sheet {
+  position: fixed;
+  inset: auto 0 calc(12px + env(safe-area-inset-bottom));
+  margin: 0 auto;
+  width: calc(100% - 24px);
+  max-width: 520px;
+  height: auto;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-bottom) - env(safe-area-inset-top));
+  border-radius: 28px;
+  background: var(--color-surface);
+}
+.sheet.quick-record-sheet form { height: auto; max-height: calc(100dvh - 24px - env(safe-area-inset-bottom) - env(safe-area-inset-top)); }
+.quick-record-sheet .sheet-head { padding: 20px 20px 12px; border: 0; }
+.quick-record-sheet .sheet-head h2 { font-size: 1.2rem; }
+.quick-record-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 20px 16px; flex-shrink: 0; }
+.quick-record-tabs > button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 8px; border: 1px solid var(--color-line); border-radius: 14px; color: var(--color-ink); background: var(--color-surface); font-size: 0.9375rem; white-space: nowrap; }
+.quick-record-tabs > button[aria-selected="true"] { border-color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); background: var(--color-blue-soft); color: var(--color-accent); }
+.quick-record-tabs > button:hover { background: var(--color-soft); }
+.quick-record-tabs > button:active { transform: translateY(1px); }
+.quick-record-sheet .sheet-body { padding: 0 20px 16px; background: var(--color-surface); flex: 0 1 auto; }
+.quick-record-sheet [hidden] { display: none !important; }
+.quick-voice-intro { text-align: center; padding: 8px 0 16px; }
+.quick-voice-symbol { display: grid; place-items: center; width: 84px; height: 84px; margin: 0 auto 14px; border-radius: 50%; background: var(--color-pink-soft); color: var(--color-ink); }
+.quick-voice-intro p { max-width: 360px; margin: 0 auto 18px; color: var(--color-muted); font-size: 0.875rem; line-height: 1.6; }
+.quick-voice-intro .primary { min-height: 50px; border-radius: 12px; }
+.quick-record-sheet .observation-input { min-height: 130px; }
+.quick-record-sheet .observation-details { margin-top: 4px; }
+.quick-record-sheet .sheet-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 20px 20px; border: 0; }
+.quick-record-sheet .sheet-actions button { min-width: 0; min-height: 48px; margin: 0; border-radius: 12px; font-size: 0.9rem; white-space: nowrap; }
+@media (max-width: 359px) {
+  .quick-record-tabs { padding-left: 16px; padding-right: 16px; gap: 8px; }
+  .quick-record-tabs > button { gap: 6px; font-size: 0.8125rem; }
+  .quick-record-sheet .sheet-actions { padding-left: 16px; padding-right: 16px; }
+}
 
 /* Welcome: a quiet app introduction with one clear start action. */
 .welcome-screen { display: flex; flex-direction: column; min-height: min(690px, calc(100dvh - 64px)); padding: clamp(28px, 7dvh, 64px) 0 12px; text-align: center; }

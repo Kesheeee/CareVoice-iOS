@@ -2,7 +2,6 @@ import { useRef } from "react";
 import {
   BookOpen,
   FileText,
-  Mic,
   MoreHorizontal,
   Plus,
   Search,
@@ -22,7 +21,6 @@ export function RecordsScreen({
   filter,
   onSearch,
   onFilter,
-  onAdd,
   onVoice,
   onReport,
   onEdit,
@@ -33,15 +31,13 @@ export function RecordsScreen({
   filter: Category | "all";
   onSearch: (value: string) => void;
   onFilter: (value: Category | "all") => void;
-  onAdd: () => void;
   onVoice: () => void;
   onReport: () => void;
   onEdit: (record: Observation) => void;
 }) {
   const zh = language === "zh",
     t = (en: string, tc: string) => (zh ? tc : en),
-    menu = useRef<HTMLDetailsElement>(null),
-    entryPicker = useRef<HTMLDivElement>(null);
+    menu = useRef<HTMLDetailsElement>(null);
   const visible = records
     .filter(
       (r) =>
@@ -53,7 +49,6 @@ export function RecordsScreen({
     .sort((a, b) => b.date.localeCompare(a.date));
   const action = (fn: () => void) => {
     if (menu.current) menu.current.open = false;
-    entryPicker.current?.hidePopover();
     fn();
   };
   return (
@@ -157,31 +152,12 @@ export function RecordsScreen({
           )}
         </div>
       )}
-      <div
-        id="record-entry-picker"
-        ref={entryPicker}
-        className="record-entry-picker"
-        popover="auto"
-        role="dialog"
-        aria-labelledby="record-entry-title"
-      >
-        <h2 id="record-entry-title">{t("Add a record", "新增記錄")}</h2>
-        <button type="button" onClick={() => action(onAdd)}>
-          <FileText size={23} aria-hidden="true" />
-          <span><strong>{t("Text record", "文字記錄")}</strong><small>{t("Type an observation", "輸入你嘅觀察")}</small></span>
-        </button>
-        <button type="button" onClick={() => action(onVoice)}>
-          <Mic size={23} aria-hidden="true" />
-          <span><strong>{t("Voice entry", "語音輸入")}</strong><small>{t("Use your keyboard’s microphone", "使用鍵盤嘅咪高峰")}</small></span>
-        </button>
-      </div>
       <button
         type="button"
         className="records-add"
         aria-label={t("Add a record", "新增記錄")}
-        popoverTarget="record-entry-picker"
         aria-haspopup="dialog"
-        onClick={() => { if (menu.current) menu.current.open = false; }}
+        onClick={() => action(onVoice)}
       >
         <Plus size={26} aria-hidden="true" />
       </button>

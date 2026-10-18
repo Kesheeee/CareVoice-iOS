@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import {
   AudioLines,
@@ -137,6 +138,10 @@ function App() {
     [professional, setProfessional] = useState(true),
     [saved, setSaved] = useState(false);
   const [voiceEntry, setVoiceEntry] = useState(false);
+  const [voiceInputActive, setVoiceInputActive] = useState(false);
+  const observationInput = useRef<HTMLTextAreaElement>(null);
+  const quickRecord = !!record && !data.records.some(r => r.id === record.id);
+  useEffect(() => { setVoiceInputActive(false); }, [record?.id]);
   const mainRef = useRef<HTMLElement>(null),
     importRef = useRef<HTMLInputElement>(null);
   const zh = data.language === "zh",
@@ -174,11 +179,14 @@ function App() {
   useEffect(() => {
     if (!profileOpen && !record && !resetOpen && !deleteId) return;
     const before = document.activeElement as HTMLElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const dialog = document.querySelector<HTMLDialogElement>("dialog");
     dialog?.showModal();
     dialog?.querySelector<HTMLElement>("input,button")?.focus();
     return () => {
       dialog?.close();
+      document.body.style.overflow = previousOverflow;
       before?.focus();
     };
   }, [profileOpen, record?.id, resetOpen, deleteId]);
@@ -341,10 +349,6 @@ function App() {
             filter={filter}
             onSearch={setSearch}
             onFilter={setFilter}
-            onAdd={() => {
-              setVoiceEntry(false);
-              setRecord(newRecord());
-            }}
             onVoice={() => {
               setVoiceEntry(true);
               setRecord(newRecord());
@@ -875,7 +879,7 @@ function App() {
       )}
       {record && (
         <dialog
-          className="sheet observation-sheet"
+          className={`sheet observation-sheet${quickRecord ? " quick-record-sheet" : ""}`}
           aria-labelledby="record-title"
           onCancel={() => setRecord(null)}
         >
@@ -911,10 +915,10 @@ function App() {
                 {t(
                   data.records.some((r) => r.id === record.id)
                     ? "Edit observation"
-                    : "Add observation",
+                    : "Quick Record",
                   data.records.some((r) => r.id === record.id)
                     ? "編輯觀察"
-                    : "新增觀察",
+                    : "快速記錄",
                 )}
               </h2>
               <button
@@ -927,8 +931,31 @@ function App() {
               </button>
             </div>
 
-            <div className="sheet-body">
-              {voiceEntry && (
+            {quickRecord && <div className="quick-record-tabs" role="tablist" aria-label={t("Record method", "記錄方式")}
+              onKeyDown={event => {
+                if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+                event.preventDefault();
+                const voice = event.key === "Home" ? true : event.key === "End" ? false : !voiceEntry;
+                setVoiceEntry(voice);
+                event.currentTarget.querySelectorAll<HTMLButtonElement>("button")[voice ? 0 : 1]?.focus();
+              }}>
+              <button type="button" role="tab" id="quick-voice-tab" aria-selected={voiceEntry} aria-controls="quick-record-panel" tabIndex={voiceEntry ? 0 : -1} onClick={() => setVoiceEntry(true)}>
+                <Mic size={20} aria-hidden="true" />{t("Voice record", "語音記錄")}
+              </button>
+              <button type="button" role="tab" id="quick-text-tab" aria-selected={!voiceEntry} aria-controls="quick-record-panel" tabIndex={!voiceEntry ? 0 : -1} onClick={() => setVoiceEntry(false)}>
+                <Pencil size={20} aria-hidden="true" />{t("Text record", "文字記錄")}
+              </button>
+            </div>}
+            <div className="sheet-body" id={quickRecord ? "quick-record-panel" : undefined} role={quickRecord ? "tabpanel" : undefined} aria-labelledby={quickRecord ? (voiceEntry ? "quick-voice-tab" : "quick-text-tab") : undefined}>
+              {voiceEntry && quickRecord && <div className="quick-voice-intro">
+                <span className="quick-voice-symbol"><Mic size={36} aria-hidden="true" /></span>
+                <p>{t("Speak using your keyboard’s microphone, then check the text before saving.", "用鍵盤嘅咪高峰講低觀察，儲存之前核對文字。")}</p>
+                {!voiceInputActive && !record.text && <button type="button" className="primary full" onClick={() => {
+                  flushSync(() => setVoiceInputActive(true));
+                  observationInput.current?.focus();
+                }}>{t("Start voice entry", "開始語音輸入")}</button>}
+              </div>}
+              {voiceEntry && !quickRecord && (
                 <div className="voice-entry-help">
                   <Mic size={22} />
                   <strong>
@@ -942,10 +969,11 @@ function App() {
                   </p>
                 </div>
               )}
-              <label>
+              <label hidden={quickRecord && voiceEntry && !voiceInputActive && !record.text}>
                 {t("What happened?", "發生咗咩事？")}
                 <textarea
                   className="observation-input"
+                  ref={observationInput}
                   required
                   maxLength={10000}
                   value={record.text}
@@ -955,6 +983,8 @@ function App() {
                   }
                 />
               </label>
+              <details className="observation-details">
+                <summary role="button">{t("More details", "補充資料")}<ChevronDown size={17} aria-hidden="true" /></summary>
               <label>
                 {t("Category", "分類")}
                 <select
@@ -994,8 +1024,6 @@ function App() {
                   }}
                 />
               </label>
-              <details className="observation-details">
-                <summary role="button">{t("More details", "補充資料")}<ChevronDown size={17} aria-hidden="true" /></summary>
               <div className="form-row">
                 <label>
                   {t("Place (optional)", "地點（選填）")}
@@ -1046,12 +1074,13 @@ function App() {
 
             </div>
             <div className="sheet-actions">
+              {quickRecord && <button type="button" className="secondary" onClick={() => setRecord(null)}>{t("Cancel", "取消")}</button>}
               <button
                 className="primary full"
                 disabled={!record.text.trim() || locked}
                 type="submit"
               >
-                {t("Save observation", "儲存觀察")}
+                {quickRecord ? t("Save record", "儲存記錄") : t("Save observation", "儲存觀察")}
                 <Check size={18} />
               </button>
               {data.records.some((r) => r.id === record.id) && (
