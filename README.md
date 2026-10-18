@@ -25,6 +25,8 @@ A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English, T
 
 Minimum deployment target: **iOS 17**. Email/password sign-in uses the same Supabase project as the phone preview. After sign-in, observation data is stored locally per account. The optional shared parent community requires the configuration described in [Community setup](docs/COMMUNITY_SETUP.md). The checked-in Xcode project is ready to open.
 
+For the current testing setup (18 October 2026), email confirmation is disabled on the shared backend. New accounts use email and password and enter the app when the server issues a session. Email ownership is not verified in this mode; password recovery still depends on email delivery. See [authentication setup](docs/COMMUNITY_SETUP.md) before a public pilot.
+
 ## What works
 
 - Five-page survey: optional nickname, birthday, seven parent-selected journey stages, support goals and optional notes.
@@ -59,7 +61,7 @@ Open a pull request into `main` and ask your partner to review. See [CONTRIBUTIN
 
 This is a working development MVP, not a clinically validated screening tool or an App Store release. It produces no risk score, severity level, diagnosis or automated clinical interpretation. A journey stage comes only from the caregiver's selection. Related records are grouped by the chosen category, not AI inference.
 
-The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. The parent community has an optional Supabase backend for accounts, posts, replies, reports, blocking and moderation; see [Community setup](docs/COMMUNITY_SETUP.md). The current primary Community screen matches TypeScript’s official-resource directory. Shared parent discussion views are retained in the code for a later release. Family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
+The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. The parent community has an optional Supabase backend for accounts, posts, replies, reports, blocking and moderation; see [Community setup](docs/COMMUNITY_SETUP.md). The native Community screen includes Parent conversations using the existing CareVoice login alongside the official-resource directory. TypeScript currently shows resources only. Family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
 
 ## Verification
 

@@ -4,7 +4,8 @@
 // JSON content is embedded below. Add carevoice-family-hd.mp4/.jpg and google-g.png
 // from CareVoice/Resources/Media to retain the same welcome artwork as the app.
 // This is SwiftUI, not a web wrapper. Supabase uses the same public configuration as mobile/.
-// Server email-delivery/confirmation restrictions apply equally to both clients.
+// Testing setup (18 Oct 2026): shared Supabase Confirm email is OFF; signup uses email/password.
+// Access still requires a server-issued session. Password recovery still requires email delivery.
 
 import AVFoundation
 import AVKit
@@ -337,7 +338,9 @@ final class CommunityAPI {
         guard PasswordPolicy.accepts(password) else { throw CommunityFailure.weakPassword }
         let bytes = try await send("auth/v1/signup", method: "POST", body: ["email": email, "password": password], token: nil,
                                    query: [URLQueryItem(name: "redirect_to", value: "https://carevoice-preview-zeta.vercel.app/")])
-        // An unconfirmed user is not a session. Never grant access just because signup returned 200.
+        // With Confirm email disabled for testing, signup returns a session immediately.
+        // Persist only a server-issued session; if confirmation is re-enabled, AccountForm
+        // shows the confirmation screen instead. A user-only response never grants access.
         if let value = try? decoder.decode(CommunitySession.self, from: bytes) { try persist(value) }
     }
     func resetPassword(email: String) async throws {

@@ -15,7 +15,8 @@ def generate():
 // JSON content is embedded below. Add carevoice-family-hd.mp4/.jpg and google-g.png
 // from CareVoice/Resources/Media to retain the same welcome artwork as the app.
 // This is SwiftUI, not a web wrapper. Supabase uses the same public configuration as mobile/.
-// Server email-delivery/confirmation restrictions apply equally to both clients.
+// Testing setup (18 Oct 2026): shared Supabase Confirm email is OFF; signup uses email/password.
+// Access still requires a server-issued session. Password recovery still requires email delivery.
 
 ''' + '\n'.join(imports) + '\n\n'
     for path in sources:
