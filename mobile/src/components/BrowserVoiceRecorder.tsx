@@ -61,7 +61,7 @@ export function BrowserVoiceRecorder({ language, text, onTranscript, onActiveCha
         <option value="en-US">English</option><option value="zh-HK">廣東話</option><option value="zh-CN">普通话</option>
       </select>
     </label>
-    <p className="voice-progress" role="status">{state.status === "listening" ? t("Listening…", "聆聽中……") : state.status === "requesting" ? t("Waiting for microphone permission…", "等候咪高峰權限……") : state.status === "stopping" ? t("Finishing transcription…", "正在完成文字轉換……") : state.status === "review" ? t("Ready to review. Check the text below before saving.", "文字已準備好，請核對後再儲存。") : t("Tap Start recording and speak for up to 60 seconds.", "撳開始錄音，最長可以講 60 秒。")}</p>
+    {(busy || state.status === "review") && <p className="voice-progress" role="status">{state.status === "listening" ? t("Listening…", "聆聽中……") : state.status === "requesting" ? t("Waiting for microphone permission…", "等候咪高峰權限……") : state.status === "stopping" ? t("Finishing transcription…", "正在完成文字轉換……") : state.status === "review" ? t("Ready to review. Check the text below before saving.", "文字已準備好，請核對後再儲存。") : null}</p>}
     {busy && <output className="voice-timer" aria-label={t("Recording time", "錄音時間")}>{`${Math.floor(state.seconds / 60)}:${String(state.seconds % 60).padStart(2, "0")} / 1:00`}</output>}
     {state.interim && <p className="voice-interim">{state.interim}</p>}
     {state.error && <p className="voice-error" role="alert">{t(...errors[state.error])}</p>}
@@ -70,6 +70,5 @@ export function BrowserVoiceRecorder({ language, text, onTranscript, onActiveCha
     </button> : <button type="button" className="primary full" onClick={start}>
       <Mic size={18} aria-hidden="true" />{state.error ? t("Try again", "再試一次") : state.status === "review" ? t("Record more", "繼續錄音") : t("Start recording", "開始錄音")}
     </button>}
-    <p className="voice-privacy">{t("Your browser’s speech service processes your voice. CareVoice saves only the text you review, not an audio file.", "語音由瀏覽器嘅語音服務處理。CareVoice 只儲存你核對後嘅文字，唔會儲存錄音檔案。")}</p>
   </div>;
 }

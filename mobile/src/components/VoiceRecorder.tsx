@@ -151,7 +151,7 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
       case "requesting": return t("Waiting for microphone permission…", "等候咪高峰權限……");
       case "transcribing": return t("Transcribing…", "正在轉寫文字……");
       case "review": return t("Ready to review. Check the text below before saving.", "文字已準備好，請核對後再儲存。");
-      default: return t("Tap Start recording and speak for up to 60 seconds.", "撳開始錄音，最長可以講 60 秒。");
+      default: return null;
     }
   };
 
@@ -162,7 +162,7 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
         <option value="en-US">English</option><option value="zh-HK">廣東話</option><option value="zh-CN">普通话</option>
       </select>
     </label>
-    <p className="voice-progress" role="status">{statusLabel()}</p>
+    {statusLabel() && <p className="voice-progress" role="status">{statusLabel()}</p>}
     {busy && <output className="voice-timer" aria-label={t("Recording time", "錄音時間")}>{`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} / 1:00`}</output>}
     {error && <p className="voice-error" role="alert">{t(...errors[error])}</p>}
     {status === "transcribing" && <button type="button" className="secondary full" onClick={cancel}>{t("Cancel transcription", "取消轉寫")}</button>}
@@ -171,7 +171,6 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
     </button> : <button type="button" className="primary full" onClick={start}>
       <Mic size={18} aria-hidden="true" />{error ? t("Try again", "再試一次") : status === "review" ? t("Record more", "繼續錄音") : t("Start recording", "開始錄音")}
     </button>}
-    <p className="voice-privacy">{t("Audio is sent through Supabase to Azure for transcription. CareVoice saves only the text you review.", "語音會經 Supabase 傳送至 Azure 轉寫。CareVoice 只儲存你核對後嘅文字。")}</p>
   </div>;
 }
 
