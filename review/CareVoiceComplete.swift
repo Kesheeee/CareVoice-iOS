@@ -64,7 +64,7 @@ final class AppStore: ObservableObject {
     func activateAccount(_ id: UUID?) {
         guard !isUITest, id != activeAccountID else { return }
         let directory = fileURL.deletingLastPathComponent()
-        activeAccountID = id; storageUnavailable = false; offerImport = false; guestData = nil
+        activeAccountID = id; showQuestionnaire = false; storageUnavailable = false; offerImport = false; guestData = nil
         fileURL = directory.appendingPathComponent(id.map { "account-\($0.uuidString.lowercased()).json" } ?? "family-data.json")
         let language = data.language
         data = AppData(); data.language = language
@@ -127,6 +127,7 @@ struct CareVoiceApp: App {
             .environmentObject(store)
             .environment(\.locale, store.language.locale)
             .tint(Brand.blue)
+            .preferredColorScheme(.light)
             .alert(store.t("Unable to complete action", "未能完成操作"), isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
                 Button(store.t("OK", "確定"), role: .cancel) { store.errorMessage = nil }
             } message: { Text(store.errorMessage ?? "") }
@@ -1439,7 +1440,7 @@ struct AccountForm: View {
             if mode == .signup { Text(label).font(.subheadline.weight(.semibold)) }
             HStack(spacing: 12) { Image(systemName: symbol).foregroundStyle(.secondary); content() }
                 .padding(18).frame(minHeight: 56).background(.white, in: RoundedRectangle(cornerRadius: 22))
-                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gray.opacity(0.18)))
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gray.opacity(0.18)).allowsHitTesting(false))
         }
     }
     private func provider(_ name: String, symbol: String) -> some View {
@@ -1968,7 +1969,7 @@ struct ProfileEditor: View {
         Form {
             Section {
                 TextField(store.t("Nickname (optional)", "暱稱（選填）"), text: $profile.nickname).textContentType(.nickname).accessibilityIdentifier("nickname")
-                DatePicker(store.t("Birthday", "生日"), selection: Binding(get: { profile.birthDate ?? Calendar.current.date(byAdding: .month, value: -profile.ageMonths, to: Date())! }, set: { profile.birthDate = $0; profile.ageMonths = profile.currentAgeMonths }), in: Calendar.current.date(byAdding: .year, value: -7, to: Date())!...Date(), displayedComponents: .date)
+                DatePicker(store.t("Birthday", "生日"), selection: Binding(get: { profile.birthDate ?? Calendar.current.date(byAdding: .month, value: -profile.ageMonths, to: Date())! }, set: { profile.birthDate = $0; profile.ageMonths = profile.currentAgeMonths }), in: Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.date(byAdding: .year, value: -7, to: Calendar.current.startOfDay(for: Date()))!)!...Date(), displayedComponents: .date)
             } header: { Text(store.t("About your child", "關於你的孩子")) }
             footer: { Text(store.t("Use a nickname. Your child’s details stay on this device.", "使用暱稱即可。孩子的資料只儲存於此裝置。")) }
             Section {

@@ -52,7 +52,7 @@ final class CareVoiceUITests: XCTestCase {
     func testParentsCommunitySetupAndAccountNavigation() {
         let app = launch(); app.buttons["tab-2"].tap()
         XCTAssertTrue(app.staticTexts["Official resources & support"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.links.containing(.staticText, identifier: "Child Assessment Service (CAS)").firstMatch.exists)
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "Child Assessment Service (CAS)")).firstMatch.exists)
         snapshot(app, "Community-Resources")
     }
     func testQuickRecordTabsSaveAndPersistence() {

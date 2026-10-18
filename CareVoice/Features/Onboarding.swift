@@ -9,7 +9,7 @@ struct ProfileEditor: View {
         Form {
             Section {
                 TextField(store.t("Nickname (optional)", "暱稱（選填）"), text: $profile.nickname).textContentType(.nickname).accessibilityIdentifier("nickname")
-                DatePicker(store.t("Birthday", "生日"), selection: Binding(get: { profile.birthDate ?? Calendar.current.date(byAdding: .month, value: -profile.ageMonths, to: Date())! }, set: { profile.birthDate = $0; profile.ageMonths = profile.currentAgeMonths }), in: Calendar.current.date(byAdding: .year, value: -7, to: Date())!...Date(), displayedComponents: .date)
+                DatePicker(store.t("Birthday", "生日"), selection: Binding(get: { profile.birthDate ?? Calendar.current.date(byAdding: .month, value: -profile.ageMonths, to: Date())! }, set: { profile.birthDate = $0; profile.ageMonths = profile.currentAgeMonths }), in: Calendar.current.date(byAdding: .day, value: 1, to: Calendar.current.date(byAdding: .year, value: -7, to: Calendar.current.startOfDay(for: Date()))!)!...Date(), displayedComponents: .date)
             } header: { Text(store.t("About your child", "關於你的孩子")) }
             footer: { Text(store.t("Use a nickname. Your child’s details stay on this device.", "使用暱稱即可。孩子的資料只儲存於此裝置。")) }
             Section {

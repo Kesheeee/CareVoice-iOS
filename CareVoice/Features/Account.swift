@@ -159,7 +159,7 @@ struct AccountForm: View {
             if mode == .signup { Text(label).font(.subheadline.weight(.semibold)) }
             HStack(spacing: 12) { Image(systemName: symbol).foregroundStyle(.secondary); content() }
                 .padding(18).frame(minHeight: 56).background(.white, in: RoundedRectangle(cornerRadius: 22))
-                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gray.opacity(0.18)))
+                .overlay(RoundedRectangle(cornerRadius: 22).stroke(Color.gray.opacity(0.18)).allowsHitTesting(false))
         }
     }
     private func provider(_ name: String, symbol: String) -> some View {

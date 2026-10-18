@@ -46,7 +46,7 @@ final class AppStore: ObservableObject {
     func activateAccount(_ id: UUID?) {
         guard !isUITest, id != activeAccountID else { return }
         let directory = fileURL.deletingLastPathComponent()
-        activeAccountID = id; storageUnavailable = false; offerImport = false; guestData = nil
+        activeAccountID = id; showQuestionnaire = false; storageUnavailable = false; offerImport = false; guestData = nil
         fileURL = directory.appendingPathComponent(id.map { "account-\($0.uuidString.lowercased()).json" } ?? "family-data.json")
         let language = data.language
         data = AppData(); data.language = language

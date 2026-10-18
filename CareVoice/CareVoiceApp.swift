@@ -9,6 +9,7 @@ struct CareVoiceApp: App {
             .environmentObject(store)
             .environment(\.locale, store.language.locale)
             .tint(Brand.blue)
+            .preferredColorScheme(.light)
             .alert(store.t("Unable to complete action", "未能完成操作"), isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) {
                 Button(store.t("OK", "確定"), role: .cancel) { store.errorMessage = nil }
             } message: { Text(store.errorMessage ?? "") }
