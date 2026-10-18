@@ -1,9 +1,7 @@
 import { translator } from "../i18n";
-import { useRef } from "react";
 import {
   BookOpen,
   FileText,
-  MoreHorizontal,
   Plus,
   Search,
   X,
@@ -24,7 +22,7 @@ export function RecordsScreen({
   onFilter,
   onVoice,
   onReport,
-  onEdit,
+  onOpen,
 }: {
   records: Observation[];
   language: Language;
@@ -34,10 +32,9 @@ export function RecordsScreen({
   onFilter: (value: Category | "all") => void;
   onVoice: () => void;
   onReport: () => void;
-  onEdit: (record: Observation) => void;
+  onOpen: (record: Observation) => void;
 }) {
-  const t = translator(language),
-    menu = useRef<HTMLDetailsElement>(null);
+  const t = translator(language);
   const visible = records
     .filter(
       (r) =>
@@ -47,43 +44,13 @@ export function RecordsScreen({
           .includes(search.toLowerCase()),
     )
     .sort((a, b) => b.date.localeCompare(a.date));
-  const action = (fn: () => void) => {
-    if (menu.current) menu.current.open = false;
-    fn();
-  };
   return (
     <section className="records-screen">
       <div className="records-heading">
         <h1>{t("Records", "記錄")}</h1>
-        <div className="records-heading-actions">
-          <details
-            className="records-options"
-            ref={menu}
-            onBlur={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget))
-                e.currentTarget.open = false;
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Escape") {
-                e.currentTarget.open = false;
-                e.currentTarget.querySelector("summary")?.focus();
-              }
-            }}
-          >
-            <summary
-              role="button"
-              aria-label={t("More record actions", "更多記錄操作")}
-            >
-              <MoreHorizontal size={22} />
-            </summary>
-            <div className="records-menu">
-              <button onClick={() => action(onReport)}>
-                <FileText size={18} />
-                {t("Prepare a report", "準備報告")}
-              </button>
-            </div>
-          </details>
-        </div>
+        <button className="records-report-button" onClick={onReport}>
+          <FileText size={18} aria-hidden="true" />{t("Reports", "報告")}
+        </button>
       </div>
       <div className="records-search">
         <Search size={19} />
@@ -128,7 +95,7 @@ export function RecordsScreen({
               record={r}
               records={records}
               language={language}
-              onEdit={onEdit}
+              onOpen={onOpen}
             />
           ))}
         </div>
@@ -157,7 +124,7 @@ export function RecordsScreen({
         className="records-add"
         aria-label={t("Add a record", "新增記錄")}
         aria-haspopup="dialog"
-        onClick={() => action(onVoice)}
+        onClick={onVoice}
       >
         <Plus size={26} aria-hidden="true" />
       </button>

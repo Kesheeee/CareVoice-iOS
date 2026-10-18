@@ -2037,3 +2037,44 @@ main {
 .profile-screen .large-avatar { background: var(--color-surface); }
 .bottom-nav button { min-height: 52px; justify-content: center; gap: 0; }
 .bottom-nav button svg { width: 25px; height: 25px; }
+/* Record reading flow · Hallmark critique: P5 H5 E4 S5 R5 V4 */
+.records-report-button, .record-detail-nav button, .record-detail-prompt button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 10px 12px; color: var(--color-accent);
+  font-weight: 600; white-space: nowrap; border-radius: 12px;
+}
+.records-report-button { background: var(--color-blue-soft); }
+.record-view-link { display: flex; align-items: center; gap: 4px; color: var(--color-accent); font-size: .8rem; margin-top: 8px; }
+.record-detail-nav { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 12px; }
+.record-detail-nav button:first-child { margin-left: -12px; }
+.record-detail-nav button:last-child { background: var(--color-surface); border: 1px solid var(--color-line); }
+.record-details h1 { font-size: 1.65rem; margin: 0 0 24px; }
+.record-details h2 { font-size: 1rem; line-height: 1.5; margin: 0 0 8px; }
+.record-detail-body { padding: 22px; border: 1px solid var(--color-line); border-radius: 20px; background: var(--color-surface); }
+.record-detail-body > time { display: block; font-size: .82rem; color: var(--color-muted); margin: 12px 0 24px; }
+.record-detail-body p { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
+.record-detail-meta { display: flex; flex-wrap: wrap; gap: 12px 20px; margin-top: 20px; color: var(--color-muted); font-size: .85rem; }
+.record-detail-meta span { display: flex; align-items: center; gap: 6px; overflow-wrap: anywhere; min-width: 0; }
+.record-detail-meta svg { flex-shrink: 0; }
+.record-detail-context { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-line); }
+.record-detail-prompt { margin: 20px 0 28px; padding: 20px; border-radius: 16px; background: var(--color-blue-soft); }
+.record-detail-prompt p, .record-detail-related > p { color: var(--color-muted); font-size: .88rem; line-height: 1.6; margin: 0 0 12px; }
+.record-detail-prompt button { padding-left: 0; }
+.record-detail-related { margin: 28px 0; }
+.record-detail-related-list { border: 1px solid var(--color-line); border-radius: 16px; overflow: clip; background: var(--color-surface); }
+.record-detail-related-list button { display: flex; align-items: center; width: 100%; text-align: left; gap: 16px; padding: 18px; min-height: 64px; border-bottom: 1px solid var(--color-line); }
+.record-detail-related-list button:last-child { border-bottom: 0; }
+.record-detail-related-list button > span { flex: 1; min-width: 0; }
+.record-detail-related-list time { display: block; color: var(--color-muted); font-size: .78rem; margin-bottom: 6px; }
+.record-detail-related-list span span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.record-detail-related-list svg { flex-shrink: 0; color: var(--color-accent); }
+.record-detail-empty { padding: 16px 0; }
+.record-detail-report { min-height: 52px; gap: 8px; }
+.record-detail-delete { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; margin: 16px auto 0; }
+@media (hover: hover) {
+  .record-detail-nav button:hover, .records-report-button:hover, .record-detail-related-list button:hover { background: var(--color-blue-soft); }
+  .record-detail-prompt button:hover { text-decoration: underline; }
+}
+.record-detail-saved { color: var(--color-success); margin: -12px 0 20px; font-size: .88rem; }
+.record-detail-body > .record-tag { display: inline-block; padding: 4px 10px; border-radius: 8px; background: var(--color-blue-soft); color: var(--color-accent); font-size: .8rem; }
+.record-detail-body p { color: var(--color-ink); font-size: 1rem; }

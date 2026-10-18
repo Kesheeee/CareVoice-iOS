@@ -72,6 +72,7 @@ import {
   SetupProgress,
 } from "./components/Onboarding";
 import { Dashboard } from "./components/Dashboard";
+import { RecordDetails } from "./components/RecordDetails";
 import { RecordsScreen } from "./components/RecordsScreen";
 import { VoiceRecorder } from "./components/VoiceRecorder";
 import { ReportPreview } from "./components/ReportPreview";
@@ -86,6 +87,7 @@ type Page =
   | "questionnaireIntro"
   | "home"
   | "records"
+  | "recordDetails"
   | "resources"
   | "profile"
   | "questionnaire"
@@ -135,6 +137,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
     [profileOpen, setProfileOpen] = useState(window.location.hash === "#onboarding" || (!!user && !initial.data.profile)),
     [draftProfile, setDraftProfile] = useState<Profile>(() => initial.data.profile ?? blankProfile()),
     [record, setRecord] = useState<Observation | null>(null),
+    [detailID, setDetailID] = useState<string | null>(null),
     [deleteId, setDeleteId] = useState<string | null>(null),
     [resetOpen, setResetOpen] = useState(false);
   const [search, setSearch] = useState(""),
@@ -199,6 +202,11 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
       before?.focus();
     };
   }, [profileOpen, record?.id, resetOpen, deleteId]);
+  const openRecord = (observation: Observation) => {
+    setDetailID(observation.id);
+    go("recordDetails");
+  };
+  const selectedRecord = data.records.find(r => r.id === detailID);
   const openProfile = () => {
     setDraftProfile(data.profile ?? blankProfile());
     setProfileOpen(true);
@@ -343,10 +351,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
                 setVoiceEntry(false);
                 setRecord(newRecord());
               }}
-              onEdit={(r) => {
-                setVoiceEntry(false);
-                setRecord(r);
-              }}
+              onEdit={openRecord}
             />
           </>
         )}
@@ -363,11 +368,13 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               setRecord(newRecord());
             }}
             onReport={() => go("report")}
-            onEdit={(r) => {
-              setVoiceEntry(false);
-              setRecord(r);
-            }}
+            onOpen={openRecord}
           />
+        )}
+        {page === "recordDetails" && selectedRecord && (
+          <RecordDetails record={selectedRecord} records={data.records} language={data.language} saved={saved}
+            onBack={() => go("records")} onEdit={() => { setVoiceEntry(false); setRecord({ ...selectedRecord }); }}
+            onOpen={openRecord} onReport={() => go("report")} onDelete={() => setDeleteId(selectedRecord.id)} />
         )}
         {page === "journey" && (
           <div className="journey-screen">
@@ -798,14 +805,14 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               className={
                 page === p ||
                 (p === "home" && ["journey", "questionnaire"].includes(page)) ||
-                (p === "records" && page === "report")
+                (p === "records" && ["report", "recordDetails"].includes(page))
                   ? "active"
                   : ""
               }
               aria-current={
                 page === p ||
                 (p === "home" && ["journey", "questionnaire"].includes(page)) ||
-                (p === "records" && page === "report")
+                (p === "records" && ["report", "recordDetails"].includes(page))
                   ? "page"
                   : undefined
               }
@@ -914,7 +921,9 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
                 browserStore.save(next);
                 setData(next);
                 setError("");
+                setDetailID(record.id);
                 setRecord(null);
+                go("recordDetails");
                 setSaved(true);
               } catch {
                 setError(
@@ -1122,11 +1131,14 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
           <button
             className="danger-button full"
             onClick={() => {
-              update((d) => ({
+              const removed = update((d) => ({
                 ...d,
                 records: d.records.filter((r) => r.id !== deleteId),
               }));
-              setDeleteId(null);
+              if (removed) {
+                if (detailID === deleteId) { setDetailID(null); go("records"); }
+                setDeleteId(null);
+              }
             }}
           >
             {t("Delete observation", "刪除觀察")}
@@ -1193,9 +1205,6 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
           </button>
         </dialog>
       )}
-      <div className="sr-only" role="status">
-        {saved ? t("Observation saved", "觀察已儲存") : ""}
-      </div>
     </div>
   );
 }

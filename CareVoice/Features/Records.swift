@@ -5,6 +5,7 @@ struct RecordsView: View {
     @State private var search = ""
     @State private var category: RecordCategory?
     @State private var adding = false
+    @State private var savedRecordID: UUID?
     private var filtered: [BehaviorRecord] {
         store.data.records.filter { r in
             (category == nil || r.category == category) && (search.isEmpty || r.text.localizedCaseInsensitiveContains(search) || r.location.localizedCaseInsensitiveContains(search))
@@ -29,12 +30,14 @@ struct RecordsView: View {
                 }
             }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
         }.background(Brand.background)
-            .navigationTitle(store.t("Your moments", "日常記錄"))
+            .navigationTitle(store.t("Records", "記錄"))
+            .toolbar { NavigationLink { ReportsView() } label: { Label(store.t("Reports", "報告"), systemImage: "doc.text").labelStyle(.titleAndIcon) } }
             .searchable(text: $search, prompt: store.t("Search observations", "搜尋記錄"))
             .overlay(alignment: .bottomTrailing) {
                 Button { adding = true } label: { Image(systemName: "plus").font(.title2.bold()).foregroundStyle(.white).frame(width: 56, height: 56).background(Brand.blue, in: Circle()).shadow(color: .black.opacity(0.15), radius: 8, y: 4) }.padding(20).accessibilityLabel(store.t("New record", "新增記錄")).accessibilityIdentifier("addRecord")
             }
-            .sheet(isPresented: $adding) { NavigationStack { RecordEditor() } }
+            .sheet(isPresented: $adding) { NavigationStack { RecordEditor(onSaved: { savedRecordID = $0.id }) } }
+            .navigationDestination(item: $savedRecordID) { id in RecordDetail(recordID: id) }
     }
     private func filterButton(_ title: String, value: RecordCategory?) -> some View {
         Button { category = value } label: {
@@ -57,6 +60,7 @@ struct RecordCard: View {
             }
             Text(record.text).font(.body).lineLimit(4).foregroundStyle(.primary)
             if !record.location.isEmpty { Label(record.location, systemImage: "mappin").font(.caption).foregroundStyle(.secondary) }
+            Label(store.t("View details", "查看詳情"), systemImage: "chevron.right").font(.caption).foregroundStyle(Brand.blue)
         }
     }
 }
@@ -75,19 +79,28 @@ struct RecordDetail: View {
                         Card {
                             Label(record.category.title(store.language), systemImage: record.category.symbol).foregroundStyle(Brand.blue).font(.headline)
                             Text(record.date, format: .dateTime.year().month().day().hour().minute()).font(.subheadline).foregroundStyle(.secondary)
+                            Text(store.t("What happened", "發生了甚麼")).font(.headline)
                             Text(record.text).textSelection(.enabled)
                             if !record.location.isEmpty { Label(record.location, systemImage: "mappin") }
                             if let n = record.durationMinutes { Label(store.t("\(n) minutes", "\(n) 分鐘"), systemImage: "clock") }
                         }
                         if !record.context.isEmpty { Card { SectionHeading(title: store.t("What happened before", "之前發生了甚麼")); Text(record.context) } }
                         if !record.helped.isEmpty { Card { SectionHeading(title: store.t("What helped", "有幫助的方法")); Text(record.helped) } }
+                        if record.context.isEmpty || record.helped.isEmpty {
+                            Card {
+                                Text(store.t("Remember a little more?", "還記得更多細節嗎？")).font(.headline)
+                                Text(store.t("Add what happened before or what helped, while it’s still fresh.", "趁記憶還清晰，補充之前發生的事或有幫助的方法。")).font(.subheadline).foregroundStyle(.secondary)
+                                Button { editing = true } label: { Label(store.t("Add details", "補充詳情"), systemImage: "pencil").frame(minHeight: 44) }
+                            }
+                        }
                         let related = store.data.related(to: record)
                         if !related.isEmpty {
-                            SectionHeading(title: store.t("Earlier moments in this category", "同類別的過往記錄"))
-                            Text(store.t("Grouped by your chosen category, not an inferred connection.", "按你選擇的類別分組，並非推斷因果關係。"))
+                            SectionHeading(title: store.t("Earlier records in this category", "同類別的過往記錄"))
+                            Text(store.t("Grouped by the category you chose.", "按你選擇的類別分組。"))
                                 .font(.caption).foregroundStyle(.secondary)
-                            ForEach(related) { earlier in RecordCard(record: earlier) }
+                            ForEach(related) { earlier in NavigationLink { RecordDetail(recordID: earlier.id) } label: { RecordCard(record: earlier) }.buttonStyle(.plain) }
                         }
+                        NavigationLink { ReportsView() } label: { Label(store.t("Prepare a report", "準備報告"), systemImage: "doc.text").frame(maxWidth: .infinity, minHeight: 52) }.buttonStyle(.bordered)
                         Button(store.t("Delete record", "刪除記錄"), role: .destructive) { deleting = true }
                     }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
                 }.background(Brand.background)
@@ -95,7 +108,7 @@ struct RecordDetail: View {
                     .sheet(isPresented: $editing) { NavigationStack { RecordEditor(existing: record) } }
             }
         }
-        .navigationTitle(store.t("Moment details", "記錄詳情")).navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(store.t("Record details", "記錄詳情")).navigationBarTitleDisplayMode(.inline)
         .alert(store.t("Delete this record?", "刪除此記錄？"), isPresented: $deleting) {
             Button(store.t("Cancel", "取消"), role: .cancel) { }
             Button(store.t("Delete", "刪除"), role: .destructive) { store.deleteRecord(recordID); if !store.data.records.contains(where: { $0.id == recordID }) { dismiss() } }
@@ -108,6 +121,7 @@ struct RecordEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     var existing: BehaviorRecord?
+    var onSaved: (BehaviorRecord) -> Void = { _ in }
     @State private var record = BehaviorRecord(text: "")
     @StateObject private var speech = SpeechRecorder()
     @State private var beforeSpeech = ""
@@ -162,7 +176,7 @@ struct RecordEditor: View {
                     Button(store.t("Cancel", "取消")) { speech.stop(); confirmDiscard = true }.frame(maxWidth: .infinity, minHeight: 56).background(Brand.background, in: Capsule())
                     Button(store.t("Save record", "儲存記錄")) {
                         speech.stop(); record.text = record.text.trimmingCharacters(in: .whitespacesAndNewlines); record.durationMinutes = Int(duration)
-                        if store.saveRecord(record) { dismiss() }
+                        if store.saveRecord(record) { onSaved(record); dismiss() }
                     }.buttonStyle(AccountPrimaryStyle()).disabled(!valid || speech.isRecording || speech.isStarting).accessibilityIdentifier("saveRecord")
                 }.padding(20).background(.bar)
             }
