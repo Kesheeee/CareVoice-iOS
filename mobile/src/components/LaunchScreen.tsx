@@ -70,7 +70,7 @@ export function LaunchScreen({ language, initialSignIn = false, onContinue, onCl
         } }}>
         <div className="account-sheet-handle" aria-hidden="true" />
         {sheet === "choices" && <button className="account-sheet-close" onClick={close} aria-label={t("Close", "關閉")}><X size={20} /></button>}
-        {sheet !== "choices" ? <SignIn key={sheet} embedded emailOnly={sheet === "emailEntry"} language={language} onBack={() => { setSheet("choices"); setMessage(""); }} onContinue={continueLocal} /> : <div className="account-sheet-content">
+        {sheet !== "choices" ? <SignIn key={sheet} embedded createAccount={sheet === "emailEntry"} language={language} onBack={() => { setSheet("choices"); setMessage(""); }} onContinue={continueLocal} /> : <div className="account-sheet-content">
           <h2 id="account-sheet-title" tabIndex={-1}>{existing ? t("Welcome back", "歡迎返嚟") : t("Let’s get started", "一齊開始")}</h2>
           <div className="account-providers">
             <button className="account-provider" onClick={() => setMessage(t("Google sign-in is a preview and is not connected yet.", "Google 登入目前只供預覽，暫時未連接。"))}><img className="provider-google" src="/media/google-g.png" width="22" height="22" alt="" />{t("Continue with Google", "使用 Google 繼續")}</button>

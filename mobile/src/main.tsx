@@ -2,7 +2,7 @@ import { translator, languageLocale, languageNames } from "./i18n";
 import { LanguageSettings } from "./components/LanguageSettings";
 import React, { useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { authClient, hasAuthLinkError } from "./platform/auth";
+import { authClient, hasAuthLinkError, hasPasswordRecoveryLink } from "./platform/auth";
 import { createRoot } from "react-dom/client";
 import {
   AudioLines,
@@ -77,6 +77,7 @@ import { VoiceRecorder } from "./components/VoiceRecorder";
 import { ReportPreview } from "./components/ReportPreview";
 import { Community } from "./components/Community";
 import { LaunchScreen } from "./components/LaunchScreen";
+import { PasswordUpdate } from "./components/PasswordUpdate";
 import { GuidedOnboarding } from "./components/GuidedOnboarding";
 const questions: Question[] = questionsJson;
 type Page =
@@ -1232,6 +1233,7 @@ function Empty({
   );
 }
 function CareVoiceRoot() {
+  const [recovery, setRecovery] = useState(hasPasswordRecoveryLink);
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [signedOut, setSignedOut] = useState(() => { try { return sessionStorage.getItem("carevoice.signed-out") === "true"; } catch { return false; } });
   const [linkError, setLinkError] = useState(hasAuthLinkError);
@@ -1240,7 +1242,20 @@ function CareVoiceRoot() {
   useEffect(() => {
     const { data: { subscription } } = authClient.auth.onAuthStateChange((event, session) => {
       const account = session?.user ?? null;
+      if (event === "PASSWORD_RECOVERY") {
+        setRecovery(true);
+        try { sessionStorage.setItem("carevoice.password-recovery", "true"); } catch { /* Current screen still works. */ }
+      }
+      if (event === "INITIAL_SESSION" && account) {
+        try {
+          const pending = hasPasswordRecoveryLink || sessionStorage.getItem("carevoice.password-recovery") === "true";
+          setRecovery(pending);
+          if (pending) sessionStorage.setItem("carevoice.password-recovery", "true");
+        } catch { /* URL intent still works for this visit. */ }
+      }
       if (event === "SIGNED_OUT") {
+        setRecovery(false);
+        try { sessionStorage.removeItem("carevoice.password-recovery"); } catch { /* Session is signed out. */ }
         setSignedOut(true);
         try { sessionStorage.setItem("carevoice.signed-out", "true"); } catch { /* The session itself is still signed out. */ }
       }
@@ -1259,6 +1274,14 @@ function CareVoiceRoot() {
     return () => subscription.unsubscribe();
   }, []);
   if (user === undefined) return <div className="auth-loading" role="status">Opening CareVoice…</div>;
+  if (user && recovery) {
+    let language: Language = "en";
+    try { language = accountStore(user.id).load().language; } catch { /* Default language. */ }
+    return <PasswordUpdate language={language} onDone={() => {
+      try { sessionStorage.removeItem("carevoice.password-recovery"); } catch { /* Current screen still completes. */ }
+      setRecovery(false);
+    }} />;
+  }
   if (user && importPreview) {
     const t = translator(importPreview.language);
     return <main className="account-import">

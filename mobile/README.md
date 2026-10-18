@@ -55,8 +55,12 @@ Before a native release, replace `src/platform/storage.ts` with a native protect
 
 New visitors see a full-screen video welcome. Get started opens account provider
 choices; the existing-account action opens the sign-in form. Email sign-in is
-connected to the CareVoice Supabase project: email links, optional emailed codes,
-and existing email/password accounts. Google and Apple remain previews.
+connected to the CareVoice Supabase project: password signup and password login.
+New accounts enter email twice and confirm a password of at least 8 characters.
+Passwords are sent only to Supabase Auth and are never stored in the notebook.
+Signup without a session shows an email-verification screen; it does not grant
+access. Set or reset password sends a recovery link and opens a password form
+only after Supabase verifies it. Magic-link/code login is no longer offered. Google and Apple remain previews.
 The public publishable key is bundled; no service-role key is used. Supabase
 persists and refreshes the browser session. Notes remain local, scoped by account
 ID, with an explicit choice before copying an existing preview notebook.
@@ -89,7 +93,7 @@ parent-and-child video (`carevoice-family-hd.mp4`, original 720 × 1280 quality)
 when reduced motion is requested or video playback fails. The login form does
 not depend on video playback or a Higgsfield connection at runtime.
 
-Data is local to this browser and origin, schema version 1, with no analytics, login or cloud sync. CareVoice does not encrypt browser storage. Clearing browser data can erase records. Download a JSON backup to transfer between devices or future native builds. Restore validates the schema before replacing current data. A failed/corrupt read blocks writes to preserve the saved copy. Reports are independent copies once exported.
+Data is local to this browser and origin, schema version 1, with no analytics or cloud record sync. CareVoice does not encrypt browser storage. Clearing browser data can erase records. Download a JSON backup to transfer between devices or future native builds. Restore validates the schema before replacing current data. A failed/corrupt read blocks writes to preserve the saved copy. Reports are independent copies once exported.
 
 The original Swift app's persisted JSON uses a different date/enum representation; automatic Swift-to-web data migration is not implemented.
 
