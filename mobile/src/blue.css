@@ -2121,3 +2121,26 @@ main {
 .profile-sheet input[type="date"] { display: block; appearance: none; -webkit-appearance: none; }
 .profile-sheet input[type="date"]::-webkit-date-and-time-value { text-align: left; min-width: 0; }
 .profile-sheet .age-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* Keep the chat layout independent of Community's card and form styles. */
+.care-chat-dialog { box-sizing: border-box; overflow: hidden; min-width: 0; }
+.care-chat-dialog .care-chat-header { flex: 0 0 auto; padding: max(12px, env(safe-area-inset-top)) 16px 12px; gap: 12px; }
+.care-chat-dialog .care-chat-header > div { min-width: 0; }
+.care-chat-dialog .care-chat-header h2 { margin: 0; font-size: 20px; }
+.care-chat-dialog .care-chat-header button { padding: 0; flex: 0 0 44px; display: grid; place-items: center; }
+.care-chat-dialog .care-chat-messages { min-width: 0; min-height: 0; padding: 20px; overscroll-behavior: contain; }
+.care-chat-dialog .care-chat-messages:not(:has(.care-chat-turn)) { display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+.care-chat-dialog .care-chat-intro { padding: 0; }
+.care-chat-dialog .care-chat-intro > span { font-size: 36px; }
+.care-chat-dialog .care-chat-intro h3 { margin: 16px 0 0; font-size: clamp(22px, 6vw, 27px); line-height: 1.25; }
+.care-chat-dialog .care-chat-preview-info { margin: 0; padding: 0; border: 0; background: transparent; text-align: center; }
+.care-chat-dialog .care-chat-preview-info > summary { display: block; width: 100%; padding: 4px 0; margin: 0; min-height: 0; text-align: center; list-style: none; font-size: 12px; font-weight: 400; color: #69788c; }
+.care-chat-dialog .care-chat-preview-info > summary::-webkit-details-marker { display: none; }
+.care-chat-dialog .care-chat-preview-info p { margin: 8px auto 0; max-width: 280px; font-size: 12px; }
+.care-chat-dialog .care-chat-prompts { margin: 0; gap: 8px; }
+.care-chat-dialog .care-chat-prompts button { min-height: 40px; padding: 9px 13px; font-size: 13px; }
+.care-chat-dialog .care-chat-footer { flex: 0 0 auto; min-width: 0; padding: 12px 16px max(12px, env(safe-area-inset-bottom)); }
+.care-chat-dialog .care-chat-footer form { display: flex; gap: 10px; align-items: flex-end; margin: 0; }
+.care-chat-dialog .care-chat-footer textarea { display: block; width: 0; flex: 1 1 0; min-width: 0; min-height: 48px; max-height: 120px; height: 48px; margin: 0; padding: 12px 14px; border-radius: 24px; font-size: 16px; line-height: 22px; overflow-y: auto; }
+.care-chat-dialog .care-chat-footer form button { flex: 0 0 48px; width: 48px; height: 48px; min-height: 48px; padding: 0; margin: 0; }
+.care-chat-dialog .care-chat-review { min-height: 0; min-width: 0; }

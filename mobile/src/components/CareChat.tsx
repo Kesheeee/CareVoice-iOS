@@ -15,8 +15,8 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
   useEffect(()=>{if(open)dialog.current?.showModal();else dialog.current?.close();},[open]);
   useEffect(()=>{bottom.current?.scrollIntoView({block:'nearest'});},[messages]);
   const prompts=[t('Appointments','預約'),t('A difficult day','遇到困難'),t('Find support','尋找支援')];
-  return <dialog ref={dialog} className="care-chat-dialog" onCancel={onClose}>
-    <header className="care-chat-header"><button aria-label={t('Back','返回')} onClick={()=>sharing?setSharing(false):onClose()}><ArrowLeft/></button><div><h2>{sharing?t('Review your question','檢查你的問題'):'CareVoice'}</h2><span>{t('Interface preview','介面預覽')}</span></div><MessageCircle aria-hidden="true"/></header>
+  return <dialog ref={dialog} className="care-chat-dialog" aria-label={t("Ask CareVoice", "詢問 CareVoice")} onCancel={onClose}>
+    <header className="care-chat-header"><button aria-label={t('Back','返回')} onClick={()=>sharing?setSharing(false):onClose()}><ArrowLeft/></button><div><h2>{sharing?t('Review your question','檢查你的問題'):'CareVoice'}</h2><span>{t('AI preview','AI 預覽')}</span></div><MessageCircle aria-hidden="true"/></header>
     {sharing ? <div className="care-chat-review">
       <h3>{t('What would you like other parents to see?','你想讓其他家長看到甚麼？')}</h3>
       <p>{t('Only the text below goes into your post preview. Your chat and child’s records are not included.','貼文預覽只包括以下文字，不包含對話或小朋友的記錄。')}</p>
@@ -35,7 +35,7 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
       </div>
       <footer className="care-chat-footer">
         {messages.length>0 && <button className="care-chat-share" onClick={()=>{setPost(messages[0]);setConsent(false);setSharing(true);}}><Share2 size={17}/>{t('Share a question with parents','與其他家長分享問題')}</button>}
-        <form onSubmit={e=>{e.preventDefault();if(!input.trim())return;setMessages([...messages,input.trim()]);setInput('');}}><textarea aria-label={t('Message','訊息')} placeholder={t('Type your question…','輸入你的問題…')} rows={2} maxLength={2000} value={input} onChange={e=>setInput(e.target.value)}/><button aria-label={t('Send message','傳送訊息')} disabled={!input.trim()}><Send size={22}/></button></form>
+        <form onSubmit={e=>{e.preventDefault();if(!input.trim())return;setMessages([...messages,input.trim()]);setInput('');}}><textarea aria-label={t('Message','訊息')} placeholder={t('Type your question…','輸入你的問題…')} rows={1} maxLength={2000} value={input} onChange={e=>setInput(e.target.value)}/><button aria-label={t('Send message','傳送訊息')} disabled={!input.trim()}><Send size={22}/></button></form>
       </footer>
     </>}
   </dialog>;
