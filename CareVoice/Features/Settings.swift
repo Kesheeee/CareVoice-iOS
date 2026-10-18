@@ -101,6 +101,7 @@ struct SettingsDetailView: View {
             switch page {
             case .preferences: AccountPreferencesView()
             case .data: SettingsDataView()
+            case .security, .community: CommunityAccountView(community: store.community)
             default: SettingsInformationView(page: page)
             }
         }.navigationTitle(store.t(page.title.0, page.title.1)).navigationBarTitleDisplayMode(.inline)
@@ -218,15 +219,15 @@ struct SettingsInformationView: View {
                 case .help:
                     paragraph("How do I edit my child's details?", "如何編輯孩子資料？", "Open Account preferences, then Edit child details. Save your changes before returning.", "開啟帳戶偏好，再點選編輯孩子資料。返回前請儲存變更。")
                     paragraph("How do I keep a copy of my records?", "如何保留記錄副本？", "Open Data & privacy to export your local data or share a PDF report.", "開啟資料與私隱，即可匯出本機資料或分享 PDF 報告。")
-                    paragraph("Can I ask the AI or publish a post?", "可以提問 AI 或發佈帖子嗎？", "These services are not connected yet. You can browse Phase 1 resources and prepare a private community draft.", "這些服務尚未連接。你可瀏覽第一階段資源及撰寫私人社區草稿。")
+                    paragraph("Can I ask the AI or publish a post?", "可以提問 AI 或發佈帖子嗎？", "AI is not connected yet. In Parents, sign in and choose a public nickname to share posts and replies once the community service is configured.", "AI 尚未連接。社區服務設定完成後，可於家長交流登入並選擇公開暱稱，分享帖子及回覆。")
                     paragraph("Contact support / report a problem", "聯絡支援／回報問題", "A support contact has not been configured. For this review build, share the steps to reproduce the problem with the person who provided the app. Avoid including your child's records.", "尚未設定支援聯絡方式。使用此審閱版本時，請向提供應用程式的人說明問題的重現步驟，避免附上孩子的記錄。")
                 case .privacy:
-                    paragraph("Current data handling", "目前的資料處理", "Profiles, observations and answers are saved locally with iOS file protection. There is no analytics, advertising or cloud sync in this build. AI questions are not sent to a server.", "檔案、觀察及答案儲存於本機，並使用 iOS 檔案保護。此版本沒有分析追蹤、廣告或雲端同步。AI 問題不會傳送至伺服器。")
+                    paragraph("Current data handling", "目前的資料處理", "Child profiles, observations and answers stay on your device. Community sign-in uses your email; your chosen public nickname, posts and replies are stored in the community service and visible to signed-in members. Reports are visible to moderators and their author. AI questions are not sent to a server.", "孩子檔案、觀察及答案保留於裝置。社區登入使用電郵；公開暱稱、帖子及回覆會儲存於社區服務，並供已登入成員查看。舉報只供管理員及舉報者查看。AI 問題不會傳送至伺服器。")
                     paragraph("Sharing and external links", "分享及外部連結", "Reports and exports leave this device through the destination you choose. Opening an official resource visits an external website with its own privacy practices.", "報告及匯出資料只會透過你選擇的目的地離開裝置。開啟官方資源會前往外部網站，該網站有其私隱安排。")
                     paragraph("Policy publication pending", "私隱政策待發佈", "This describes the current review build. A published privacy policy and operator contact must be added before online accounts or community sharing launch.", "以上說明適用於目前的審閱版本。推出網上帳戶或社區分享前，須加入已發佈的私隱政策及營運者聯絡方式。")
                 case .guidelines:
                     paragraph("Community guidelines — draft", "社區守則 — 草稿", "Be kind to other caregivers. Share your own experience without identifying another child or family. Peer stories should not be presented as a diagnosis or professional advice.", "請友善對待其他照顧者。分享自身經驗時，避免披露其他孩子或家庭的身份。個人經驗不應當作診斷或專業意見。")
-                    paragraph("Before public posting opens", "開放公開發帖前", "The final guidelines, reporting process and moderation arrangements still need to be published. Public posting is currently unavailable.", "最終守則、舉報流程及審核安排仍待發佈。目前尚未提供公開發帖。")
+                    paragraph("Before public posting opens", "開放公開發帖前", "Use the menu on a post or reply to report a concern or block its author. Moderators can review reports and remove content. Do not post emergencies or expect an immediate response. Final operating policies and a support contact are required before public launch.", "可於帖子或回覆選單舉報問題或封鎖作者。管理員可審核舉報並移除內容。請勿發佈緊急求助或期待即時回應。公開推出前須訂立最終營運政策及支援聯絡方式。")
                 case .terms:
                     paragraph("Terms are not published yet", "使用條款尚未發佈", "This is a review build. Final service terms and the operator's contact details must be added before account and community services launch. No terms acceptance is collected on this page.", "此為審閱版本。推出帳戶及社區服務前，須加入最終服務條款及營運者聯絡資料。本頁不會收集條款同意。")
                 case .about:

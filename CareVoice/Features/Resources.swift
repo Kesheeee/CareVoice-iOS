@@ -23,10 +23,6 @@ struct ResourcesView: View {
     @State private var topic = "first"
     @State private var question = ""
     @State private var submittedQuestion: String?
-    @State private var composing = false
-    @State private var postTitle = ""
-    @State private var postBody = ""
-    @State private var draftSaved = false
     @FocusState private var typing: Bool
 
     private var relevantResources: [OfficialResource] {
@@ -47,6 +43,9 @@ struct ResourcesView: View {
                 Text(store.t("Resources", "資源")).tag(1)
                 Text(store.t("Parents", "家長交流")).tag(2)
             }.pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
+            if section == 2 {
+                ParentCommunityView(community: store.community)
+            } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     if section == 0 { askContent }
@@ -60,15 +59,15 @@ struct ResourcesView: View {
                         NavigationLink { CitableFactsView() } label: { Label(store.t("Cited information", "可引用資料"), systemImage: "checkmark.seal").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
                         ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
                         sourceNote
-                    } else { parentsContent }
+                    }
                 }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
             }.scrollDismissesKeyboard(.interactively)
+            }
             if section == 0 { composer }
         }
         .background(Brand.background)
         .navigationTitle(store.t("Community", "社區"))
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $composing) { postComposer }
     }
 
     private var askContent: some View {
@@ -135,53 +134,6 @@ struct ResourcesView: View {
         }.padding(16).background(.bar)
     }
 
-    private var parentsContent: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text(store.t("You’re not alone in this.", "照顧路上，唔使一個人。")).font(.title2.bold())
-            Text(store.t("A space to share questions and everyday experiences with other caregivers.", "同其他照顧者分享問題同日常經驗嘅空間。"))
-                .foregroundStyle(.secondary)
-            Card {
-                Image(systemName: "person.2").font(.largeTitle).foregroundStyle(Brand.blue)
-                Text(store.t("Caregiver discussions are coming", "家長交流準備中")).font(.headline)
-                Text(store.t("Shared posts and replies are not connected yet. You can prepare a private draft here; it stays in memory for this app session and is not published.", "貼文同回覆尚未連接。你可以先準備私人草稿，只會暫存喺今次使用期間，唔會發布。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
-                Button(store.t(draftSaved ? "Edit my draft" : "Prepare a question", draftSaved ? "編輯草稿" : "準備一個問題")) { composing = true }
-                    .buttonStyle(.borderedProminent)
-            }
-            if draftSaved {
-                Card {
-                    Label(store.t("Private draft · not published", "私人草稿・未發布"), systemImage: "lock").font(.caption).foregroundStyle(.secondary)
-                    Text(postTitle).font(.headline)
-                    Text(postBody).font(.subheadline)
-                    Button(store.t("Discard draft", "刪除草稿"), role: .destructive) { postTitle = ""; postBody = ""; draftSaved = false }
-                }
-            }
-            Card {
-                Label(store.t("Caregiver experiences · Phase 2", "照顧者經驗・第二階段"), systemImage: "heart.text.square").font(.headline)
-                Text(store.t("Later, CareVoice can surface relevant, consented and anonymised experiences. Peer stories will be labelled separately from official guidance. No experience matching is active yet.", "之後 CareVoice 可展示相關、已獲同意同匿名處理嘅經驗。家長故事會同官方指引分開標示，目前未啟用經驗配對。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    private var postComposer: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField(store.t("Question title", "問題標題"), text: $postTitle).onChange(of: postTitle) { postTitle = String($0.prefix(120)) }
-                    TextField(store.t("What would you like to share?", "你想分享啲咩？"), text: $postBody, axis: .vertical).lineLimit(6...12)
-                        .onChange(of: postBody) { postBody = String($0.prefix(3000)) }
-                } footer: { Text(store.t("Leave out names, school details, phone numbers and medical documents. This draft is not published or saved after the app closes.", "請勿加入姓名、學校、電話或醫療文件。草稿唔會發布，關閉程式後亦唔會保留。")) }
-            }.navigationTitle(store.t("Private draft", "私人草稿")).navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button(store.t("Close", "關閉")) { composing = false } }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(store.t("Keep draft", "保留草稿")) { draftSaved = true; composing = false }
-                            .disabled(postTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || postBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    }
-                }
-        }
-    }
     private var sourceNote: some View {
         Text(store.t("Official links open in your browser. Confirm eligibility, referral requirements and availability with the service provider.", "官方連結會喺瀏覽器開啟。資格、轉介要求同名額請向服務機構確認。"))
             .font(.caption).foregroundStyle(.secondary)

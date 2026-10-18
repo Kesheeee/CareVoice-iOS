@@ -8,7 +8,9 @@
 // Resources. A native illustration is shown when these media files are absent.
 // Includes local protected JSON storage, records, questionnaire, reports/PDF sharing,
 // official-resource community, journey checklist, settings, backup/restore and survey.
-// Auth is an explicit preview. No account service, cloud sync or community backend.
+// Parent community supports Supabase email-code auth and shared discussions.
+// Configure CommunityConfiguration and apply the committed database migration first.
+// Welcome-screen auth and AI remain previews; child records stay on device.
 // Review scope: native adaptation of the approved phone design; simulator visual QA pending. Retains
 // the native 30-question questionnaire (embedded below), not the web's revised 33.
 // No Xcode compiler is available on the Windows authoring host; build on macOS.
@@ -22,6 +24,7 @@ import AVFoundation
 import AVKit
 import Speech
 import UniformTypeIdentifiers
+import Security
 
 // MARK: - CareVoice/Core/Models.swift
 
@@ -227,6 +230,7 @@ final class AppStore: ObservableObject {
     @Published private(set) var data = AppData()
     @Published var errorMessage: String?
     @Published private(set) var storageUnavailable = false
+    let community = CommunityStore()
     let questions: [Question]
     let content = GovernmentContent.load()
     private let fileURL: URL
@@ -1016,6 +1020,7 @@ struct ProfileView: View {
 }
 
 
+
 // Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4
 // Shared settings layout: native type sizing, semantic surfaces, existing brand blue.
 enum SettingsPage: String, CaseIterable, Identifiable {
@@ -1117,6 +1122,7 @@ struct SettingsDetailView: View {
             switch page {
             case .preferences: AccountPreferencesView()
             case .data: SettingsDataView()
+            case .security, .community: CommunityAccountView(community: store.community)
             default: SettingsInformationView(page: page)
             }
         }.navigationTitle(store.t(page.title.0, page.title.1)).navigationBarTitleDisplayMode(.inline)
@@ -1234,15 +1240,15 @@ struct SettingsInformationView: View {
                 case .help:
                     paragraph("How do I edit my child's details?", "如何編輯孩子資料？", "Open Account preferences, then Edit child details. Save your changes before returning.", "開啟帳戶偏好，再點選編輯孩子資料。返回前請儲存變更。")
                     paragraph("How do I keep a copy of my records?", "如何保留記錄副本？", "Open Data & privacy to export your local data or share a PDF report.", "開啟資料與私隱，即可匯出本機資料或分享 PDF 報告。")
-                    paragraph("Can I ask the AI or publish a post?", "可以提問 AI 或發佈帖子嗎？", "These services are not connected yet. You can browse Phase 1 resources and prepare a private community draft.", "這些服務尚未連接。你可瀏覽第一階段資源及撰寫私人社區草稿。")
+                    paragraph("Can I ask the AI or publish a post?", "可以提問 AI 或發佈帖子嗎？", "AI is not connected yet. In Parents, sign in and choose a public nickname to share posts and replies once the community service is configured.", "AI 尚未連接。社區服務設定完成後，可於家長交流登入並選擇公開暱稱，分享帖子及回覆。")
                     paragraph("Contact support / report a problem", "聯絡支援／回報問題", "A support contact has not been configured. For this review build, share the steps to reproduce the problem with the person who provided the app. Avoid including your child's records.", "尚未設定支援聯絡方式。使用此審閱版本時，請向提供應用程式的人說明問題的重現步驟，避免附上孩子的記錄。")
                 case .privacy:
-                    paragraph("Current data handling", "目前的資料處理", "Profiles, observations and answers are saved locally with iOS file protection. There is no analytics, advertising or cloud sync in this build. AI questions are not sent to a server.", "檔案、觀察及答案儲存於本機，並使用 iOS 檔案保護。此版本沒有分析追蹤、廣告或雲端同步。AI 問題不會傳送至伺服器。")
+                    paragraph("Current data handling", "目前的資料處理", "Child profiles, observations and answers stay on your device. Community sign-in uses your email; your chosen public nickname, posts and replies are stored in the community service and visible to signed-in members. Reports are visible to moderators and their author. AI questions are not sent to a server.", "孩子檔案、觀察及答案保留於裝置。社區登入使用電郵；公開暱稱、帖子及回覆會儲存於社區服務，並供已登入成員查看。舉報只供管理員及舉報者查看。AI 問題不會傳送至伺服器。")
                     paragraph("Sharing and external links", "分享及外部連結", "Reports and exports leave this device through the destination you choose. Opening an official resource visits an external website with its own privacy practices.", "報告及匯出資料只會透過你選擇的目的地離開裝置。開啟官方資源會前往外部網站，該網站有其私隱安排。")
                     paragraph("Policy publication pending", "私隱政策待發佈", "This describes the current review build. A published privacy policy and operator contact must be added before online accounts or community sharing launch.", "以上說明適用於目前的審閱版本。推出網上帳戶或社區分享前，須加入已發佈的私隱政策及營運者聯絡方式。")
                 case .guidelines:
                     paragraph("Community guidelines — draft", "社區守則 — 草稿", "Be kind to other caregivers. Share your own experience without identifying another child or family. Peer stories should not be presented as a diagnosis or professional advice.", "請友善對待其他照顧者。分享自身經驗時，避免披露其他孩子或家庭的身份。個人經驗不應當作診斷或專業意見。")
-                    paragraph("Before public posting opens", "開放公開發帖前", "The final guidelines, reporting process and moderation arrangements still need to be published. Public posting is currently unavailable.", "最終守則、舉報流程及審核安排仍待發佈。目前尚未提供公開發帖。")
+                    paragraph("Before public posting opens", "開放公開發帖前", "Use the menu on a post or reply to report a concern or block its author. Moderators can review reports and remove content. Do not post emergencies or expect an immediate response. Final operating policies and a support contact are required before public launch.", "可於帖子或回覆選單舉報問題或封鎖作者。管理員可審核舉報並移除內容。請勿發佈緊急求助或期待即時回應。公開推出前須訂立最終營運政策及支援聯絡方式。")
                 case .terms:
                     paragraph("Terms are not published yet", "使用條款尚未發佈", "This is a review build. Final service terms and the operator's contact details must be added before account and community services launch. No terms acceptance is collected on this page.", "此為審閱版本。推出帳戶及社區服務前，須加入最終服務條款及營運者聯絡資料。本頁不會收集條款同意。")
                 case .about:
@@ -1283,10 +1289,6 @@ struct ResourcesView: View {
     @State private var topic = "first"
     @State private var question = ""
     @State private var submittedQuestion: String?
-    @State private var composing = false
-    @State private var postTitle = ""
-    @State private var postBody = ""
-    @State private var draftSaved = false
     @FocusState private var typing: Bool
 
     private var relevantResources: [OfficialResource] {
@@ -1307,6 +1309,9 @@ struct ResourcesView: View {
                 Text(store.t("Resources", "資源")).tag(1)
                 Text(store.t("Parents", "家長交流")).tag(2)
             }.pickerStyle(.segmented).padding(.horizontal, 20).padding(.vertical, 12)
+            if section == 2 {
+                ParentCommunityView(community: store.community)
+            } else {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     if section == 0 { askContent }
@@ -1320,15 +1325,15 @@ struct ResourcesView: View {
                         NavigationLink { CitableFactsView() } label: { Label(store.t("Cited information", "可引用資料"), systemImage: "checkmark.seal").frame(maxWidth: .infinity, alignment: .leading).padding(18).background(.white, in: RoundedRectangle(cornerRadius: 16)) }
                         ForEach(OfficialResource.all) { resource in ResourceCard(resource: resource) }
                         sourceNote
-                    } else { parentsContent }
+                    }
                 }.padding(20).frame(maxWidth: 560).frame(maxWidth: .infinity)
             }.scrollDismissesKeyboard(.interactively)
+            }
             if section == 0 { composer }
         }
         .background(Brand.background)
         .navigationTitle(store.t("Community", "社區"))
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $composing) { postComposer }
     }
 
     private var askContent: some View {
@@ -1395,53 +1400,6 @@ struct ResourcesView: View {
         }.padding(16).background(.bar)
     }
 
-    private var parentsContent: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text(store.t("You’re not alone in this.", "照顧路上，唔使一個人。")).font(.title2.bold())
-            Text(store.t("A space to share questions and everyday experiences with other caregivers.", "同其他照顧者分享問題同日常經驗嘅空間。"))
-                .foregroundStyle(.secondary)
-            Card {
-                Image(systemName: "person.2").font(.largeTitle).foregroundStyle(Brand.blue)
-                Text(store.t("Caregiver discussions are coming", "家長交流準備中")).font(.headline)
-                Text(store.t("Shared posts and replies are not connected yet. You can prepare a private draft here; it stays in memory for this app session and is not published.", "貼文同回覆尚未連接。你可以先準備私人草稿，只會暫存喺今次使用期間，唔會發布。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
-                Button(store.t(draftSaved ? "Edit my draft" : "Prepare a question", draftSaved ? "編輯草稿" : "準備一個問題")) { composing = true }
-                    .buttonStyle(.borderedProminent)
-            }
-            if draftSaved {
-                Card {
-                    Label(store.t("Private draft · not published", "私人草稿・未發布"), systemImage: "lock").font(.caption).foregroundStyle(.secondary)
-                    Text(postTitle).font(.headline)
-                    Text(postBody).font(.subheadline)
-                    Button(store.t("Discard draft", "刪除草稿"), role: .destructive) { postTitle = ""; postBody = ""; draftSaved = false }
-                }
-            }
-            Card {
-                Label(store.t("Caregiver experiences · Phase 2", "照顧者經驗・第二階段"), systemImage: "heart.text.square").font(.headline)
-                Text(store.t("Later, CareVoice can surface relevant, consented and anonymised experiences. Peer stories will be labelled separately from official guidance. No experience matching is active yet.", "之後 CareVoice 可展示相關、已獲同意同匿名處理嘅經驗。家長故事會同官方指引分開標示，目前未啟用經驗配對。"))
-                    .font(.subheadline).foregroundStyle(.secondary)
-            }
-        }
-    }
-
-    private var postComposer: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    TextField(store.t("Question title", "問題標題"), text: $postTitle).onChange(of: postTitle) { postTitle = String($0.prefix(120)) }
-                    TextField(store.t("What would you like to share?", "你想分享啲咩？"), text: $postBody, axis: .vertical).lineLimit(6...12)
-                        .onChange(of: postBody) { postBody = String($0.prefix(3000)) }
-                } footer: { Text(store.t("Leave out names, school details, phone numbers and medical documents. This draft is not published or saved after the app closes.", "請勿加入姓名、學校、電話或醫療文件。草稿唔會發布，關閉程式後亦唔會保留。")) }
-            }.navigationTitle(store.t("Private draft", "私人草稿")).navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button(store.t("Close", "關閉")) { composing = false } }
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(store.t("Keep draft", "保留草稿")) { draftSaved = true; composing = false }
-                            .disabled(postTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || postBody.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    }
-                }
-        }
-    }
     private var sourceNote: some View {
         Text(store.t("Official links open in your browser. Confirm eligibility, referral requirements and availability with the service provider.", "官方連結會喺瀏覽器開啟。資格、轉介要求同名額請向服務機構確認。"))
             .font(.caption).foregroundStyle(.secondary)
@@ -7064,4 +7022,864 @@ enum EmbeddedGovernmentContent {
 ]
 """#,
     ]
+}
+
+
+// MARK: - CareVoice/Core/CommunityModels.swift
+
+enum CommunityTopic: String, Codable, CaseIterable, Identifiable {
+    case everyday, assessment, school, waiting, celebrations
+    var id: String { rawValue }
+    func title(_ language: AppLanguage) -> String {
+        switch self {
+        case .everyday: return language.text("Everyday care", "日常照顧")
+        case .assessment: return language.text("Assessments", "評估安排")
+        case .school: return language.text("School & learning", "學校與學習")
+        case .waiting: return language.text("While waiting", "輪候期間")
+        case .celebrations: return language.text("Small wins", "小小進步")
+        }
+    }
+}
+
+enum CommunityReason: String, CaseIterable, Identifiable {
+    case privacy, harmful, harassment, spam, other
+    var id: String { rawValue }
+    func title(_ language: AppLanguage) -> String {
+        switch self {
+        case .privacy: return language.text("Personal information", "個人資料")
+        case .harmful: return language.text("Harmful advice or content", "有害建議或內容")
+        case .harassment: return language.text("Harassment", "騷擾")
+        case .spam: return language.text("Spam or promotion", "垃圾訊息或推廣")
+        case .other: return language.text("Something else", "其他問題")
+        }
+    }
+}
+
+struct CommunityProfile: Codable, Identifiable {
+    let userId: UUID
+    let displayName: String
+    var id: UUID { userId }
+}
+struct CommunityPost: Codable, Identifiable {
+    let id: UUID
+    let authorId: UUID
+    let authorName: String
+    let topic: CommunityTopic
+    let title: String
+    let body: String
+    let status: String
+    let createdAt: String
+    let updatedAt: String
+    let replyCount: Int
+    var removed: Bool { status == "removed" }
+}
+struct CommunityReply: Codable, Identifiable {
+    let id: UUID
+    let postId: UUID
+    let authorId: UUID
+    let authorName: String
+    let body: String
+    let status: String
+    let createdAt: String
+    let updatedAt: String
+}
+struct CommunityReport: Codable, Identifiable {
+    let id: UUID
+    let targetKind: String
+    let targetId: UUID
+    let reason: String
+    let detail: String
+    let state: String
+    let createdAt: String
+}
+struct CommunityBlock: Codable, Identifiable {
+    let blockedId: UUID
+    var id: UUID { blockedId }
+}
+struct CommunityUser: Codable { let id: UUID; let email: String? }
+struct CommunitySession: Codable {
+    let accessToken: String
+    let refreshToken: String
+    let expiresAt: Double
+    let user: CommunityUser
+    enum CodingKeys: String, CodingKey { case accessToken, refreshToken, expiresAt, expiresIn, user }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        accessToken = try c.decode(String.self, forKey: .accessToken)
+        refreshToken = try c.decode(String.self, forKey: .refreshToken)
+        user = try c.decode(CommunityUser.self, forKey: .user)
+        expiresAt = try c.decodeIfPresent(Double.self, forKey: .expiresAt)
+            ?? (Date().timeIntervalSince1970 + c.decode(Double.self, forKey: .expiresIn))
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(accessToken, forKey: .accessToken); try c.encode(refreshToken, forKey: .refreshToken)
+        try c.encode(expiresAt, forKey: .expiresAt); try c.encode(user, forKey: .user)
+    }
+}
+
+enum CommunityValidation {
+    static func clean(_ text: String) -> String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
+    // PostgreSQL char_length counts Unicode scalars, so client and server agree on limits.
+    static func length(_ text: String) -> Int { clean(text).unicodeScalars.count }
+    static func validPost(title: String, body: String) -> Bool {
+        (3...120).contains(length(title)) && (1...3000).contains(length(body))
+    }
+    static func validReply(_ body: String) -> Bool { (1...1500).contains(length(body)) }
+    static func validNickname(_ name: String) -> Bool { (2...40).contains(length(name)) }
+    static func date(_ timestamp: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter.date(from: timestamp) ?? ISO8601DateFormatter().date(from: timestamp)
+    }
+}
+
+enum CommunityFailure: Error {
+    case unavailable, signIn, denied, rateLimit, conflict, invalid, network, storage
+    func message(_ language: AppLanguage) -> String {
+        switch self {
+        case .unavailable: return language.text("Community connection is not configured yet.", "社區連接尚未設定。")
+        case .signIn: return language.text("Please sign in again. Your text is still here.", "請重新登入，你的文字仍保留在此。")
+        case .denied: return language.text("This action is not available for your account or this discussion.", "你的帳戶或此討論目前無法執行這項操作。")
+        case .rateLimit: return language.text("Please wait a little before trying again.", "請稍候再試。")
+        case .conflict: return language.text("This item already exists or was changed. Refresh and try again.", "此項目已存在或已變更，請重新整理後再試。")
+        case .invalid: return language.text("Please check the details or verification code and try again.", "請檢查資料或驗證碼後再試。")
+        case .network: return language.text("Could not connect. Check your connection and try again. Your text has been kept.", "未能連接，請檢查網絡後再試。你的文字已保留。")
+        case .storage: return language.text("Your sign-in could not be saved securely. Unlock your device and try again.", "未能安全儲存登入資料，請解鎖裝置後再試。")
+        }
+    }
+}
+
+
+// MARK: - CareVoice/CommunityStore.swift
+
+enum CommunityConfiguration {
+    // Publishable client configuration only. Never put a secret/service_role key here.
+    static let projectURL = ""
+    static let publishableKey = ""
+    static var current: (URL, String)? {
+        if ProcessInfo.processInfo.arguments.contains("--ui-testing") { return nil }
+        let address = Bundle.main.object(forInfoDictionaryKey: "CareVoiceCommunityURL") as? String ?? projectURL
+        let key = Bundle.main.object(forInfoDictionaryKey: "CareVoiceCommunityPublishableKey") as? String ?? publishableKey
+        guard let url = URL(string: address), url.scheme == "https", url.host != nil,
+              key.hasPrefix("sb_publishable_") else { return nil }
+        return (url, key)
+    }
+}
+
+private enum CommunityKeychain {
+    static func query(_ account: String) -> [String: Any] {
+        [kSecClass as String: kSecClassGenericPassword,
+         kSecAttrService as String: "com.carevoice.community.session", kSecAttrAccount as String: account]
+    }
+    static func read(_ account: String) throws -> Data? {
+        var q = query(account); q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
+        var item: CFTypeRef?
+        let status = SecItemCopyMatching(q as CFDictionary, &item)
+        if status == errSecItemNotFound { return nil }
+        guard status == errSecSuccess, let data = item as? Data else { throw CommunityFailure.storage }
+        return data
+    }
+    static func save(_ data: Data, account: String) throws {
+        let attributes: [String: Any] = [kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly]
+        let status = SecItemUpdate(query(account) as CFDictionary, attributes as CFDictionary)
+        if status == errSecItemNotFound {
+            guard SecItemAdd(query(account).merging(attributes) { _, new in new } as CFDictionary, nil) == errSecSuccess else { throw CommunityFailure.storage }
+        } else if status != errSecSuccess { throw CommunityFailure.storage }
+    }
+    static func remove(_ account: String) throws {
+        let status = SecItemDelete(query(account) as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw CommunityFailure.storage }
+    }
+}
+
+// Requests are serialized by CommunityStore, including refresh-token rotation.
+@MainActor
+final class CommunityAPI {
+    let url: URL
+    private let key: String
+    private(set) var session: CommunitySession?
+    private let decoder: JSONDecoder = { let d = JSONDecoder(); d.keyDecodingStrategy = .convertFromSnakeCase; return d }()
+    private let encoder: JSONEncoder = { let e = JSONEncoder(); e.keyEncodingStrategy = .convertToSnakeCase; return e }()
+    private let transport: URLSession = {
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.urlCache = nil; configuration.timeoutIntervalForRequest = 30
+        return URLSession(configuration: configuration)
+    }()
+    init(url: URL, key: String) { self.url = url; self.key = key }
+    func restore() throws {
+        if let data = try CommunityKeychain.read(url.absoluteString) { session = try decoder.decode(CommunitySession.self, from: data) }
+    }
+    private func persist(_ value: CommunitySession) throws {
+        try CommunityKeychain.save(encoder.encode(value), account: url.absoluteString)
+        session = value
+    }
+    func clearSession() throws { try CommunityKeychain.remove(url.absoluteString); session = nil }
+    private func send(_ path: String, method: String, body: [String: Any]?, token: String?, query: [URLQueryItem] = []) async throws -> Data {
+        var parts = URLComponents(url: url.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+        parts.queryItems = query.isEmpty ? nil : query
+        var request = URLRequest(url: parts.url!); request.httpMethod = method
+        request.setValue(key, forHTTPHeaderField: "apikey")
+        if let token { request.setValue("Bearer " + token, forHTTPHeaderField: "Authorization") }
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if path.hasPrefix("rest/") { request.setValue("return=representation", forHTTPHeaderField: "Prefer") }
+        if let body { request.httpBody = try JSONSerialization.data(withJSONObject: body) }
+        let (data, response) = try await transport.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw CommunityFailure.network }
+        guard (200...299).contains(http.statusCode) else {
+            // Never show raw server errors or tokens to the user.
+            let message = String(data: data, encoding: .utf8) ?? ""
+            if http.statusCode == 429 || message.contains("community_rate_limit") { throw CommunityFailure.rateLimit }
+            if http.statusCode == 401 {
+                if token != nil { try clearSession() }
+                throw CommunityFailure.signIn
+            }
+            if http.statusCode == 403 || message.contains("42501") { throw CommunityFailure.denied }
+            if http.statusCode == 409 { throw CommunityFailure.conflict }
+            throw http.statusCode >= 500 ? CommunityFailure.network : CommunityFailure.invalid
+        }
+        return data
+    }
+    private func token() async throws -> String {
+        guard let current = session else { throw CommunityFailure.signIn }
+        if current.expiresAt > Date().timeIntervalSince1970 + 60 { return current.accessToken }
+        do {
+            let data = try await send("auth/v1/token", method: "POST", body: ["refresh_token": current.refreshToken], token: nil,
+                query: [URLQueryItem(name: "grant_type", value: "refresh_token")])
+            let updated = try decoder.decode(CommunitySession.self, from: data)
+            try persist(updated); return updated.accessToken
+        } catch CommunityFailure.invalid { try clearSession(); throw CommunityFailure.signIn }
+          catch CommunityFailure.signIn { try clearSession(); throw CommunityFailure.signIn }
+    }
+    func sendCode(email: String) async throws {
+        _ = try await send("auth/v1/otp", method: "POST", body: ["email": email, "create_user": true], token: nil)
+    }
+    func verify(email: String, code: String) async throws {
+        let data = try await send("auth/v1/verify", method: "POST", body: ["email": email, "token": code, "type": "email"], token: nil)
+        try persist(decoder.decode(CommunitySession.self, from: data))
+    }
+    func signOut() async throws {
+        if session != nil {
+            let bearer = try await token()
+            _ = try await send("auth/v1/logout", method: "POST", body: nil, token: bearer,
+                query: [URLQueryItem(name: "scope", value: "local")])
+        }
+        try clearSession()
+    }
+    func rpc<T: Decodable>(_ name: String, body: [String: Any] = [:], as type: T.Type) async throws -> T {
+        let bearer = try await token()
+        return try decoder.decode(type, from: await send("rest/v1/rpc/" + name, method: "POST", body: body, token: bearer))
+    }
+    func rows<T: Decodable>(_ table: String, query: [URLQueryItem] = [], as type: T.Type) async throws -> T {
+        let bearer = try await token()
+        return try decoder.decode(type, from: await send("rest/v1/" + table, method: "GET", body: nil, token: bearer, query: query))
+    }
+    func mutate(_ table: String, method: String, body: [String: Any]? = nil, id: UUID? = nil, idColumn: String = "id") async throws {
+        let bearer = try await token()
+        let query = id.map { [URLQueryItem(name: idColumn, value: "eq." + $0.uuidString)] } ?? []
+        let data = try await send("rest/v1/" + table, method: method, body: body, token: bearer, query: query)
+        // RLS can turn a rejected update/delete into a successful HTTP response with zero rows.
+        guard let rows = try JSONSerialization.jsonObject(with: data) as? [Any], !rows.isEmpty else { throw CommunityFailure.denied }
+    }
+}
+
+@MainActor
+final class CommunityStore: ObservableObject {
+    @Published private(set) var user: CommunityUser?
+    @Published private(set) var profile: CommunityProfile?
+    @Published private(set) var posts: [CommunityPost] = []
+    @Published private(set) var moderator = false
+    @Published private(set) var busy = false
+    @Published private(set) var hasMore = false
+    @Published var error: CommunityFailure?
+    @Published var topic: CommunityTopic?
+    @Published var mine = false
+    private let api: CommunityAPI?
+    private var started = false
+    var configured: Bool { api != nil }
+    init() {
+        api = CommunityConfiguration.current.map { CommunityAPI(url: $0.0, key: $0.1) }
+    }
+    @discardableResult
+    func perform(_ operation: (CommunityAPI) async throws -> Void) async -> Bool {
+        guard !busy else { return false }
+        guard let api else { error = .unavailable; return false }
+        busy = true; error = nil
+        defer { busy = false; user = api.session?.user }
+        do { try await operation(api); return true }
+        catch {
+            self.error = error as? CommunityFailure ?? .network
+            if api.session == nil { profile = nil; posts = []; moderator = false }
+            return false
+        }
+    }
+    func start() async {
+        guard !started else { return }; started = true
+        guard configured else { return }
+        await perform { api in
+            try api.restore(); user = api.session?.user
+            if user != nil { try await loadIdentity(api) }
+        }
+    }
+    private func loadIdentity(_ api: CommunityAPI) async throws {
+        guard let id = api.session?.user.id else { throw CommunityFailure.signIn }
+        let profiles = try await api.rows("community_profiles", query: [URLQueryItem(name: "user_id", value: "eq." + id.uuidString)], as: [CommunityProfile].self)
+        profile = profiles.first
+        moderator = try await api.rpc("community_is_moderator", as: Bool.self)
+    }
+    func sendCode(_ email: String) async -> Bool { await perform { try await $0.sendCode(email: email) } }
+    func verify(_ email: String, code: String) async -> Bool {
+        await perform { api in try await api.verify(email: email, code: code); try await loadIdentity(api); try await fetchFeed(api, more: false) }
+    }
+    func saveNickname(_ nickname: String) async -> Bool {
+        guard CommunityValidation.validNickname(nickname) else { error = .invalid; return false }
+        return await perform { api in
+            guard let id = api.session?.user.id else { throw CommunityFailure.signIn }
+            let body: [String: Any] = profile == nil ? ["user_id": id.uuidString, "display_name": CommunityValidation.clean(nickname)] : ["display_name": CommunityValidation.clean(nickname)]
+            try await api.mutate("community_profiles", method: profile == nil ? "POST" : "PATCH", body: body,
+                id: profile == nil ? nil : id, idColumn: "user_id")
+            try await loadIdentity(api); try await fetchFeed(api, more: false)
+        }
+    }
+    private func fetchFeed(_ api: CommunityAPI, more: Bool) async throws {
+        var body: [String: Any] = ["p_mine": mine]
+        if let topic { body["p_topic"] = topic.rawValue }
+        if more, let last = posts.last { body["p_before"] = last.createdAt; body["p_before_id"] = last.id.uuidString }
+        let result = try await api.rpc("community_feed", body: body, as: [CommunityPost].self)
+        hasMore = result.count == 20
+        if more { let existing = Set(posts.map(\.id)); posts += result.filter { !existing.contains($0.id) } }
+        else { posts = result }
+    }
+    func refresh(more: Bool = false) async { await perform { try await fetchFeed($0, more: more) } }
+    func savePost(id: UUID? = nil, topic: CommunityTopic, title: String, body: String) async -> Bool {
+        guard CommunityValidation.validPost(title: title, body: body) else { error = .invalid; return false }
+        return await perform { api in
+            try await api.mutate("community_posts", method: id == nil ? "POST" : "PATCH",
+                body: ["topic": topic.rawValue, "title": CommunityValidation.clean(title), "body": CommunityValidation.clean(body)], id: id)
+        }
+    }
+    func delete(_ id: UUID, reply: Bool = false) async -> Bool {
+        await perform { try await $0.mutate(reply ? "community_replies" : "community_posts", method: "DELETE", id: id) }
+    }
+    func saveReply(post: UUID, id: UUID? = nil, body: String) async -> Bool {
+        guard CommunityValidation.validReply(body) else { error = .invalid; return false }
+        return await perform { api in
+            var values: [String: Any] = ["body": CommunityValidation.clean(body)]
+            if id == nil { values["post_id"] = post.uuidString }
+            try await api.mutate("community_replies", method: id == nil ? "POST" : "PATCH", body: values, id: id)
+        }
+    }
+    func report(kind: String, id: UUID, reason: CommunityReason, detail: String) async -> Bool {
+        guard CommunityValidation.length(detail) <= 1000 else { error = .invalid; return false }
+        return await perform { api in
+            try await api.mutate("community_reports", method: "POST", body: ["target_kind": kind, "target_id": id.uuidString,
+                "reason": reason.rawValue, "detail": CommunityValidation.clean(detail)])
+        }
+    }
+    func block(_ id: UUID) async -> Bool {
+        await perform { api in try await api.mutate("community_blocks", method: "POST", body: ["blocked_id": id.uuidString]); posts = [] }
+    }
+    func signOut() async -> Bool {
+        await perform { api in try await api.signOut(); profile = nil; posts = []; moderator = false }
+    }
+    func deleteAccount() async -> Bool {
+        await perform { api in
+            _ = try await api.rpc("community_delete_account", as: Bool.self)
+            try api.clearSession(); profile = nil; posts = []; moderator = false
+        }
+    }
+}
+
+// MARK: - CareVoice/Features/ParentCommunity.swift
+
+// Hallmark · pre-emit critique: P4 H5 E4 S5 R5 V4
+struct CommunityErrorNotice: View {
+    @EnvironmentObject var store: AppStore
+    @ObservedObject var community: CommunityStore
+    var body: some View {
+        if let error = community.error {
+            HStack(alignment: .top) {
+                Image(systemName: "exclamationmark.circle")
+                Text(error.message(store.language)).font(.subheadline)
+                Spacer()
+                Button { community.error = nil } label: { Image(systemName: "xmark").frame(width: 44, height: 44) }
+                    .accessibilityLabel(store.t("Dismiss message", "關閉訊息"))
+            }.padding(12).background(Brand.blue.opacity(0.08), in: RoundedRectangle(cornerRadius: 16))
+                .accessibilityIdentifier("communityError")
+        }
+    }
+}
+
+struct ParentCommunityView: View {
+    @EnvironmentObject var store: AppStore
+    @ObservedObject var community: CommunityStore
+    @State private var composing = false
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(store.t("Together, through the everyday.", "日常照顧，一起同行。")).font(.title2.bold())
+                        Text(store.t("Questions, experiences and small wins from other parents.", "與其他家長分享問題、經驗和小小進步。"))
+                            .font(.subheadline).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 8)
+                    NavigationLink { CommunityAccountView(community: community) } label: {
+                        Image(systemName: "person.crop.circle").font(.title2).frame(width: 44, height: 44)
+                    }.accessibilityLabel(store.t("Community account", "社區帳戶"))
+                }
+                CommunityErrorNotice(community: community)
+                if community.user == nil || community.profile == nil {
+                    CommunityAccountView(community: community, embedded: true)
+                } else {
+                    HStack {
+                        Picker(store.t("Posts", "帖子"), selection: $community.mine) {
+                            Text(store.t("Latest", "最新")).tag(false)
+                            Text(store.t("My posts", "我的帖子")).tag(true)
+                        }.pickerStyle(.segmented).disabled(community.busy)
+                        Button { composing = true } label: {
+                            Image(systemName: "square.and.pencil").font(.title3).frame(width: 48, height: 44)
+                        }.buttonStyle(.borderedProminent).accessibilityLabel(store.t("Create a post", "發佈帖子"))
+                    }
+                    Picker(store.t("Topic", "主題"), selection: $community.topic) {
+                        Text(store.t("All topics", "全部主題")).tag(Optional<CommunityTopic>.none)
+                        ForEach(CommunityTopic.allCases) { topic in Text(topic.title(store.language)).tag(Optional(topic)) }
+                    }.pickerStyle(.menu).disabled(community.busy)
+                    if community.busy && community.posts.isEmpty { ProgressView().frame(maxWidth: .infinity) }
+                    else if community.posts.isEmpty {
+                        ContentUnavailableView(store.t("A conversation can start with you", "由你開始一段交流"), systemImage: "bubble.left.and.bubble.right",
+                            description: Text(store.t("No posts here yet. Share a question or an everyday moment.", "這裡還沒有帖子。分享一個問題或日常片段吧。")))
+                    }
+                    LazyVStack(spacing: 14) {
+                        ForEach(community.posts) { post in
+                            NavigationLink { CommunityDiscussionView(postId: post.id, community: community) } label: {
+                                Card {
+                                    HStack {
+                                        Text(post.topic.title(store.language)).font(.caption.weight(.semibold)).foregroundStyle(Brand.blue)
+                                        Spacer(); Text(post.authorName).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Text(post.title).font(.headline).foregroundStyle(.primary)
+                                    Text(post.body).font(.subheadline).foregroundStyle(.secondary).lineLimit(3)
+                                    HStack {
+                                        Label("\(post.replyCount)", systemImage: "bubble.right")
+                                        if post.removed { Text(store.t("Removed by moderation", "已由管理員移除")) }
+                                        Spacer()
+                                        if let date = CommunityValidation.date(post.createdAt) { Text(date, style: .date) }
+                                    }.font(.caption).foregroundStyle(.secondary)
+                                }
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                    if community.hasMore {
+                        Button(store.t("Load more", "載入更多")) { Task { await community.refresh(more: true) } }.disabled(community.busy)
+                    }
+                    Text(store.t("Shared experiences are personal perspectives, not professional advice.", "分享的經驗屬個人觀點，並非專業意見。"))
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+        }
+        .refreshable { if community.user != nil { await community.refresh() } }
+        .task { await community.start(); if community.user != nil { await community.refresh() } }
+        .onChange(of: community.mine) { _, _ in Task { await community.refresh() } }
+        .onChange(of: community.topic) { _, _ in Task { await community.refresh() } }
+        .sheet(isPresented: $composing) { NavigationStack { CommunityPostEditor(community: community) } }
+        .onChange(of: composing) { _, value in if !value { Task { await community.refresh() } } }
+    }
+}
+
+struct CommunityAccountView: View {
+    @EnvironmentObject var store: AppStore
+    @ObservedObject var community: CommunityStore
+    var embedded = false
+    @State private var email = ""
+    @State private var sentEmail: String?
+    @State private var code = ""
+    @State private var name = ""
+    @State private var deleteAccount = false
+    @State private var nextSend = Date.distantPast
+    var body: some View {
+        Group {
+            if embedded { content }
+            else { ScrollView { content.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity) } }
+        }
+        .navigationTitle(embedded ? "" : store.t("Community account", "社區帳戶"))
+        .navigationBarTitleDisplayMode(.inline)
+        .task { await community.start(); name = community.profile?.displayName ?? "" }
+        .onChange(of: community.profile?.displayName) { _, value in name = value ?? "" }
+        .alert(store.t("Delete your community account?", "刪除社區帳戶？"), isPresented: $deleteAccount) {
+            Button(store.t("Cancel", "取消"), role: .cancel) {}
+            Button(store.t("Delete account", "刪除帳戶"), role: .destructive) { Task { _ = await community.deleteAccount() } }
+        } message: { Text(store.t("Your shared posts, replies and community profile will be permanently deleted. Your child's local records stay on this device.", "你的公開帖子、回覆及社區檔案將永久刪除。孩子的本機記錄會保留於此裝置。")) }
+    }
+    @ViewBuilder private var content: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            if !embedded { CommunityErrorNotice(community: community) }
+            if !community.configured {
+                Card {
+                    Label(store.t("Community setup is pending", "社區設定待完成"), systemImage: "person.2").font(.headline)
+                    Text(store.t("The community screens are ready. Shared posts will be available after the account service is connected.", "社區頁面已準備好。連接帳戶服務後即可分享帖子。"))
+                        .foregroundStyle(.secondary)
+                    NavigationLink(store.t("Read community guidelines", "閱讀社區守則")) { SettingsDetailView(page: .guidelines) }
+                }
+            } else if community.user == nil {
+                Card {
+                    Text(store.t("Join the conversation", "加入交流")).font(.title3.bold())
+                    Text(store.t("Sign in with an email code. Your email stays private; only your chosen nickname appears on posts.", "使用電郵驗證碼登入。電郵會保持私人，帖子只會顯示你選擇的暱稱。"))
+                        .font(.subheadline).foregroundStyle(.secondary)
+                    if let sentEmail {
+                        Text(store.t("Code sent to ", "驗證碼已傳送至 ") + sentEmail).font(.subheadline)
+                        TextField(store.t("Email code", "電郵驗證碼"), text: $code)
+                            .textContentType(.oneTimeCode).keyboardType(.numberPad).textFieldStyle(.roundedBorder)
+                            .onChange(of: code) { _, value in code = String(value.filter(\.isNumber).prefix(8)) }
+                        Button(store.t("Verify & continue", "驗證並繼續")) {
+                            Task { if await community.verify(sentEmail, code: code) { code = ""; self.sentEmail = nil } }
+                        }.buttonStyle(.borderedProminent).disabled(community.busy || code.count < 6)
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            Button(store.t("Send a new code", "重新傳送驗證碼")) {
+                                Task { if await community.sendCode(sentEmail) { nextSend = Date().addingTimeInterval(60) } }
+                            }.disabled(community.busy || context.date < nextSend)
+                        }
+                        Button(store.t("Use another email", "使用其他電郵")) { self.sentEmail = nil; code = "" }.disabled(community.busy)
+                    } else {
+                        TextField(store.t("Email address", "電郵地址"), text: $email)
+                            .textContentType(.emailAddress).keyboardType(.emailAddress).textInputAutocapitalization(.never)
+                            .autocorrectionDisabled().textFieldStyle(.roundedBorder)
+                        Button(store.t("Send sign-in code", "傳送登入驗證碼")) {
+                            let address = CommunityValidation.clean(email)
+                            Task { if await community.sendCode(address) { sentEmail = address; nextSend = Date().addingTimeInterval(60) } }
+                        }.buttonStyle(.borderedProminent).disabled(community.busy || !email.contains("@"))
+                    }
+                }
+            } else {
+                Card {
+                    Text(store.t("Your public nickname", "你的公開暱稱")).font(.headline)
+                    TextField(store.t("Choose a nickname", "選擇暱稱"), text: $name).textFieldStyle(.roundedBorder)
+                        .textContentType(.nickname).accessibilityIdentifier("communityNickname")
+                    Text(store.t("Use 2–40 characters. This is separate from your child's profile and appears beside posts and replies.", "請使用 2–40 個字元。此暱稱與孩子的檔案分開，並會顯示於帖子及回覆旁。"))
+                        .font(.caption).foregroundStyle(.secondary)
+                    Button(store.t("Save community profile", "儲存社區檔案")) { Task { _ = await community.saveNickname(name) } }
+                        .buttonStyle(.borderedProminent).disabled(community.busy || !CommunityValidation.validNickname(name))
+                }
+                if community.profile != nil {
+                    NavigationLink(store.t("Blocked accounts", "已封鎖帳戶")) { CommunityBlockedView(community: community) }
+                    if community.moderator {
+                        NavigationLink(store.t("Moderation queue", "待審核舉報")) { CommunityModerationView(community: community) }
+                    }
+                }
+                Button(store.t("Sign out", "登出")) { Task { _ = await community.signOut() } }.disabled(community.busy)
+                Button(store.t("Delete community account", "刪除社區帳戶"), role: .destructive) { deleteAccount = true }.disabled(community.busy)
+            }
+            if community.busy { ProgressView().frame(maxWidth: .infinity) }
+        }
+    }
+}
+
+struct CommunityPostEditor: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var community: CommunityStore
+    var post: CommunityPost?
+    @State private var title = ""
+    @State private var bodyText = ""
+    @State private var topic: CommunityTopic = .everyday
+    @State private var discard = false
+    var body: some View {
+        Form {
+            CommunityErrorNotice(community: community)
+            Section {
+                Picker(store.t("Topic", "主題"), selection: $topic) {
+                    ForEach(CommunityTopic.allCases) { Text($0.title(store.language)).tag($0) }
+                }
+                TextField(store.t("Give your question a title", "為問題加上標題"), text: $title, axis: .vertical).lineLimit(1...3)
+                TextField(store.t("What would you like to share?", "你想分享甚麼？"), text: $bodyText, axis: .vertical).lineLimit(6...14)
+                Text("\(CommunityValidation.length(title))/120 · \(CommunityValidation.length(bodyText))/3000").font(.caption).foregroundStyle(.secondary)
+            } footer: {
+                Text(store.t("This will be shared with signed-in community members. Leave out children's names, schools, contact details and medical documents.", "內容將與已登入的社區成員分享。請勿加入孩子姓名、學校、聯絡資料或醫療文件。"))
+            }
+        }.navigationTitle(store.t(post == nil ? "New discussion" : "Edit post", post == nil ? "新討論" : "編輯帖子"))
+            .navigationBarTitleDisplayMode(.inline).interactiveDismissDisabled()
+            .onAppear { if let post { title = post.title; bodyText = post.body; topic = post.topic } }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(store.t("Cancel", "取消")) {
+                        if title != (post?.title ?? "") || bodyText != (post?.body ?? "") || topic != (post?.topic ?? .everyday) { discard = true }
+                        else { dismiss() }
+                    }.disabled(community.busy)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(store.t(post == nil ? "Publish" : "Save", post == nil ? "發佈" : "儲存")) {
+                        Task { if await community.savePost(id: post?.id, topic: topic, title: title, body: bodyText) { dismiss() } }
+                    }.disabled(community.busy || !CommunityValidation.validPost(title: title, body: bodyText))
+                }
+            }
+            .confirmationDialog(store.t("Discard your changes?", "放棄變更？"), isPresented: $discard, titleVisibility: .visible) {
+                Button(store.t("Discard", "放棄"), role: .destructive) { dismiss() }
+            }
+    }
+}
+
+struct CommunityReportTarget: Identifiable { let kind: String; let id: UUID }
+struct CommunityDiscussionView: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    let postId: UUID
+    @ObservedObject var community: CommunityStore
+    @State private var post: CommunityPost?
+    @State private var replies: [CommunityReply] = []
+    @State private var replyText = ""
+    @State private var more = false
+    @State private var loaded = false
+    @State private var editing = false
+    @State private var editingReply: CommunityReply?
+    @State private var report: CommunityReportTarget?
+    @State private var deleting: CommunityReportTarget?
+    @State private var blocking: UUID?
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                CommunityErrorNotice(community: community)
+                if let post {
+                    HStack {
+                        Text(post.authorName).font(.subheadline.weight(.semibold)); Spacer()
+                        Menu {
+                            if post.authorId == community.user?.id {
+                                Button(store.t("Edit post", "編輯帖子")) { editing = true }
+                                Button(store.t("Delete post", "刪除帖子"), role: .destructive) { deleting = .init(kind: "post", id: post.id) }
+                            } else {
+                                Button(store.t("Report post", "舉報帖子")) { report = .init(kind: "post", id: post.id) }
+                                Button(store.t("Block this parent", "封鎖此家長"), role: .destructive) { blocking = post.authorId }
+                            }
+                        } label: { Image(systemName: "ellipsis").frame(width: 44, height: 44) }.disabled(community.busy)
+                    }
+                    Text(post.topic.title(store.language)).font(.caption).foregroundStyle(Brand.blue)
+                    Text(post.title).font(.title2.bold())
+                    Text(post.body).textSelection(.enabled)
+                    if post.removed { Text(store.t("This post was removed by moderation.", "此帖子已由管理員移除。")).foregroundStyle(.secondary) }
+                    Divider()
+                    Text(store.t("Replies", "回覆")).font(.headline)
+                    ForEach(replies) { reply in
+                        Card {
+                            HStack {
+                                Text(reply.authorName).font(.subheadline.bold()); Spacer()
+                                Menu {
+                                    if reply.authorId == community.user?.id {
+                                        Button(store.t("Edit reply", "編輯回覆")) { editingReply = reply }
+                                        Button(store.t("Delete reply", "刪除回覆"), role: .destructive) { deleting = .init(kind: "reply", id: reply.id) }
+                                    } else {
+                                        Button(store.t("Report reply", "舉報回覆")) { report = .init(kind: "reply", id: reply.id) }
+                                        Button(store.t("Block this parent", "封鎖此家長"), role: .destructive) { blocking = reply.authorId }
+                                    }
+                                } label: { Image(systemName: "ellipsis").frame(width: 44, height: 44) }.disabled(community.busy)
+                            }
+                            Text(reply.body).textSelection(.enabled)
+                            if reply.status == "removed" { Text(store.t("Removed by moderation", "已由管理員移除")).font(.caption).foregroundStyle(.secondary) }
+                        }
+                    }
+                    if replies.isEmpty && !community.busy { Text(store.t("No replies yet. Be the first to respond.", "還沒有回覆，分享你的想法吧。")).foregroundStyle(.secondary) }
+                    if more { Button(store.t("More replies", "更多回覆")) { Task { await load(more: true) } }.disabled(community.busy) }
+                } else if loaded {
+                    ContentUnavailableView(store.t("Discussion unavailable", "討論無法顯示"), systemImage: "bubble.left",
+                        description: Text(store.t("It may have been deleted, removed or hidden by a block.", "此討論可能已刪除、移除或因封鎖而隱藏。")))
+                }
+                if community.busy { ProgressView().frame(maxWidth: .infinity) }
+            }.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity)
+        }.background(Brand.background).navigationTitle(store.t("Discussion", "討論")).navigationBarTitleDisplayMode(.inline)
+            .task { await load() }.refreshable { await load() }
+            .safeAreaInset(edge: .bottom) {
+                if let post, !post.removed, community.profile != nil {
+                    HStack(alignment: .bottom) {
+                        TextField(store.t("Write a kind reply…", "寫下友善的回覆…"), text: $replyText, axis: .vertical).lineLimit(1...4)
+                            .padding(12).background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16))
+                        Button {
+                            Task { if await community.saveReply(post: postId, body: replyText) { replyText = ""; await load() } }
+                        } label: { Image(systemName: "arrow.up").frame(width: 44, height: 44) }
+                            .buttonStyle(.borderedProminent).accessibilityLabel(store.t("Send reply", "傳送回覆"))
+                            .disabled(community.busy || !CommunityValidation.validReply(replyText))
+                    }.padding(12).background(.bar)
+                }
+            }
+            .sheet(isPresented: $editing, onDismiss: { Task { await load() } }) {
+                NavigationStack { CommunityPostEditor(community: community, post: post) }
+            }
+            .sheet(item: $editingReply, onDismiss: { Task { await load() } }) { reply in
+                NavigationStack { CommunityReplyEditor(community: community, reply: reply) }
+            }
+            .sheet(item: $report) { target in NavigationStack { CommunityReportView(community: community, target: target) } }
+            .confirmationDialog(store.t("Delete this content?", "刪除此內容？"), isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
+                if let target = deleting {
+                    Button(store.t("Delete", "刪除"), role: .destructive) {
+                        Task { if await community.delete(target.id, reply: target.kind == "reply") { if target.kind == "post" { dismiss() } else { await load() } } }
+                    }
+                }
+            }
+            .confirmationDialog(store.t("Block this parent? Their discussions and replies will be hidden from you, and yours from them.", "封鎖此家長？你們將無法查看彼此的討論及回覆。"), isPresented: Binding(get: { blocking != nil }, set: { if !$0 { blocking = nil } }), titleVisibility: .visible) {
+                if let id = blocking {
+                    Button(store.t("Block parent", "封鎖家長"), role: .destructive) { Task { if await community.block(id) { await load() } } }
+                }
+            }
+    }
+    private func load(more loadMore: Bool = false) async {
+        await community.perform { api in
+            let results = try await api.rpc("community_feed", body: ["p_post_id": postId.uuidString], as: [CommunityPost].self)
+            post = results.first; loaded = true
+            guard post != nil else { replies = []; more = false; return }
+            var body: [String: Any] = ["p_post_id": postId.uuidString]
+            if loadMore, let last = replies.last { body["p_after"] = last.createdAt; body["p_after_id"] = last.id.uuidString }
+            let result = try await api.rpc("community_thread", body: body, as: [CommunityReply].self)
+            more = result.count == 30
+            if loadMore { let ids = Set(replies.map(\.id)); replies += result.filter { !ids.contains($0.id) } } else { replies = result }
+        }
+    }
+}
+
+struct CommunityReplyEditor: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var community: CommunityStore
+    let reply: CommunityReply
+    @State private var text = ""
+    @State private var discard = false
+    var body: some View {
+        Form {
+            CommunityErrorNotice(community: community)
+            TextField(store.t("Your reply", "你的回覆"), text: $text, axis: .vertical).lineLimit(5...12)
+            Text("\(CommunityValidation.length(text))/1500").font(.caption).foregroundStyle(.secondary)
+        }.navigationTitle(store.t("Edit reply", "編輯回覆")).navigationBarTitleDisplayMode(.inline)
+            .onAppear { text = reply.body }.interactiveDismissDisabled()
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(store.t("Cancel", "取消")) { if text == reply.body { dismiss() } else { discard = true } }.disabled(community.busy)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(store.t("Save", "儲存")) { Task { if await community.saveReply(post: reply.postId, id: reply.id, body: text) { dismiss() } } }
+                        .disabled(community.busy || !CommunityValidation.validReply(text))
+                }
+            }.confirmationDialog(store.t("Discard changes?", "放棄變更？"), isPresented: $discard, titleVisibility: .visible) {
+                Button(store.t("Discard", "放棄"), role: .destructive) { dismiss() }
+            }
+    }
+}
+
+struct CommunityReportView: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var community: CommunityStore
+    let target: CommunityReportTarget
+    @State private var reason: CommunityReason = .privacy
+    @State private var detail = ""
+    @State private var sent = false
+    var body: some View {
+        Form {
+            CommunityErrorNotice(community: community)
+            if sent {
+                Label(store.t("Report received", "已收到舉報"), systemImage: "checkmark.shield")
+                Text(store.t("A moderator can review it. Reporting does not automatically remove content.", "管理員可審核此舉報。舉報不會自動移除內容。"))
+                Button(store.t("Done", "完成")) { dismiss() }
+            } else {
+                Picker(store.t("Reason", "原因"), selection: $reason) {
+                    ForEach(CommunityReason.allCases) { Text($0.title(store.language)).tag($0) }
+                }
+                TextField(store.t("Details (optional)", "詳細說明（選填）"), text: $detail, axis: .vertical).lineLimit(3...6)
+                Text(store.t("Only moderators can review your report. Avoid adding identifying details about a child.", "只有管理員可審核你的舉報。請避免加入可識別孩子身份的資料。"))
+                    .font(.caption).foregroundStyle(.secondary)
+                Button(store.t("Submit report", "提交舉報")) {
+                    Task { if await community.report(kind: target.kind, id: target.id, reason: reason, detail: detail) { sent = true } }
+                }.disabled(community.busy || CommunityValidation.length(detail) > 1000)
+            }
+        }.navigationTitle(store.t("Report content", "舉報內容")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Close", "關閉")) { dismiss() }.disabled(community.busy) } }
+    }
+}
+
+struct CommunityBlockedView: View {
+    @EnvironmentObject var store: AppStore
+    @ObservedObject var community: CommunityStore
+    @State private var people: [CommunityProfile] = []
+    var body: some View {
+        List {
+            CommunityErrorNotice(community: community)
+            if people.isEmpty { Text(store.t("No blocked accounts", "沒有已封鎖帳戶")).foregroundStyle(.secondary) }
+            ForEach(people) { person in
+                HStack {
+                    Text(person.displayName); Spacer()
+                    Button(store.t("Unblock", "解除封鎖")) { Task {
+                        if await community.perform({ try await $0.mutate("community_blocks", method: "DELETE", id: person.userId, idColumn: "blocked_id") }) { await load() }
+                    } }.disabled(community.busy)
+                }
+            }
+        }.navigationTitle(store.t("Blocked accounts", "已封鎖帳戶")).navigationBarTitleDisplayMode(.inline)
+            .task { await load() }.refreshable { await load() }
+    }
+    private func load() async {
+        await community.perform { api in
+            let blocks = try await api.rows("community_blocks", as: [CommunityBlock].self)
+            if blocks.isEmpty { people = []; return }
+            people = try await api.rows("community_profiles", query: [URLQueryItem(name: "user_id", value: "in.(" + blocks.map { $0.blockedId.uuidString }.joined(separator: ",") + ")")], as: [CommunityProfile].self)
+        }
+    }
+}
+
+struct CommunityModerationView: View {
+    @EnvironmentObject var store: AppStore
+    @ObservedObject var community: CommunityStore
+    @State private var reports: [CommunityReport] = []
+    var body: some View {
+        List {
+            CommunityErrorNotice(community: community)
+            if reports.isEmpty { Text(store.t("No open reports", "沒有待處理舉報")).foregroundStyle(.secondary) }
+            ForEach(reports) { report in
+                NavigationLink { CommunityModerationDetail(community: community, report: report) } label: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(CommunityReason(rawValue: report.reason)?.title(store.language) ?? report.reason).font(.headline)
+                        Text(report.detail).font(.subheadline).lineLimit(2)
+                    }
+                }
+            }
+        }.navigationTitle(store.t("Moderation queue", "待審核舉報")).navigationBarTitleDisplayMode(.inline)
+            .task { await load() }.refreshable { await load() }
+    }
+    private func load() async {
+        await community.perform { api in
+            guard community.moderator else { throw CommunityFailure.denied }
+            reports = try await api.rows("community_reports", query: [URLQueryItem(name: "state", value: "eq.open"),
+                URLQueryItem(name: "order", value: "created_at.asc"), URLQueryItem(name: "limit", value: "20")], as: [CommunityReport].self)
+        }
+    }
+}
+
+struct CommunityModerationDetail: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var community: CommunityStore
+    let report: CommunityReport
+    @State private var content = ""
+    @State private var action: String?
+    var body: some View {
+        List {
+            CommunityErrorNotice(community: community)
+            Section(store.t("Reported content", "被舉報內容")) { Text(content) }
+            Section(store.t("Report details", "舉報詳情")) {
+                Text(CommunityReason(rawValue: report.reason)?.title(store.language) ?? report.reason)
+                Text(report.detail)
+            }
+            Button(store.t("Remove content", "移除內容"), role: .destructive) { action = "removed" }.disabled(community.busy)
+            Button(store.t("Dismiss report", "不採取行動")) { action = "dismissed" }.disabled(community.busy)
+        }.navigationTitle(store.t("Review report", "審核舉報")).navigationBarTitleDisplayMode(.inline)
+            .task {
+                await community.perform { api in
+                    guard community.moderator else { throw CommunityFailure.denied }
+                    let rows = try await api.rows(report.targetKind == "post" ? "community_posts" : "community_replies",
+                        query: [URLQueryItem(name: "id", value: "eq." + report.targetId.uuidString), URLQueryItem(name: "select", value: "body")], as: [[String: String]].self)
+                    content = rows.first?["body"] ?? store.t("The author has deleted this content.", "作者已刪除此內容。")
+                }
+            }
+            .confirmationDialog(store.t("Confirm this moderation decision?", "確認此審核決定？"), isPresented: Binding(get: { action != nil }, set: { if !$0 { action = nil } }), titleVisibility: .visible) {
+                if let action {
+                    Button(store.t("Confirm", "確認"), role: action == "removed" ? .destructive : nil) { Task {
+                        if await community.perform({ api in _ = try await api.rpc("community_resolve_report", body: ["p_report_id": report.id.uuidString, "p_action": action], as: Bool.self) }) { dismiss() }
+                    } }
+                }
+            }
+    }
 }

@@ -1,0 +1,31 @@
+name: Community database permissions
+on:
+  push:
+    branches: [main, feature/mobile-web]
+  workflow_dispatch:
+jobs:
+  permissions:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: community_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: community_test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap disposable auth schema
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/bootstrap_ci.sql
+      - name: Apply community migration
+        run: psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261018010000_parent_community.sql
+      - name: Verify ownership, blocking and moderation boundaries
+        run: psql -v ON_ERROR_STOP=1 -f supabase/tests/community_permissions.sql

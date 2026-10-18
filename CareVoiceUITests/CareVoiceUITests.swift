@@ -1,6 +1,20 @@
 import XCTest
 
 final class CareVoiceUITests: XCTestCase {
+    func testParentsCommunitySetupAndAccountNavigation() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
+        app.buttons["getStarted"].tap(); app.buttons["saveProfile"].tap()
+        app.tabBars.buttons.element(boundBy: 2).tap()
+        app.buttons["Parents"].tap()
+        XCTAssertTrue(app.staticTexts["Community setup is pending"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Publish"].exists)
+        snapshot(app, "Community-Parents-Setup")
+        app.buttons["Community account"].tap()
+        XCTAssertTrue(app.buttons["Read community guidelines"].waitForExistence(timeout: 5))
+        app.buttons["Read community guidelines"].tap()
+        XCTAssertTrue(app.navigationBars["Community Guidelines"].waitForExistence(timeout: 5))
+    }
     func testLanguageSelectionAndPersistence() throws {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))

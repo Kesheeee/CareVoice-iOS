@@ -5,6 +5,7 @@ final class AppStore: ObservableObject {
     @Published private(set) var data = AppData()
     @Published var errorMessage: String?
     @Published private(set) var storageUnavailable = false
+    let community = CommunityStore()
     let questions: [Question]
     let content: GovernmentContent
     private let fileURL: URL

@@ -19,12 +19,12 @@ A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English an
 3. Select the **CareVoice** scheme and an iPhone simulator, then press **Run**.
 4. For a physical iPhone, choose your Apple development team under **Signing & Capabilities**. Change the bundle identifier if your team needs a unique identifier. An Apple developer account is not needed for the simulator.
 
-Minimum deployment target: **iOS 17**. No package installation, API key, backend, paid service, or secret configuration is required. The checked-in Xcode project is ready to open.
+Minimum deployment target: **iOS 17**. Core observation features work locally without a backend. The optional shared parent community requires the configuration described in [Community setup](docs/COMMUNITY_SETUP.md). The checked-in Xcode project is ready to open.
 
 ## What works
 
 - Optional nickname and age, six parent-selected journey stages, first-concern notes.
-- Bilingual home, profile, resources and navigation.
+- English, Traditional Chinese and Simplified Chinese across home, profile, resources and navigation.
 - All 30 supplied observation questions, autosave, skip, “Not sure”, review and immediate professional-follow-up guidance for reported/uncertain loss of skills.
 - Create/edit/delete timestamped observations; categories, place, duration, context and what helped; search and filters.
 - On-device speech transcription where Apple's recognizer supports the selected locale. Permission and availability failures offer text input. Voice capture stops after 60 seconds or on backgrounding. Audio is not saved.
@@ -55,7 +55,7 @@ Open a pull request into `main` and ask your partner to review. See [CONTRIBUTIN
 
 This is a working development MVP, not a clinically validated screening tool or an App Store release. It produces no risk score, severity level, diagnosis or automated clinical interpretation. A journey stage comes only from the caregiver's selection. Related records are grouped by the chosen category, not AI inference.
 
-The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. Backend accounts, family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
+The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. The parent community has an optional Supabase backend for verified email-code accounts, posts, replies, reports, blocking and moderation; see [Community setup](docs/COMMUNITY_SETUP.md). Its connection remains pending until a project is configured. Family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
 
 ## Verification
 
