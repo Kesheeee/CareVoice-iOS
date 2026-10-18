@@ -39,3 +39,10 @@ Not yet validated: physical devices, Safari/WebKit, OS share sheets, print-to-PD
 - English, Traditional Chinese, and Simplified Chinese persist through reloads and backups. Simplified interface copy uses OpenCC with explicit wording for the chooser; caregiver notes and names are not converted.
 - Browser tests cover all three selections, persistence, cancellation, and storage failure. Domain tests verify Simplified report labels while preserving original notes.
 - Chromium and WebKit checks at 320, 375, and 414 × 667 confirm all three choices and actions fit without horizontal overflow. Physical iPhone testing remains outstanding.
+# Email authentication — 18 October 2026
+
+- Connected the Vercel email form to the existing CareVoice Supabase project using its public publishable key. Default email templates were not changed; email confirmation remains enabled.
+- Changed Supabase Site URL from localhost:3000 to https://carevoice-preview-zeta.vercel.app/ through the authenticated dashboard. Custom SMTP is disabled; the default sender remains limited to project-team addresses.
+- Live Vercel Continue action successfully requested one sign-in email for the user's supplied address. The UI showed Check your email. Inbox receipt and the real email-link round trip require user verification; no email account was read.
+- Four isolated auth browser tests pass in Chromium and WebKit: request/failure states, expired verification code, password/session restoration/sign-out, and email callback with explicit preview-note import. Requests in these tests are mocked; no real emails or accounts are created by the tests.
+- Seventeen domain/speech tests and thirteen focused Chromium browser tests pass. Production build passes. Account notebooks are stored separately on-device, with no record upload or cross-device sync.

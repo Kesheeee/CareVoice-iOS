@@ -1,6 +1,8 @@
 import { translator, languageLocale, languageNames } from "./i18n";
 import { LanguageSettings } from "./components/LanguageSettings";
 import React, { useEffect, useRef, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { authClient, hasAuthLinkError } from "./platform/auth";
 import { createRoot } from "react-dom/client";
 import {
   AudioLines,
@@ -57,7 +59,7 @@ import {
   type Question,
   type Stage,
 } from "./domain";
-import { browserStore, validateData } from "./platform/storage";
+import { accountStorageKey, accountStore, browserStore as previewStore, validateData } from "./platform/storage";
 import { download, shareReport } from "./platform/share";
 import questionsJson from "./questions.json";
 import legacyQuestions from "./legacy-questions.json";
@@ -110,7 +112,8 @@ const newRecord = (): Observation => ({
   context: "",
   helped: "",
 });
-function App() {
+function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
+  const [browserStore] = useState(() => accountStore(user?.id));
   const [initial] = useState(() => {
     try {
       return { data: browserStore.load(), error: "" };
@@ -126,9 +129,9 @@ function App() {
     [error, setError] = useState(initial.error),
     [locked, setLocked] = useState(!!initial.error);
   const [page, setPage] = useState<Page>(
-      window.location.hash === "#sign-in" ? "signIn" : initial.data.profile ? "home" : "welcome",
+      !user && window.location.hash === "#sign-in" ? "signIn" : signedOut && !user ? "welcome" : initial.data.profile ? "home" : "welcome",
     ),
-    [profileOpen, setProfileOpen] = useState(window.location.hash === "#onboarding"),
+    [profileOpen, setProfileOpen] = useState(window.location.hash === "#onboarding" || (!!user && !initial.data.profile)),
     [draftProfile, setDraftProfile] = useState<Profile>(() => initial.data.profile ?? blankProfile()),
     [record, setRecord] = useState<Observation | null>(null),
     [deleteId, setDeleteId] = useState<string | null>(null),
@@ -143,6 +146,7 @@ function App() {
   const [voiceBusy, setVoiceBusy] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [languageSaved, setLanguageSaved] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const quickRecord = !!record && !data.records.some(r => r.id === record.id);
   const mainRef = useRef<HTMLElement>(null),
     importRef = useRef<HTMLInputElement>(null);
@@ -300,7 +304,7 @@ function App() {
           <button
             onClick={() =>
               download(
-                localStorage.getItem("carevoice.mobile.v1") || "",
+                localStorage.getItem(accountStorageKey(user?.id)) || "",
                 "carevoice-recovery.json",
                 "application/json",
               )
@@ -640,6 +644,17 @@ function App() {
                 <ChevronRight size={17} />
               </button>
             </div>
+            <h2 className="profile-section">{t("Account", "帳戶", "账户")}</h2>
+            {user ? <>
+              <p className="account-email">{user.email}</p>
+              <div className="settings-list"><button disabled={signingOut} onClick={async () => {
+                setSigningOut(true);
+                try {
+                  const { error } = await authClient.auth.signOut({ scope: "local" });
+                  if (error) throw error;
+                } catch { setError(t("Could not sign out. Please try again.", "無法登出，請再試一次。")); setSigningOut(false); }
+              }}><LockKeyhole size={20} />{signingOut ? t("Signing out…", "正在登出…") : t("Sign out", "登出")}<ChevronRight size={17} /></button></div>
+            </> : <div className="settings-list"><button onClick={() => go("signIn")}><LockKeyhole size={20} />{t("Sign in", "登入")}<ChevronRight size={17} /></button></div>}
             {languageSaved && <p className="language-saved" role="status"><Check size={16} />{t("Language updated", "語言設定已更新", "语言设置已更新")}</p>}
             <h2 className="profile-section">{t("Care", "照顧工具")}</h2>
             <div className="settings-list">
@@ -694,8 +709,8 @@ function App() {
                 </h3>
                 <p>
                   {t(
-                    "Records stay in this browser. No account, analytics, or cloud sync. Clearing browser data can erase them; keep a backup. Browser storage is not encrypted by CareVoice.",
-                    "記錄儲存喺呢個瀏覽器，冇帳戶、分析追蹤或雲端同步。清除瀏覽器資料會刪埋記錄，記得保留備份。CareVoice 冇加密瀏覽器入面儲存嘅資料。",
+                    "Email sign-in uses Supabase. Notes stay in this browser, separately for each signed-in account; they do not sync to other devices. Clearing browser data can erase notes, so keep a backup. Browser storage is not encrypted by CareVoice.",
+                    "電郵登入使用 Supabase。筆記按登入帳戶分開儲存於此瀏覽器，不會同步至其他裝置。清除瀏覽器資料可能會刪除筆記，請保留備份。CareVoice 未加密瀏覽器內的儲存資料。",
                   )}
                 </p>
                 <p>{t("Voice recording uses your browser’s speech service, which may process audio online. CareVoice saves only the text you review and does not store an audio file.", "語音記錄使用瀏覽器嘅語音服務，可能會在線上處理聲音。CareVoice 只儲存你核對後嘅文字，唔會儲存錄音檔案。")}</p>
@@ -1216,8 +1231,54 @@ function Empty({
     </section>
   );
 }
+function CareVoiceRoot() {
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [signedOut, setSignedOut] = useState(() => { try { return sessionStorage.getItem("carevoice.signed-out") === "true"; } catch { return false; } });
+  const [linkError, setLinkError] = useState(hasAuthLinkError);
+  const [importPreview, setImportPreview] = useState<AppData | null>(null);
+  const [storageError, setStorageError] = useState("");
+  useEffect(() => {
+    const { data: { subscription } } = authClient.auth.onAuthStateChange((event, session) => {
+      const account = session?.user ?? null;
+      if (event === "SIGNED_OUT") {
+        setSignedOut(true);
+        try { sessionStorage.setItem("carevoice.signed-out", "true"); } catch { /* The session itself is still signed out. */ }
+      }
+      if (account) {
+        setSignedOut(false); setLinkError(false);
+        if (window.location.hash === "#sign-in") window.history.replaceState(null, "", window.location.pathname);
+        try { sessionStorage.removeItem("carevoice.signed-out"); } catch { /* Optional UI preference. */ }
+      }
+      // Never silently attach an existing device notebook to a new account.
+      try {
+        const preview = previewStore.load();
+        setImportPreview(account && !localStorage.getItem(accountStorageKey(account.id)) && (preview.profile || preview.records.length) ? preview : null);
+      } catch { setImportPreview(null); }
+      setUser(account);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+  if (user === undefined) return <div className="auth-loading" role="status">Opening CareVoice…</div>;
+  if (user && importPreview) {
+    const t = translator(importPreview.language);
+    return <main className="account-import">
+      <h1>{t("Keep your existing notes?", "保留現有筆記？", "保留现有笔记？")}</h1>
+      <p>{t("There are notes from the preview on this device. You can copy them into your signed-in notebook, or start fresh.", "此裝置上有預覽版筆記。你可以複製到登入帳戶的筆記本，或重新開始。", "此设备上有预览版笔记。你可以复制到登录账户的笔记本，或重新开始。")}</p>
+      <p className="account-email">{user.email}</p>
+      {[true, false].map(copy => <button key={String(copy)} className={`${copy ? "primary" : "secondary"} full`} onClick={() => {
+        try { accountStore(user.id).save(copy ? importPreview : { ...emptyData(), language: importPreview.language }); setImportPreview(null); }
+        catch { setStorageError(t("Could not save. Free some browser storage and try again.", "無法儲存，請騰出瀏覽器儲存空間後再試。")); }
+      }}>{copy ? t("Keep my notes", "保留我的筆記", "保留我的笔记") : t("Start fresh", "重新開始", "重新开始")}</button>)}
+      {storageError && <p role="alert">{storageError}</p>}
+    </main>;
+  }
+  return <>
+    {linkError && <div className="error-banner" role="alert">This sign-in link is invalid or has expired. Please request a new email.<button onClick={() => { setLinkError(false); window.history.replaceState(null, "", window.location.pathname); }}>Dismiss</button></div>}
+    <App key={user?.id ?? "preview"} user={user} signedOut={signedOut} />
+  </>;
+}
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <CareVoiceRoot />
   </React.StrictMode>,
 );

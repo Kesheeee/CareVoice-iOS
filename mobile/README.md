@@ -54,12 +54,34 @@ Before a native release, replace `src/platform/storage.ts` with a native protect
 ## Data
 
 New visitors see a full-screen video welcome. Get started opens account provider
-choices; the existing-account action opens the sign-in form. Authentication is
-currently a UI preview, with no credentials sent or stored. Local survey setup
+choices; the existing-account action opens the sign-in form. Email sign-in is
+connected to the CareVoice Supabase project: email links, optional emailed codes,
+and existing email/password accounts. Google and Apple remain previews.
+The public publishable key is bundled; no service-role key is used. Supabase
+persists and refreshes the browser session. Notes remain local, scoped by account
+ID, with an explicit choice before copying an existing preview notebook.
+Local survey setup
 is available at `/#onboarding`: nickname, birthday, seven Phase 1 journey stages,
 support goals, and optional notes. Returning local profiles open Home.
 Settings contains profile editing, language, care tools, backups, and privacy.
 Bottom navigation uses icons with accessible labels.
+
+### Email delivery setup
+
+The Supabase Site URL is `https://carevoice-preview-zeta.vercel.app/`.
+Keep this URL in sync with the deployment domain. The client requests that origin
+as its email redirect; additional preview/local origins must be explicitly allowed
+in Supabase before real email links can return to them.
+
+The project currently uses Supabase's default sender and unchanged templates.
+That sender is restricted to project-team addresses and has a low email rate
+limit. Configure custom SMTP in Supabase before offering email login to the
+public. Do not disable email confirmation to work around delivery restrictions.
+See [Supabase email delivery](https://supabase.com/docs/guides/auth/auth-smtp).
+
+`tests/browser/auth.spec.ts` intercepts Auth requests with synthetic fixtures:
+these tests never send real email or create production accounts. Real email
+delivery and link opening must be checked separately.
 
 The welcome and sign-in background uses an eight-second portrait Higgsfield-generated
 parent-and-child video (`carevoice-family-hd.mp4`, original 720 × 1280 quality) and matching poster, served locally from

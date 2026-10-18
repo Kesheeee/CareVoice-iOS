@@ -13,6 +13,7 @@ export interface DataStore {
   clear(): void;
 }
 const KEY = "carevoice.mobile.v1";
+export const accountStorageKey = (userId?: string) => userId ? `${KEY}.account.${userId}` : KEY;
 export function validateData(raw: unknown): AppData {
   const d = raw as AppData;
   if (
@@ -86,15 +87,19 @@ export function validateData(raw: unknown): AppData {
     throw new Error("Invalid answers");
   return d;
 }
-export const browserStore: DataStore = {
+export function accountStore(userId?: string): DataStore {
+  const key = accountStorageKey(userId);
+  return {
   load() {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(key);
     return raw ? validateData(JSON.parse(raw)) : emptyData();
   },
   save(data) {
-    localStorage.setItem(KEY, JSON.stringify(data));
+    localStorage.setItem(key, JSON.stringify(data));
   },
   clear() {
-    localStorage.removeItem(KEY);
+    localStorage.removeItem(key);
   },
-};
+  };
+}
+export const browserStore = accountStore();
