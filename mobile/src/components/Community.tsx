@@ -68,10 +68,12 @@ export function Community({ language }: { language: Language }) {
         <h1>{t("Community", "社區")}</h1>
       </div>
       <section className="ask-hero">
-        <div className="ask-hero-icons" aria-hidden="true"><Heart size={30}/><MessageCircle size={38}/></div>
+        <img className="ask-hero-photo" src="/media/carevoice-community.png" alt="" aria-hidden="true" />
+        <div className="ask-hero-copy">
         <h2>{t("Ask CareVoice", "問問 CareVoice")}</h2>
         <p>{t("What’s on your mind today?", "今天有甚麼想聊聊？")}</p>
         <button className="primary" onClick={() => setCompose(!compose)}><MessageCircle size={18}/>{t("Ask a question", "提出問題")}</button>
+        </div>
       </section>
       <CareChat open={compose} language={language} onClose={() => setCompose(false)} onPreview={text => {setDrafts([...drafts,text]);setView("drafts");}} />
       <section className="ask-browser">

@@ -7,7 +7,6 @@ import {
   Compass,
   FileText,
   Pencil,
-  Plus,
   UserRound,
 } from "lucide-react";
 import { type AppData, type Observation } from "../domain";
@@ -52,12 +51,13 @@ export function Dashboard({
         ].map(([emoji,label,action])=><button key={String(label)} onClick={action as ()=>void}><span aria-hidden="true">{emoji as string}</span><small>{label as string}</small></button>)}
       </div>
       <section className="care-home-start">
+        <img className="care-home-art" src="/media/carevoice-home.png" alt="" aria-hidden="true" />
         <h2>{t("Start here", "由這裡開始")} <span aria-hidden="true">💛</span></h2>
         <p>{t("A little support for your everyday care.", "為日常照顧添一點支援。")}</p>
         <button className="care-home-step" onClick={onCommunity}><span aria-hidden="true">💬</span>{t("Explore questions from parents", "看看家長常見問題")}</button>
         <button className="care-home-step" onClick={onAdd}><span aria-hidden="true">✍️</span>{t("Capture a moment from today", "記下今天的一刻")}</button>
         <button className="care-home-step" onClick={onJourney}><span aria-hidden="true">🧭</span>{t("Find your next step", "尋找下一步")}</button>
-        <button className="care-home-start-button" onClick={onAdd}>{t("Add a record", "新增記錄")}<Plus size={18}/></button>
+        <button className="care-home-start-button" onClick={onAdd}>{t("Add a record", "新增記錄")}</button>
       </section>
       <button className="care-home-checkin" onClick={onRecords}><span aria-hidden="true">🌱</span><div><strong>{data.records.length ? t("Your care, one day at a time", "每天一點，記下照顧點滴") : t("Start your care calendar", "開始你的照顧日曆")}</strong><p>{t("Keep everyday moments together in Tracker.", "在追蹤頁整理每天的點滴。")}</p></div><ChevronRight size={20}/></button>
       <button className="home-questionnaire" onClick={onQuestionnaire}>
@@ -99,6 +99,12 @@ export function Dashboard({
           <span>{t("No records yet", "仲未有記錄")}</span>
         </div>
       )}
+      <section className="home-feedback" aria-labelledby="home-feedback-title">
+        <h2 id="home-feedback-title">{t("Share your thoughts", "分享你的想法")}</h2>
+        <p>{t("Have an idea or feedback? Help us improve CareVoice.", "有新點子或意見？一起讓 CareVoice 做得更好。")}</p>
+        <button type="button" disabled aria-describedby="home-feedback-status">{t("Give feedback", "提供意見")}</button>
+        <small id="home-feedback-status">{t("Feedback form coming soon", "意見表格即將推出")}</small>
+      </section>
     </div>
   );
 }

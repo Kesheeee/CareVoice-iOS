@@ -1,3 +1,4 @@
+import { recordStreak } from "../streak";
 import { useState } from "react";
 import { translator, languageLocale } from "../i18n";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
@@ -44,6 +45,7 @@ export function RecordsScreen({
   const [allDates, setAllDates] = useState(false);
   const dayKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   const today = new Date();
+  const streak = recordStreak(records, today);
   const offset = (month.getDay() + 6) % 7;
   const days = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
   const cells = Math.ceil((offset + days) / 7) * 7;
@@ -62,9 +64,12 @@ export function RecordsScreen({
     <section className="records-screen">
       <div className="records-heading">
         <h1>{t("Tracker", "追蹤")}</h1>
+        <div className="tracker-header-actions">
         <button className="records-report-button" onClick={onReport}>
           <FileText size={18} aria-hidden="true" />{t("Reports", "報告")}
         </button>
+        <span className="tracker-streak" role="status" aria-label={t(`${streak} day recording streak`, `連續記錄 ${streak} 天`)} title={t("Consecutive days with records. Log today to keep it going.", "連續有記錄的天數，今天記錄即可延續。") }><span aria-hidden="true">🔥</span><strong>{streak}</strong></span>
+        </div>
       </div>
       <div className="tracker-calendar">
         <div className="tracker-month">

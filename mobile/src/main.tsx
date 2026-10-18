@@ -36,6 +36,7 @@ import {
   Trash2,
   UserRound,
   Settings,
+  Route,
   X,
 } from "lucide-react";
 import {
@@ -91,6 +92,7 @@ type Page =
   | "recordDetails"
   | "resources"
   | "profile"
+  | "settings"
   | "questionnaire"
   | "journey"
   | "report";
@@ -343,6 +345,8 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
         )}
         {page === "questionnaireIntro" && (
           <QuestionnaireIntro
+            completed={answeredCount(data.answers)}
+            onCategory={(index) => {setReview(false);setQIndex(index);go("questionnaire");}}
             language={data.language}
             onStart={questionnaireStart}
             onLater={() => go("home")}
@@ -647,7 +651,28 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
         )}
         {page === "resources" && <Community language={data.language} />}
         {page === "profile" && (
+          <div className="account-profile-screen">
+            <header className="account-profile-header">
+              <h1>{t("Profile", "個人檔案")}</h1>
+              <button aria-label={t("Settings", "設定")} onClick={() => go("settings")}><Settings size={24}/></button>
+            </header>
+            <section className="account-profile-card">
+              <div className="account-profile-avatar" aria-hidden="true"><UserRound size={38}/></div>
+              <h2>{t("Your profile", "你的檔案")}</h2>
+              {user?.email && <p>{user.email}</p>}
+              <button className="secondary" onClick={openProfile}>{t("Edit profile", "編輯檔案")}</button>
+            </section>
+            <h2 className="profile-section">{t("Your care journey", "你的照顧旅程")}</h2>
+            <div className="settings-list">
+              <button onClick={() => go("journey")}><Route size={20}/>{t("My next steps", "我的下一步")}<ChevronRight size={17}/></button>
+              <button onClick={() => go("records")}><BookOpen size={20}/>{t("Tracker", "追蹤")}<span>{data.records.length}</span><ChevronRight size={17}/></button>
+              <button onClick={() => go("report")}><FileText size={20}/>{t("Reports & sharing", "報告同分享")}<ChevronRight size={17}/></button>
+            </div>
+          </div>
+        )}
+        {page === "settings" && (
           <div className="profile-screen">
+            <Back onClick={() => go("profile")} label={t("Profile", "個人檔案")} />
             <PageHeading title={t("Settings", "設定")} />
             <h2 className="profile-section">{t("Preferences", "偏好設定")}</h2>
             <div className="settings-list">
@@ -811,7 +836,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               ["home", House, "Home", "首頁"],
               ["records", BookOpen, "Tracker", "追蹤"],
               ["resources", UsersRound, "Community", "社區"],
-              ["profile", Settings, "Settings", "設定"],
+              ["profile", UserRound, "Profile", "個人檔案"],
             ] as const
           ).map(([p, Icon, en, cn]) => (
             <React.Fragment key={p}>
@@ -821,14 +846,14 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
             </button>}
             <button
               className={
-                page === p ||
+                page === p || (p === "profile" && page === "settings") ||
                 (p === "home" && ["journey", "questionnaire"].includes(page)) ||
                 (p === "records" && ["report", "recordDetails"].includes(page))
                   ? "active"
                   : ""
               }
               aria-current={
-                page === p ||
+                page === p || (p === "profile" && page === "settings") ||
                 (p === "home" && ["journey", "questionnaire"].includes(page)) ||
                 (p === "records" && ["report", "recordDetails"].includes(page))
                   ? "page"
@@ -836,7 +861,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               }
               onClick={() => go(p)}
             >
-              {page === p || (p === "home" && ["journey", "questionnaire"].includes(page)) || (p === "records" && ["report", "recordDetails"].includes(page))
+              {page === p || (p === "profile" && page === "settings") || (p === "home" && ["journey", "questionnaire"].includes(page)) || (p === "records" && ["report", "recordDetails"].includes(page))
                 ? <SelectedTabIcon tab={p} />
                 : <Icon size={23} strokeWidth={1.8} aria-hidden="true" />}
               <span className="sr-only">{t(en, cn)}</span>
@@ -1109,7 +1134,6 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
                 type="submit"
               >
                 {quickRecord ? t("Save record", "儲存記錄") : t("Save observation", "儲存觀察")}
-                <Check size={18} />
               </button>
               {data.records.some((r) => r.id === record.id) && (
                 <button
