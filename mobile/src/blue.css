@@ -1510,6 +1510,27 @@ main {
 .records-screen {
   padding-bottom: 72px;
 }
+.record-entry-picker {
+  position: fixed;
+  inset: auto max(20px, calc((100vw - 560px) / 2 + 20px)) calc(152px + env(safe-area-inset-bottom)) auto;
+  margin: 0;
+  width: min(320px, calc(100vw - 40px));
+  max-height: calc(100dvh - 180px - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  padding: 16px 8px 8px;
+  border: 1px solid var(--color-line);
+  border-radius: 20px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 8px 28px var(--color-shadow);
+}
+.record-entry-picker h2 { margin: 0 12px 8px; font-size: 1rem; }
+.record-entry-picker > button { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 76px; padding: 14px 12px; border-radius: 12px; text-align: left; }
+.record-entry-picker > button:hover { background: var(--color-blue-soft); }
+.record-entry-picker > button > svg { flex-shrink: 0; color: var(--color-accent); }
+.record-entry-picker strong, .record-entry-picker small { display: block; }
+.record-entry-picker strong { font-size: 1rem; font-weight: 600; }
+.record-entry-picker small { margin-top: 4px; color: var(--color-muted); font-size: 0.8rem; }
 .records-options {
   position: relative;
   margin: 0;
