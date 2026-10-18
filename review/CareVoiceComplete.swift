@@ -565,7 +565,7 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                Text(store.t("Hello, \(store.data.profile?.displayName(store.language) ?? "there")", "你好，\(store.data.profile?.displayName(store.language) ?? "")"))
+                Text(store.t("Hello, ", "你好，") + (store.data.profile?.displayName(store.language) ?? store.t("there", "")))
                     .font(.title.bold())
                 if let p = store.data.profile {
                     Card {
