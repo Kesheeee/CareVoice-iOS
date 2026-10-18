@@ -4,7 +4,7 @@ A phone-first React + TypeScript version of CareVoice. English and Traditional C
 
 The current UI follows the blue Cici UI+UX_1013 v4 reference, with subtitles removed. Queenie's onboarding rules override the mockup's score/results screen: Welcome → child profile → caregiver-selected stage → questionnaire introduction only for the just-noticing stage → answer review → Home. All other stages go straight to Home; everyone can open the questionnaire voluntarily from Profile.
 
-Home shows actual monthly record counts and questionnaire completion, not clinical scores. Records link earlier entries only by an explicitly chosen category. Community contains official resources, parent support links and information questions rather than a live forum. Loss-of-skills Yes/Not sure surfaces an official professional contact route immediately and offers an optional timing note. Existing professional report details are optional copies, never inferred. Voice entry uses the phone keyboard's dictation; CareVoice itself does not capture or upload audio.
+Home shows actual monthly record counts and questionnaire completion, not clinical scores. Records link earlier entries only by an explicitly chosen category. Community contains official resources, parent support links and information questions rather than a live forum. Loss-of-skills Yes/Not sure surfaces an official professional contact route immediately and offers an optional timing note. Existing professional report details are optional copies, never inferred. Quick Record can use the microphone directly through the browser's speech-recognition service; only reviewed text is saved.
 
 The additional `regressionWhen` and professional-report fields are optional additions to schema version 1. Older saved data and backups load without migration or deletion. See `design.md` for the shared design system.
 
@@ -21,7 +21,15 @@ The development server is available on your local network. Open the printed Netw
 
 ## Implemented
 
-Profile with six caregiver-selected journey stages; observation create/edit/delete, context and filters; questionnaire with autosave, skip, review and immediate loss-of-skills, seizure and self-injury routing; personal journey checklist; official resource links; family/appointment reports, text sharing/download and browser print-to-PDF; local backup/restore and delete-all. No diagnosis or scores. Voice entry uses the device keyboard's dictation rather than sending microphone recordings to a server.
+Profile with caregiver-selected journey stages; observation create/edit/delete, context and filters; questionnaire with autosave, skip, review and immediate loss-of-skills, seizure and self-injury routing; personal journey checklist; official resource links; family/appointment reports, text sharing/download and browser print-to-PDF; local backup/restore and delete-all. No diagnosis or scores. Voice entry includes a direct microphone action, live transcript, Stop control and a 60-second limit.
+
+### Direct voice entry
+
+Records → **+** → **Voice record** → **Start recording** calls the browser's `SpeechRecognition` / `webkitSpeechRecognition` API after an explicit tap. Select English, Cantonese or Mandarin; support depends on the browser's speech service. Microphone/speech permission and HTTPS are required. No OpenAI key or server endpoint is used. The browser provider may process audio remotely; the UI discloses this before recording. CareVoice retains no audio file and never saves a note automatically.
+
+Final recognised phrases appear in the draft; interim text stays separate. Stop waits for a final result, then the user can edit and save. Record more appends to existing text. Cancel, closing the panel, navigation and unmount release capture; backgrounding stops recording. Permission, device, network, unsupported-language, silence and timeout errors preserve existing text and provide retry or Text record. Browser implementations may end earlier than 60 seconds after silence.
+
+References: [SpeechRecognition and browser compatibility](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition), [stop and final results](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/stop).
 
 ## Android / iOS path
 

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import { createRoot } from "react-dom/client";
 import {
   AudioLines,
@@ -70,6 +69,7 @@ import {
 } from "./components/Onboarding";
 import { Dashboard } from "./components/Dashboard";
 import { RecordsScreen } from "./components/RecordsScreen";
+import { VoiceRecorder } from "./components/VoiceRecorder";
 import { ReportPreview } from "./components/ReportPreview";
 import { Community } from "./components/Community";
 import { LaunchScreen } from "./components/LaunchScreen";
@@ -138,10 +138,8 @@ function App() {
     [professional, setProfessional] = useState(true),
     [saved, setSaved] = useState(false);
   const [voiceEntry, setVoiceEntry] = useState(false);
-  const [voiceInputActive, setVoiceInputActive] = useState(false);
-  const observationInput = useRef<HTMLTextAreaElement>(null);
+  const [voiceBusy, setVoiceBusy] = useState(false);
   const quickRecord = !!record && !data.records.some(r => r.id === record.id);
-  useEffect(() => { setVoiceInputActive(false); }, [record?.id]);
   const mainRef = useRef<HTMLElement>(null),
     importRef = useRef<HTMLInputElement>(null);
   const zh = data.language === "zh",
@@ -699,6 +697,7 @@ function App() {
                     "記錄儲存喺呢個瀏覽器，冇帳戶、分析追蹤或雲端同步。清除瀏覽器資料會刪埋記錄，記得保留備份。CareVoice 冇加密瀏覽器入面儲存嘅資料。",
                   )}
                 </p>
+                <p>{t("Voice recording uses your browser’s speech service, which may process audio online. CareVoice saves only the text you review and does not store an audio file.", "語音記錄使用瀏覽器嘅語音服務，可能會在線上處理聲音。CareVoice 只儲存你核對後嘅文字，唔會儲存錄音檔案。")}</p>
               </div>
             <p className="fine-print">
               {t(
@@ -886,7 +885,7 @@ function App() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (!record.text.trim() || locked) return;
+              if (!record.text.trim() || locked || voiceBusy) return;
               const next = {
                 ...data,
                 records: [
@@ -933,47 +932,29 @@ function App() {
 
             {quickRecord && <div className="quick-record-tabs" role="tablist" aria-label={t("Record method", "記錄方式")}
               onKeyDown={event => {
+                if (voiceBusy) return;
                 if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
                 event.preventDefault();
                 const voice = event.key === "Home" ? true : event.key === "End" ? false : !voiceEntry;
                 setVoiceEntry(voice);
                 event.currentTarget.querySelectorAll<HTMLButtonElement>("button")[voice ? 0 : 1]?.focus();
               }}>
-              <button type="button" role="tab" id="quick-voice-tab" aria-selected={voiceEntry} aria-controls="quick-record-panel" tabIndex={voiceEntry ? 0 : -1} onClick={() => setVoiceEntry(true)}>
+              <button type="button" role="tab" id="quick-voice-tab" disabled={voiceBusy} aria-selected={voiceEntry} aria-controls="quick-record-panel" tabIndex={voiceEntry ? 0 : -1} onClick={() => setVoiceEntry(true)}>
                 <Mic size={20} aria-hidden="true" />{t("Voice record", "語音記錄")}
               </button>
-              <button type="button" role="tab" id="quick-text-tab" aria-selected={!voiceEntry} aria-controls="quick-record-panel" tabIndex={!voiceEntry ? 0 : -1} onClick={() => setVoiceEntry(false)}>
+              <button type="button" role="tab" id="quick-text-tab" disabled={voiceBusy} aria-selected={!voiceEntry} aria-controls="quick-record-panel" tabIndex={!voiceEntry ? 0 : -1} onClick={() => setVoiceEntry(false)}>
                 <Pencil size={20} aria-hidden="true" />{t("Text record", "文字記錄")}
               </button>
             </div>}
             <div className="sheet-body" id={quickRecord ? "quick-record-panel" : undefined} role={quickRecord ? "tabpanel" : undefined} aria-labelledby={quickRecord ? (voiceEntry ? "quick-voice-tab" : "quick-text-tab") : undefined}>
-              {voiceEntry && quickRecord && <div className="quick-voice-intro">
-                <span className="quick-voice-symbol"><Mic size={36} aria-hidden="true" /></span>
-                <p>{t("Speak using your keyboard’s microphone, then check the text before saving.", "用鍵盤嘅咪高峰講低觀察，儲存之前核對文字。")}</p>
-                {!voiceInputActive && !record.text && <button type="button" className="primary full" onClick={() => {
-                  flushSync(() => setVoiceInputActive(true));
-                  observationInput.current?.focus();
-                }}>{t("Start voice entry", "開始語音輸入")}</button>}
-              </div>}
-              {voiceEntry && !quickRecord && (
-                <div className="voice-entry-help">
-                  <Mic size={22} />
-                  <strong>
-                    {t("Use your keyboard microphone", "用鍵盤嘅咪輸入")}
-                  </strong>
-                  <p>
-                    {t(
-                      "Tap the observation field, then your phone keyboard’s microphone. Check the transcript before saving. CareVoice does not record or upload audio.",
-                      "撳觀察欄位，再撳手機鍵盤嘅咪。儲存之前記得核對文字，CareVoice 唔會錄音或上傳聲音。",
-                    )}
-                  </p>
-                </div>
-              )}
-              <label hidden={quickRecord && voiceEntry && !voiceInputActive && !record.text}>
+              {voiceEntry && <VoiceRecorder key={record.id} language={data.language} text={record.text}
+                onActiveChange={setVoiceBusy}
+                onTranscript={text => setRecord(current => current?.id === record.id ? { ...current, text } : current)} />}
+              <label>
                 {t("What happened?", "發生咗咩事？")}
                 <textarea
                   className="observation-input"
-                  ref={observationInput}
+                  readOnly={voiceBusy}
                   required
                   maxLength={10000}
                   value={record.text}
@@ -1077,7 +1058,7 @@ function App() {
               {quickRecord && <button type="button" className="secondary" onClick={() => setRecord(null)}>{t("Cancel", "取消")}</button>}
               <button
                 className="primary full"
-                disabled={!record.text.trim() || locked}
+                disabled={!record.text.trim() || locked || voiceBusy}
                 type="submit"
               >
                 {quickRecord ? t("Save record", "儲存記錄") : t("Save observation", "儲存觀察")}

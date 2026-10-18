@@ -1948,6 +1948,17 @@ main {
 .quick-record-sheet .observation-details { margin-top: 4px; }
 .quick-record-sheet .sheet-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px 20px 20px; border: 0; }
 .quick-record-sheet .sheet-actions button { min-width: 0; min-height: 48px; margin: 0; border-radius: 12px; font-size: 0.9rem; white-space: nowrap; }
+.voice-recorder .quick-voice-symbol { width: 64px; height: 64px; margin-bottom: 12px; }
+.voice-recorder .voice-language { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 0 12px; font-size: 0.8rem; }
+.voice-recorder .voice-language select { width: auto; min-width: 110px; min-height: 44px; margin: 0; padding: 8px 12px; font-size: 0.875rem; }
+.voice-recorder .voice-timer { display: block; margin: 0 0 12px; font-size: 1.25rem; font-variant-numeric: tabular-nums; font-weight: 650; color: var(--color-accent); }
+.voice-recorder .voice-interim { padding: 12px; border-radius: 12px; background: var(--color-soft); overflow-wrap: anywhere; }
+.voice-recorder .voice-error { padding: 12px; border-radius: 12px; color: var(--color-danger); background: var(--color-danger-soft); }
+.voice-recorder .voice-privacy { margin: 12px auto 0; font-size: 0.75rem; line-height: 1.5; }
+.voice-listening .quick-voice-symbol { color: var(--color-danger); background: var(--color-danger-soft); }
+.voice-listening .primary { background: var(--color-danger); }
+.voice-review .quick-voice-symbol { color: var(--color-success); background: var(--color-success-soft); }
+.quick-record-tabs button:disabled { cursor: default; }
 @media (max-width: 359px) {
   .quick-record-tabs { padding-left: 16px; padding-right: 16px; gap: 8px; }
   .quick-record-tabs > button { gap: 6px; font-size: 0.8125rem; }

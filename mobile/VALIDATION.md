@@ -1,5 +1,11 @@
 # Mobile web verification
 
+## Direct microphone transcription — 18 October 2026
+
+TypeScript/Vite production build and all 16 domain/speech unit tests passed. Seven speech tests cover cumulative/interim results, duplicate prevention, finalisation, permission errors, cancellation, stale events, the 60-second limit, unsupported browsers, silence and provider timeouts. Two isolated Chromium browser tests with a simulated speech engine verify tap-only capture, typed-note preservation, multiple recording segments, explicit Save persistence, Cancel cleanup and permission-denied fallback. No microphone or real speech service was used by these automated tests.
+
+The live local UI was checked at 320, 375, 414 and 768px widths: no horizontal overflow, dialog fits, Start recording and footer controls remain visible. Real microphone permission, transcription quality, Cantonese/Mandarin availability and Safari/iPhone speech service behavior still need physical-device verification. Audio is processed by the browser's speech service; CareVoice saves reviewed text only. No API key, audio file or new record schema is introduced.
+
 ## Cleaner Records
 
 15 October 2026: production build and browser checks passed for the new Records toolbar, add action, voice/report menu, search, category chips, collapsed same-category related records, editing and deletion. Bilingual screen layouts fit 320/375/414/768px. Empty and populated 375px Records screens were visually reviewed. An accessibility-role issue on the native menu summary was corrected and the Records flow rerun successfully. No record schema or clinical logic changed.
