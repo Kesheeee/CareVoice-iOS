@@ -175,9 +175,9 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
   </div>;
 }
 
-// Enable after deploying and verifying the authenticated Supabase function.
+// Supabase transcription is deployed and verified. Browser speech is an explicit fallback.
 export function VoiceRecorder(props: Parameters<typeof AzureVoiceRecorder>[0]) {
-  return (import.meta as ImportMeta & { env?: { VITE_VOICE_BACKEND?: string } }).env?.VITE_VOICE_BACKEND === "supabase"
+  return (import.meta as ImportMeta & { env?: { VITE_VOICE_BACKEND?: string } }).env?.VITE_VOICE_BACKEND !== "browser"
     ? <AzureVoiceRecorder {...props}/>
     : <BrowserVoiceRecorder {...props}/>;
 }

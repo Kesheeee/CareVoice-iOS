@@ -14,7 +14,7 @@ The endpoint checks the Supabase user token, rejects anonymous users, validates 
 
    `npx supabase functions deploy transcribe --project-ref lbbpuwtwhiectsmhhuej --use-api`
 
-4. Build the web app with `VITE_VOICE_BACKEND=supabase` and deploy that build to Vercel. Until then, the existing browser speech path remains active.
+4. Build and deploy the web app to Vercel. Supabase is the default; `VITE_VOICE_BACKEND=browser` explicitly restores browser speech as a rollback.
 5. Sign in with a test user. Record a short phrase in English, Cantonese and Mandarin, stop, review the transcript and save. Verify permission rejection, cancellation, and offline errors on a real iPhone Safari. Confirm an unauthenticated endpoint request returns 401.
 
 Tests: `node --experimental-strip-types --test mobile/tests/transcribe.test.ts`.
