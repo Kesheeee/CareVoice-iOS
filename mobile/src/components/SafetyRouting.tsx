@@ -1,10 +1,11 @@
 import { translator } from "../i18n";
-import { ShieldCheck, Phone, ArrowUpRight } from "lucide-react";
+import { ShieldCheck, Phone, ArrowUpRight, X } from "lucide-react";
 import type { Language } from "../domain";
-export function SafetyRouting({ language }: { language: Language }) {
+export function SafetyRouting({ language, onDismiss }: { language: Language; onDismiss: () => void }) {
   const zh = language !== "en";
   const t = translator(language);
-  return <aside className="notice safety-routing" role="alert" aria-label={t("Safety guidance", "安全指引")}>
+  return <aside className="notice safety-routing dismissible-notice" role="alert" aria-label={t("Safety guidance", "安全指引")}>
+    <button type="button" className="notice-dismiss" aria-label={t("Dismiss medical guidance", "關閉醫療提示")} onClick={onDismiss}><X size={20} /></button>
     <ShieldCheck size={20} />
     <div>
       <strong>{t("Get medical help", "尋求醫療協助")}</strong>

@@ -225,13 +225,18 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
     setDraftProfile(data.profile ?? blankProfile());
     setProfileOpen(true);
   };
+  const [followUpDismissed, setFollowUpDismissed] = useState(false);
+  const [safetyDismissed, setSafetyDismissed] = useState(false);
+  useEffect(() => setFollowUpDismissed(false), [data.answers[131], data.answers[29], data.answers[30]]);
+  useEffect(() => setSafetyDismissed(false), [data.answers[132], data.answers[133]]);
   const followUp = needsFollowUp(data.answers);
   const safetyRouting = needsSafetyRouting(data.answers);
   useEffect(() => {
     if ((followUp || safetyRouting) && page === "questionnaire") window.scrollTo({ top: 0 });
   }, [followUp, safetyRouting, data.answers[132], data.answers[133], page]);
-  const warning = followUp ? (
-    <aside className="notice" role="alert">
+  const warning = followUp && !followUpDismissed ? (
+    <aside className="notice dismissible-notice" role="alert">
+      <button type="button" className="notice-dismiss" aria-label={t("Dismiss change guidance", "關閉變化提示")} onClick={() => setFollowUpDismissed(true)}><X size={20} /></button>
       <Heart size={20} />
       <div>
         <strong>{t("A change worth discussing", "值得跟進嘅變化")}</strong>
@@ -354,7 +359,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
         )}
         {page === "home" && (
           <>
-            {safetyRouting && <SafetyRouting language={data.language} />}
+            {safetyRouting && !safetyDismissed && <SafetyRouting language={data.language} onDismiss={() => setSafetyDismissed(true)} />}
             {warning}
             <Dashboard
               data={data}
@@ -470,7 +475,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
         {page === "questionnaire" && (
           <div className="questionnaire-screen">
             <Back onClick={() => go("home")} label={t("Home", "首頁")} />
-            {safetyRouting && <SafetyRouting language={data.language} />}
+            {safetyRouting && !safetyDismissed && <SafetyRouting language={data.language} onDismiss={() => setSafetyDismissed(true)} />}
             {warning}
             {review ? (
               <>
@@ -794,7 +799,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
                 {t("Family", "家庭摘要")}
               </button>
             </div>
-            {safetyRouting && <SafetyRouting language={data.language} />}
+            {safetyRouting && !safetyDismissed && <SafetyRouting language={data.language} onDismiss={() => setSafetyDismissed(true)} />}
             {warning}
             <ReportPreview text={reportText(data, [...questions, ...legacyQuestions.filter(q => data.answers[q.id])], professional)} />
             <div className="report-actions">
