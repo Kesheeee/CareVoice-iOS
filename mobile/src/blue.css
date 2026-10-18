@@ -2078,3 +2078,7 @@ main {
 .record-detail-saved { color: var(--color-success); margin: -12px 0 20px; font-size: .88rem; }
 .record-detail-body > .record-tag { display: inline-block; padding: 4px 10px; border-radius: 8px; background: var(--color-blue-soft); color: var(--color-accent); font-size: .8rem; }
 .record-detail-body p { color: var(--color-ink); font-size: 1rem; }
+.settings-session { margin-top: 28px; padding-top: 4px; border-top: 1px solid var(--color-line); }
+.settings-session .account-email { overflow-wrap: anywhere; }
+.settings-logout { display: block; width: 100%; min-height: 52px; padding: 12px 4px; text-align: left; color: var(--color-danger); background: none; border: 0; border-radius: 6px; font-weight: 500; }
+@media (hover: hover) { .settings-logout:hover:not(:disabled) { text-decoration: underline; } }

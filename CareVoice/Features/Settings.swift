@@ -95,8 +95,11 @@ struct AccountSettingsRow: View {
     var body: some View {
         if let user = community.user {
             Section(store.t("Account", "帳戶")) {
-                Text(user.email ?? "").font(.subheadline).foregroundStyle(Color.secondary)
-                Button { Task { _ = await community.signOut() } } label: { SettingsRow(title: store.t("Sign out", "登出"), icon: "rectangle.portrait.and.arrow.right") }.disabled(community.busy)
+                Text(user.email ?? "").font(.subheadline).foregroundStyle(Color.secondary).listRowBackground(Color.clear).listRowSeparator(.hidden)
+                Button(role: .destructive) { Task { _ = await community.signOut() } } label: {
+                    Text(community.busy ? store.t("Logging out…", "正在登出…") : store.t("Log out", "登出"))
+                        .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
+                }.disabled(community.busy).listRowBackground(Color.clear).listRowSeparator(.hidden)
             }
         }
     }

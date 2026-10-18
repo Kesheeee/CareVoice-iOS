@@ -262,7 +262,7 @@ test("Password login restores only this account's notebook, survives reload, and
   ).toBeVisible();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.getByText(user.email, { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await page.getByRole("button", { name: "Log out", exact: true }).click();
   await expect(
     page.getByRole("button", { name: "Get started", exact: true }),
   ).toBeVisible();

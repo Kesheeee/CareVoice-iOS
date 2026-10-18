@@ -723,17 +723,17 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               )}
             </p>
             </details>
-            {user && <>
+            {user && <section className="settings-session" aria-label={t("Account", "帳戶", "账户")}>
               <h2 className="profile-section">{t("Account", "帳戶", "账户")}</h2>
               <p className="account-email">{user.email}</p>
-              <div className="settings-list"><button disabled={signingOut} onClick={async () => {
+              <button className="settings-logout" disabled={signingOut} aria-busy={signingOut} onClick={async () => {
                 setSigningOut(true);
                 try {
                   const { error } = await authClient.auth.signOut({ scope: "local" });
                   if (error) throw error;
                 } catch { setError(t("Could not sign out. Please try again.", "無法登出，請再試一次。")); setSigningOut(false); }
-              }}><LockKeyhole size={20} />{signingOut ? t("Signing out…", "正在登出…") : t("Sign out", "登出")}<ChevronRight size={17} /></button></div>
-            </>}
+              }}>{signingOut ? t("Logging out…", "正在登出…") : t("Log out", "登出")}</button>
+            </section>}
           </div>
         )}
         {page === "report" && (
