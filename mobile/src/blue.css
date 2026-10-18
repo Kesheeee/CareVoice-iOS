@@ -1494,13 +1494,21 @@ main {
   gap: 8px;
 }
 .records-add {
-  width: 44px;
-  height: 44px;
+  position: fixed;
+  right: max(20px, calc((100vw - 560px) / 2 + 20px));
+  bottom: calc(84px + env(safe-area-inset-bottom));
+  z-index: 11;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: grid;
   place-items: center;
   background: var(--color-accent);
   color: var(--color-surface);
+  box-shadow: 0 4px 14px var(--color-shadow);
+}
+.records-screen {
+  padding-bottom: 72px;
 }
 .records-options {
   position: relative;

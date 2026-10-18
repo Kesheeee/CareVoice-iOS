@@ -90,13 +90,6 @@ export function RecordsScreen({
               </button>
             </div>
           </details>
-          <button
-            className="records-add"
-            aria-label={t("Add a record", "新增記錄")}
-            onClick={() => action(onAdd)}
-          >
-            <Plus size={23} />
-          </button>
         </div>
       </div>
       <div className="records-search">
@@ -166,6 +159,14 @@ export function RecordsScreen({
           )}
         </div>
       )}
+      <button
+        type="button"
+        className="records-add"
+        aria-label={t("Add a record", "新增記錄")}
+        onClick={() => action(onAdd)}
+      >
+        <Plus size={26} aria-hidden="true" />
+      </button>
     </section>
   );
 }
