@@ -20,3 +20,7 @@ family-data.json
 ui-test-data.json
 .codegraph
 .serena
+backend/data/
+backend/.venv/
+__pycache__/
+*.pyc
