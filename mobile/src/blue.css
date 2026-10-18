@@ -1911,7 +1911,25 @@ main {
 .observation-details > summary::-webkit-details-marker { display: none; }
 .observation-details[open] > summary svg { transform: rotate(180deg); }
 .observation-sheet .observation-details > label, .observation-details > .form-row { margin: 4px 16px 18px; }
-.observation-sheet .observation-details label { font-size: 0.8rem; color: var(--color-muted); }
+.observation-sheet .observation-details label { min-width: 0; font-size: 0.8rem; color: var(--color-muted); }
+/* iOS date controls otherwise retain their native intrinsic width. */
+.observation-details input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-inline-size: 0;
+  text-align: left;
+}
+.observation-details input[type="datetime-local"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+.observation-sheet .sheet-body { min-width: 0; scroll-padding-block: 16px; }
+.observation-details input, .observation-details textarea, .observation-details select { scroll-margin-block: 16px; }
 .observation-details textarea { min-height: 92px; }
 .observation-sheet .sheet-actions .primary { border-radius: 12px; }
 .observation-sheet .sheet-actions .danger-button { border: 0; background: transparent; font-size: 0.8rem; }
