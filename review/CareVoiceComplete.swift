@@ -3063,7 +3063,7 @@ struct SettingsView: View {
                 Button { profileOpen = true } label: { SettingsRow(title: store.t("Profile", "個人檔案"), icon: "person") }.accessibilityIdentifier("settings-preferences")
                 Button { languageOpen = true } label: { SettingsRow(title: store.t("Language", "語言"), icon: "globe", value: store.language.displayName) }.accessibilityIdentifier("languagePicker")
             }
-            Section(store.t("Account", "帳戶")) { AccountSettingsRow(community: store.community) }
+            AccountSettingsRow(community: store.community)
             Section(store.t("Care", "照顧工具")) {
                 NavigationLink { QuestionnaireView() } label: { SettingsRow(title: store.t("Observation questions", "觀察問卷"), icon: "book", value: "\(store.data.answeredCount)/\(store.questions.count)", chevron: false) }.accessibilityIdentifier("openQuestionnaire")
                 NavigationLink { ReportsView() } label: { SettingsRow(title: store.t("Reports & sharing", "報告同分享"), icon: "doc.text", chevron: false) }.accessibilityIdentifier("openReports")
@@ -3109,10 +3109,10 @@ struct AccountSettingsRow: View {
     @ObservedObject var community: CommunityStore
     var body: some View {
         if let user = community.user {
-            Text(user.email ?? "").font(.subheadline).foregroundStyle(Color.secondary)
-            Button { Task { _ = await community.signOut() } } label: { SettingsRow(title: store.t("Sign out", "登出"), icon: "rectangle.portrait.and.arrow.right") }.disabled(community.busy)
-        } else {
-            Text(store.t("Local preview", "本機預覽")).foregroundStyle(Color.secondary)
+            Section(store.t("Account", "帳戶")) {
+                Text(user.email ?? "").font(.subheadline).foregroundStyle(Color.secondary)
+                Button { Task { _ = await community.signOut() } } label: { SettingsRow(title: store.t("Sign out", "登出"), icon: "rectangle.portrait.and.arrow.right") }.disabled(community.busy)
+            }
         }
     }
 }
