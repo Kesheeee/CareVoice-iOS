@@ -4,6 +4,25 @@ final class CareVoiceUITests: XCTestCase {
     private func launch(_ arguments: [String] = ["--seed-profile"]) -> XCUIApplication {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"] + arguments; app.launch(); return app
     }
+    func testSurveyBirthdayAndAllSevenChoices() {
+        let app = launch([])
+        XCTAssertTrue(app.buttons["surveyContinue"].waitForExistence(timeout: 10)); app.buttons["surveyContinue"].tap()
+        for (part, value) in [("Day", "15"), ("Month", "6"), ("Year", String(Calendar.current.component(.year, from: Date()) - 3))] {
+            app.buttons["birthday-" + part].tap()
+            app.buttons[value].tap()
+        }
+        XCTAssertTrue(app.buttons["surveyContinue"].isEnabled); app.buttons["surveyContinue"].tap()
+        for stage in ["noticed", "professionalFollowUp", "awaitingAssessment", "assessed", "registered", "waitingSupport", "receivingServices"] {
+            XCTAssertTrue(app.buttons["survey-" + stage].isHittable, stage)
+        }
+        XCTAssertTrue(app.buttons["surveyContinue"].isHittable)
+        snapshot(app, "Survey-Seven-Stages")
+        app.buttons["survey-waitingSupport"].tap(); app.buttons["surveyContinue"].tap()
+        XCTAssertTrue(app.buttons["survey-nextSteps"].waitForExistence(timeout: 5))
+        snapshot(app, "Survey-Support-Goals")
+        app.buttons["survey-nextSteps"].tap(); app.buttons["surveyContinue"].tap(); app.buttons["surveyContinue"].tap()
+        XCTAssertTrue(app.buttons["captureMoment"].waitForExistence(timeout: 5))
+    }
     func testSettingsNavigationAndPreferences() {
         let app = launch()
         XCTAssertTrue(app.buttons["tab-3"].waitForExistence(timeout: 10)); app.buttons["tab-3"].tap()

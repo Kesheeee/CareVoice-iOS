@@ -25,11 +25,17 @@ jobs:
           phone = next(d for runtime, group in devices.items() if 'iOS' in runtime for d in group if 'iPhone' in d['name'])
           subprocess.run(['xcodebuild', '-project', 'CareVoice.xcodeproj', '-scheme', 'CareVoice', '-destination', 'platform=iOS Simulator,id=' + phone['udid'], '-resultBundlePath', 'SettingsTests.xcresult', 'CODE_SIGNING_ALLOWED=NO', 'test'], check=True)
           PY
+      - name: Export simulator screenshots
+        if: always()
+        run: |
+          if [ -d SettingsTests.xcresult ]; then python3 scripts/export_iphone_screenshots.py SettingsTests.xcresult iphone-screenshots; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: settings-iphone-test-results
-          path: SettingsTests.xcresult
+          path: |
+            SettingsTests.xcresult
+            iphone-screenshots
   single-file:
     runs-on: macos-14
     steps:

@@ -128,7 +128,7 @@ struct LanguageSettingsView: View {
                 Button(store.t("Save language", "儲存語言")) { store.setLanguage(selected); dismiss() }.buttonStyle(AccountPrimaryStyle()).accessibilityIdentifier("saveLanguage")
             }.padding(24).background(Brand.background)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel", "取消")) { dismiss() } } }
-        }.onAppear { selected = store.language }.presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
+        }.onAppear { selected = store.language }.presentationDetents([.large]).presentationDragIndicator(.visible)
     }
 }
 

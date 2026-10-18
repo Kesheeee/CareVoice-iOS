@@ -1118,6 +1118,9 @@ struct ChildProfile: Codable, Equatable {
     var ageMonths = 36
     var birthDate: Date? = nil
     var supportGoals: [String]? = nil
+    var diagnosingBody: String? = nil
+    var diagnosisDate: String? = nil
+    var reportedSupportLevel: String? = nil
     var currentAgeMonths: Int { birthDate.map { max(0, Calendar.current.dateComponents([.month], from: Calendar.current.startOfDay(for: $0), to: Calendar.current.startOfDay(for: Date())).month ?? ageMonths) } ?? ageMonths }
     var stage: JourneyStage = .noticed
     var firstConcernDate = Date()
@@ -1229,6 +1232,11 @@ enum ReportBuilder {
             if professional {
                 lines += [l.text("First noticed: ", "首次留意日期：") + formatter.string(from: p.firstConcernDate)]
                 if !p.concernNotes.isEmpty { lines += [p.concernNotes] }
+                if p.stage == .diagnosed {
+                    if let body = p.diagnosingBody, !body.isEmpty { lines += [l.text("Diagnosing organisation (copied from report): ", "診斷機構（照報告填寫）：") + body] }
+                    if let date = p.diagnosisDate, !date.isEmpty { lines += [l.text("Report date: ", "報告日期：") + date] }
+                    if let level = p.reportedSupportLevel, !level.isEmpty { lines += [l.text("Support level (copied from report): ", "支援程度（照報告填寫）：") + level] }
+                }
             }
         }
         lines += ["", l.text("Parent observations — not a diagnosis or clinical assessment.", "家長觀察記錄，並非診斷或臨床評估。"), "", l.text("Questionnaire responses", "問卷回答")]
@@ -1414,7 +1422,7 @@ struct AccountForm: View {
                     Button(store.t("Create an account", "建立帳戶")) { move(.signup) }.frame(maxWidth: .infinity, minHeight: 44)
                 }
             }.padding(24).disabled(community.busy)
-        }.interactiveDismissDisabled(community.busy).background(Brand.background).presentationDetents([.large]).presentationDragIndicator(.visible).presentationCornerRadius(32)
+        }.interactiveDismissDisabled(community.busy).background(Brand.background).presentationDetents(mode == .signup ? [.large] : [.fraction(0.65), .large]).presentationDragIndicator(.visible).presentationCornerRadius(32)
             .onAppear { mode = initialMode; community.error = nil }
             .onDisappear { password = ""; confirm = "" }
     }
@@ -3082,7 +3090,7 @@ struct LanguageSettingsView: View {
                 Button(store.t("Save language", "儲存語言")) { store.setLanguage(selected); dismiss() }.buttonStyle(AccountPrimaryStyle()).accessibilityIdentifier("saveLanguage")
             }.padding(24).background(Brand.background)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel", "取消")) { dismiss() } } }
-        }.onAppear { selected = store.language }.presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
+        }.onAppear { selected = store.language }.presentationDetents([.large]).presentationDragIndicator(.visible)
     }
 }
 

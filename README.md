@@ -1,12 +1,16 @@
 # CareVoice for iOS
 
-## Phone-first web version
+## Native iPhone and mobile preview
+
+The iPhone app in `CareVoice/` follows the current `mobile/src/` TypeScript experience. Open `CareVoice.xcodeproj` for the app, or review [`review/CareVoiceComplete.swift`](review/CareVoiceComplete.swift) for all native code in one file. That file is generated from the app sources. See [the parity map](docs/SWIFT_PARITY.md) for screen mapping and platform differences.
+
+### Phone browser preview
 
 The cross-platform phone version is in [`mobile/`](mobile/README.md). It runs in a phone browser now and uses React, TypeScript and a Capacitor configuration for later Android/iOS packaging. From `mobile/`, run `npm ci` then `npm run dev`, or `npm run build` for the static bundle. See its README for features, local data handling and native packaging steps.
 
-A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English and Traditional Chinese. Based on the UI+UX_1013 design pack, with the onboarding guidance taking precedence over the mockup's conflicting score screen.
+A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English, Traditional Chinese and Simplified Chinese. The latest phone UI follows the TypeScript preview, while using native SwiftUI controls.
 
-<img src="docs/screenshots/home-traditional-chinese.png" alt="CareVoice home screen in Traditional Chinese, running on the iPhone simulator" width="300">
+
 
 ## Run it
 
@@ -19,18 +23,18 @@ A native SwiftUI MVP for Hong Kong caregivers of children aged 0–6. English an
 3. Select the **CareVoice** scheme and an iPhone simulator, then press **Run**.
 4. For a physical iPhone, choose your Apple development team under **Signing & Capabilities**. Change the bundle identifier if your team needs a unique identifier. An Apple developer account is not needed for the simulator.
 
-Minimum deployment target: **iOS 17**. Core observation features work locally without a backend. The optional shared parent community requires the configuration described in [Community setup](docs/COMMUNITY_SETUP.md). The checked-in Xcode project is ready to open.
+Minimum deployment target: **iOS 17**. Email/password sign-in uses the same Supabase project as the phone preview. After sign-in, observation data is stored locally per account. The optional shared parent community requires the configuration described in [Community setup](docs/COMMUNITY_SETUP.md). The checked-in Xcode project is ready to open.
 
 ## What works
 
-- Optional nickname and age, six parent-selected journey stages, first-concern notes.
+- Five-page survey: optional nickname, birthday, seven parent-selected journey stages, support goals and optional notes.
 - English, Traditional Chinese and Simplified Chinese across home, profile, resources and navigation.
-- All 30 supplied observation questions, autosave, skip, “Not sure”, review and immediate professional-follow-up guidance for reported/uncertain loss of skills.
+- The same 33 observation questions as TypeScript, autosave, skip, “Not sure”, review and immediate professional-follow-up guidance for reported/uncertain loss of skills.
 - Create/edit/delete timestamped observations; categories, place, duration, context and what helped; search and filters.
 - On-device speech transcription where Apple's recognizer supports the selected locale. Permission and availability failures offer text input. Voice capture stops after 60 seconds or on backgrounding. Audio is not saved.
 - Stage-specific personal checklists linked to official DH/SWD information.
-- Family and appointment report formats, multipage PDF export through the iOS share sheet.
-- Local persistence with iOS complete file protection; no analytics or cloud sync; delete-all control.
+- Family and appointment reports, text sharing/download and multipage PDF printing/sharing through the iOS share sheet.
+- Per-account local persistence with iOS complete file protection; portable JSON backup/restore; no family-data cloud sync; delete-all control.
 
 ## Work together
 
@@ -55,7 +59,7 @@ Open a pull request into `main` and ask your partner to review. See [CONTRIBUTIN
 
 This is a working development MVP, not a clinically validated screening tool or an App Store release. It produces no risk score, severity level, diagnosis or automated clinical interpretation. A journey stage comes only from the caregiver's selection. Related records are grouped by the chosen category, not AI inference.
 
-The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. The parent community has an optional Supabase backend for verified email-code accounts, posts, replies, reports, blocking and moderation; see [Community setup](docs/COMMUNITY_SETUP.md). Its connection remains pending until a project is configured. Family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
+The app stores records on one device. Data is excluded from device backups, so uninstalling the app or losing the device may lose it. Exported PDFs are copies and cannot be revoked by deleting app data. The parent community has an optional Supabase backend for accounts, posts, replies, reports, blocking and moderation; see [Community setup](docs/COMMUNITY_SETUP.md). The current primary Community screen matches TypeScript’s official-resource directory. Shared parent discussion views are retained in the code for a later release. Family sync, AI tagging/follow-up, and live waiting-list integrations are not implemented. See [the handoff notes](docs/HANDOFF.md).
 
 ## Verification
 

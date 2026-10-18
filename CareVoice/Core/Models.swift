@@ -71,6 +71,9 @@ struct ChildProfile: Codable, Equatable {
     var ageMonths = 36
     var birthDate: Date? = nil
     var supportGoals: [String]? = nil
+    var diagnosingBody: String? = nil
+    var diagnosisDate: String? = nil
+    var reportedSupportLevel: String? = nil
     var currentAgeMonths: Int { birthDate.map { max(0, Calendar.current.dateComponents([.month], from: Calendar.current.startOfDay(for: $0), to: Calendar.current.startOfDay(for: Date())).month ?? ageMonths) } ?? ageMonths }
     var stage: JourneyStage = .noticed
     var firstConcernDate = Date()
@@ -182,6 +185,11 @@ enum ReportBuilder {
             if professional {
                 lines += [l.text("First noticed: ", "首次留意日期：") + formatter.string(from: p.firstConcernDate)]
                 if !p.concernNotes.isEmpty { lines += [p.concernNotes] }
+                if p.stage == .diagnosed {
+                    if let body = p.diagnosingBody, !body.isEmpty { lines += [l.text("Diagnosing organisation (copied from report): ", "診斷機構（照報告填寫）：") + body] }
+                    if let date = p.diagnosisDate, !date.isEmpty { lines += [l.text("Report date: ", "報告日期：") + date] }
+                    if let level = p.reportedSupportLevel, !level.isEmpty { lines += [l.text("Support level (copied from report): ", "支援程度（照報告填寫）：") + level] }
+                }
             }
         }
         lines += ["", l.text("Parent observations — not a diagnosis or clinical assessment.", "家長觀察記錄，並非診斷或臨床評估。"), "", l.text("Questionnaire responses", "問卷回答")]

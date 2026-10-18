@@ -142,7 +142,7 @@ struct AccountForm: View {
                     Button(store.t("Create an account", "建立帳戶")) { move(.signup) }.frame(maxWidth: .infinity, minHeight: 44)
                 }
             }.padding(24).disabled(community.busy)
-        }.interactiveDismissDisabled(community.busy).background(Brand.background).presentationDetents([.large]).presentationDragIndicator(.visible).presentationCornerRadius(32)
+        }.interactiveDismissDisabled(community.busy).background(Brand.background).presentationDetents(mode == .signup ? [.large] : [.fraction(0.65), .large]).presentationDragIndicator(.visible).presentationCornerRadius(32)
             .onAppear { mode = initialMode; community.error = nil }
             .onDisappear { password = ""; confirm = "" }
     }
