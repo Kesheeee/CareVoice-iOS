@@ -7,7 +7,7 @@ grant usage on schema carevoice_private to authenticated;
 
 create table public.community_profiles (
   user_id uuid primary key references auth.users(id) on delete cascade,
-  display_name text not null check (char_length(btrim(display_name)) between 2 and 40),
+  display_name text not null check (char_length(display_name) <= 40 and char_length(btrim(display_name)) >= 2),
   created_at timestamptz not null default now()
 );
 create table carevoice_private.community_moderators (
@@ -17,8 +17,8 @@ create table public.community_posts (
   id uuid primary key default gen_random_uuid(),
   author_id uuid not null references public.community_profiles(user_id) on delete cascade default auth.uid(),
   topic text not null check (topic in ('everyday','assessment','school','waiting','celebrations')),
-  title text not null check (char_length(btrim(title)) between 3 and 120),
-  body text not null check (char_length(btrim(body)) between 1 and 3000),
+  title text not null check (char_length(title) <= 120 and char_length(btrim(title)) >= 3),
+  body text not null check (char_length(body) <= 3000 and char_length(btrim(body)) >= 1),
   status text not null default 'visible' check (status in ('visible','removed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -27,7 +27,7 @@ create table public.community_replies (
   id uuid primary key default gen_random_uuid(),
   post_id uuid not null references public.community_posts(id) on delete cascade,
   author_id uuid not null references public.community_profiles(user_id) on delete cascade default auth.uid(),
-  body text not null check (char_length(btrim(body)) between 1 and 1500),
+  body text not null check (char_length(body) <= 1500 and char_length(btrim(body)) >= 1),
   status text not null default 'visible' check (status in ('visible','removed')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

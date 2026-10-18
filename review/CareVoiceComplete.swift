@@ -7260,10 +7260,16 @@ final class CommunityAPI {
         try persist(decoder.decode(CommunitySession.self, from: data))
     }
     func signOut() async throws {
-        if session != nil {
-            let bearer = try await token()
-            _ = try await send("auth/v1/logout", method: "POST", body: nil, token: bearer,
-                query: [URLQueryItem(name: "scope", value: "local")])
+        do {
+            if session != nil {
+                let bearer = try await token()
+                _ = try await send("auth/v1/logout", method: "POST", body: nil, token: bearer,
+                    query: [URLQueryItem(name: "scope", value: "local")])
+            }
+        } catch {
+            // Always remove credentials from this device, including when offline.
+            try clearSession()
+            throw error
         }
         try clearSession()
     }
@@ -7319,7 +7325,7 @@ final class CommunityStore: ObservableObject {
         guard configured else { return }
         await perform { api in
             try api.restore(); user = api.session?.user
-            if user != nil { try await loadIdentity(api) }
+            if user != nil { try await loadIdentity(api); try await fetchFeed(api, more: false) }
         }
     }
     private func loadIdentity(_ api: CommunityAPI) async throws {
@@ -7503,7 +7509,7 @@ struct CommunityAccountView: View {
             if embedded { content }
             else { ScrollView { content.padding(20).frame(maxWidth: 600).frame(maxWidth: .infinity) } }
         }
-        .navigationTitle(embedded ? "" : store.t("Community account", "社區帳戶"))
+        .navigationTitle(embedded ? store.t("Community", "社區") : store.t("Community account", "社區帳戶"))
         .navigationBarTitleDisplayMode(.inline)
         .task { await community.start(); name = community.profile?.displayName ?? "" }
         .onChange(of: community.profile?.displayName) { _, value in name = value ?? "" }
@@ -7715,7 +7721,7 @@ struct CommunityDiscussionView: View {
             }
             .confirmationDialog(store.t("Block this parent? Their discussions and replies will be hidden from you, and yours from them.", "封鎖此家長？你們將無法查看彼此的討論及回覆。"), isPresented: Binding(get: { blocking != nil }, set: { if !$0 { blocking = nil } }), titleVisibility: .visible) {
                 if let id = blocking {
-                    Button(store.t("Block parent", "封鎖家長"), role: .destructive) { Task { if await community.block(id) { await load() } } }
+                    Button(store.t("Block parent", "封鎖家長"), role: .destructive) { Task { if await community.block(id) { replies = []; if post?.authorId == id { post = nil }; await load() } } }
                 }
             }
     }

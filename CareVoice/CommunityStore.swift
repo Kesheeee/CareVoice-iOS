@@ -108,10 +108,16 @@ final class CommunityAPI {
         try persist(decoder.decode(CommunitySession.self, from: data))
     }
     func signOut() async throws {
-        if session != nil {
-            let bearer = try await token()
-            _ = try await send("auth/v1/logout", method: "POST", body: nil, token: bearer,
-                query: [URLQueryItem(name: "scope", value: "local")])
+        do {
+            if session != nil {
+                let bearer = try await token()
+                _ = try await send("auth/v1/logout", method: "POST", body: nil, token: bearer,
+                    query: [URLQueryItem(name: "scope", value: "local")])
+            }
+        } catch {
+            // Always remove credentials from this device, including when offline.
+            try clearSession()
+            throw error
         }
         try clearSession()
     }
@@ -167,7 +173,7 @@ final class CommunityStore: ObservableObject {
         guard configured else { return }
         await perform { api in
             try api.restore(); user = api.session?.user
-            if user != nil { try await loadIdentity(api) }
+            if user != nil { try await loadIdentity(api); try await fetchFeed(api, more: false) }
         }
     }
     private func loadIdentity(_ api: CommunityAPI) async throws {
