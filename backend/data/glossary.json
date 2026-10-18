@@ -1,0 +1,202 @@
+[
+  {
+    "term": "CAC／測驗中心",
+    "full_tc": "衞生署兒童體能智力測驗中心",
+    "code": "CAS",
+    "plain_tc": "做评估的地方，不是做训练的地方。全港有 7 间，按住址分地区。要医生或心理学家写转介信才能去。",
+    "source_id": "SRC-001",
+    "term_en": "CAC",
+    "full_en": "Child Assessment Centre, Department of Health",
+    "plain_en": "Where assessment happens, not training. 7 across Hong Kong, by district. You need a referral letter from a doctor or psychologist."
+  },
+  {
+    "term": "EETC",
+    "full_tc": "早期教育及訓練中心",
+    "code": "E",
+    "plain_tc": "早期教育及訓練中心的英文缩写，官方轮候数据集用这个名，就是「E位」。",
+    "source_id": "SRC-012",
+    "term_en": "EETC",
+    "full_en": "Early Education and Training Centre",
+    "plain_en": "The English abbreviation for Early Education and Training Centre, used in the official waiting dataset — the 'E-place'."
+  },
+  {
+    "term": "E位",
+    "full_tc": "早期教育及訓練中心",
+    "code": "E",
+    "plain_tc": "像补习班：每星期去几次，每次一小时左右，由治疗师或特殊幼儿老师做个别训练。适合程度较轻、还在家里或普通幼儿园的孩子。",
+    "source_id": "SRC-003",
+    "term_en": "EETC",
+    "full_en": "Early Education and Training Centre",
+    "plain_en": "Like tutoring: a few visits a week, about an hour each, one-to-one training by therapists or special child care workers. For children with milder needs who are at home or in a mainstream kindergarten."
+  },
+  {
+    "term": "I位",
+    "full_tc": "幼稚園暨幼兒中心兼收計劃",
+    "code": "I",
+    "plain_tc": "在普通幼儿园里给轻度弱能的孩子加训练和照顾，让孩子跟一般孩子一起上学。",
+    "source_id": "SRC-009",
+    "term_en": "ICCC",
+    "full_en": "Integrated Programme in Kindergarten-cum-Child Care Centre",
+    "plain_en": "Adds training and care for mildly disabled children within a mainstream kindergarten, so they attend with typically developing peers."
+  },
+  {
+    "term": "OPRS",
+    "full_tc": "到校學前康復服務",
+    "code": "O",
+    "plain_tc": "到校學前康復服務的英文缩写，家长口中的「O位」就是它。",
+    "source_id": "SRC-007",
+    "term_en": "OPRS",
+    "full_en": "On-site Pre-school Rehabilitation Services",
+    "plain_en": "The abbreviation for On-site Pre-school Rehabilitation Services — the 'O-place'."
+  },
+  {
+    "term": "O位",
+    "full_tc": "到校學前康復服務",
+    "code": "O",
+    "plain_tc": "NGO 的跨专业团队直接到幼儿园给孩子做训练，家长不用自己带孩子跑中心。已经做到零等候。",
+    "source_id": "SRC-007",
+    "term_en": "OPRS",
+    "full_en": "On-site Pre-school Rehabilitation Services",
+    "plain_en": "An NGO multidisciplinary team delivers training directly at the kindergarten, so parents don't shuttle children to a centre. Already at 'zero waiting'."
+  },
+  {
+    "term": "SCCC",
+    "full_tc": "特殊幼兒中心",
+    "code": "S",
+    "plain_tc": "特殊幼兒中心的英文缩写，官方轮候数据集用这个名，就是「S位」。",
+    "source_id": "SRC-013",
+    "term_en": "SCCC",
+    "full_en": "Special Child Care Centre",
+    "plain_en": "The abbreviation for Special Child Care Centre, used in the official waiting dataset — the 'S-place'."
+  },
+  {
+    "term": "S位",
+    "full_tc": "特殊幼兒中心",
+    "code": "S",
+    "plain_tc": "像全日制特教幼儿园：孩子每天去，全天由跨专业团队做训练和照顾。收 2–6 岁中度至严重的残疾儿童，自闭症通常在评估后归到这条线。",
+    "source_id": "SRC-003",
+    "term_en": "SCCC",
+    "full_en": "Special Child Care Centre",
+    "plain_en": "Like a full-day special kindergarten: the child attends daily for all-day training and care by a multidisciplinary team. For ages 2–6 with moderate to severe disabilities; autism is usually placed here after assessment."
+  },
+  {
+    "term": "S位＋住宿",
+    "full_tc": "住宿特殊幼兒中心",
+    "code": "SR",
+    "plain_tc": "跟 S 位一样，但连住宿也包。全港只有 6 所，轮候通常更久。",
+    "source_id": "SRC-008",
+    "term_en": "RSCCC",
+    "full_en": "Residential Special Child Care Centre",
+    "plain_en": "Same as S-place but with residential care. Only 6 territory-wide; waits are usually longer."
+  },
+  {
+    "term": "TSP",
+    "full_tc": "學習訓練津貼",
+    "code": "T",
+    "plain_tc": "學習訓練津貼的英文缩写，就是「T位」。",
+    "source_id": "SRC-005",
+    "term_en": "TSP",
+    "full_en": "Training Subsidy Programme",
+    "plain_en": "The abbreviation for the Training Subsidy Programme — the 'T-place'."
+  },
+  {
+    "term": "T位",
+    "full_tc": "學習訓練津貼",
+    "code": "T",
+    "plain_tc": "不是服务，是钱。在排队的期间，用现金津贴去买认可机构的训练课。分普通和高额两档。",
+    "source_id": "SRC-005",
+    "term_en": "TSP",
+    "full_en": "Training Subsidy Programme",
+    "plain_en": "Not a service, but money. While queueing, use the cash subsidy to buy training sessions from recognised operators. Two tiers: normal and higher."
+  },
+  {
+    "term": "中央轉介系統／CRSRS",
+    "full_tc": "康復服務中央轉介系統（學前兒童康復服務子系統）",
+    "code": null,
+    "plain_tc": "排队的那个系统。所有政府资助的学前康复服务都从这里分配。★「排上队」＝在这里完成登记，不是看完医生就算。",
+    "source_id": "SRC-004",
+    "term_en": "Central Referral System (CRSRS)",
+    "full_en": "Central Referral System for Rehabilitation Services (pre-school children sub-system)",
+    "plain_en": "The queueing system. All government-subsidised pre-school rehabilitation services are allocated here. 'Getting on the list' means completing registration here, not merely seeing a doctor."
+  },
+  {
+    "term": "住宿S位",
+    "full_tc": "住宿特殊幼兒中心",
+    "code": null,
+    "plain_tc": "连住宿也包的特殊幼儿中心，全港只有6所，轮候通常更久。",
+    "source_id": "SRC-008",
+    "term_en": "RSCCC",
+    "full_en": "Residential Special Child Care Centre",
+    "plain_en": "A special child care centre that also provides residential care. Only 6 territory-wide; waits usually longer."
+  },
+  {
+    "term": "個案工作員",
+    "full_tc": "社會福利署／非政府機構之個案工作員",
+    "code": null,
+    "plain_tc": "帮你办手续的社工。转介信、中央转介系统登记，多数由他们手上过。",
+    "source_id": "SRC-009",
+    "term_en": "Case worker",
+    "full_en": "Case worker of the Social Welfare Department / NGO",
+    "plain_en": "The social worker who handles your paperwork. Referral letters and Central Referral System registration mostly pass through them."
+  },
+  {
+    "term": "兼收計劃",
+    "full_tc": "幼稚園暨幼兒中心兼收計劃",
+    "code": null,
+    "plain_tc": "让轻度弱能的孩子在普通幼儿园里边上学边接受训练。",
+    "source_id": "SRC-005",
+    "term_en": "Integrated Programme",
+    "full_en": "Integrated Programme in Kindergarten-cum-Child Care Centre",
+    "plain_en": "Lets mildly disabled children attend a mainstream kindergarten while receiving training."
+  },
+  {
+    "term": "普通津貼",
+    "full_tc": "學習訓練津貼（普通津貼）",
+    "code": null,
+    "plain_tc": "T位津贴的普通档，给入息稍高的家庭。",
+    "source_id": "SRC-018",
+    "term_en": "Normal subsidy",
+    "full_en": "Training Subsidy Programme (normal subsidy)",
+    "plain_en": "The normal tier of the T-place subsidy, for households with slightly higher income."
+  },
+  {
+    "term": "輪候期間的過渡服務",
+    "full_tc": "過渡性服務",
+    "code": null,
+    "plain_tc": "等 S 位的时候，同时间可以用 E 位或 O 位顶上，一直用到 S 位有位。★ 很多家长完全不知道这条。",
+    "source_id": "SRC-008",
+    "term_en": "Transitional services",
+    "full_en": "Transitional services",
+    "plain_en": "While waiting for an S-place, you can simultaneously use an E-place or O-place until an S-place opens. Many parents don't know this at all."
+  },
+  {
+    "term": "醫務社工",
+    "full_tc": "社署／醫院管理局之醫務社會工作員",
+    "code": null,
+    "plain_tc": "驻在医院的社工。如果孩子走的是医院那条线，通常是他们帮你转介，并附带心理报告、医生报告。",
+    "source_id": "SRC-014",
+    "term_en": "Medical social worker",
+    "full_en": "Medical social worker of the Social Welfare Department / Hospital Authority",
+    "plain_en": "A social worker based in a hospital. If your child is on the hospital route, they usually make the referral with psychological and medical reports."
+  },
+  {
+    "term": "預早登記",
+    "full_tc": "預早登記計劃",
+    "code": null,
+    "plain_tc": "未满2岁就可以先排队的机制，不用等到2岁才入队。",
+    "source_id": "SRC-003",
+    "term_en": "Advance registration",
+    "full_en": "Advance registration scheme",
+    "plain_en": "A mechanism to join the queue before age 2, so you don't wait until the child turns 2."
+  },
+  {
+    "term": "高額津貼",
+    "full_tc": "學習訓練津貼（高額津貼）",
+    "code": null,
+    "plain_tc": "T位津贴的高额档，给入息较低的家庭。",
+    "source_id": "SRC-017",
+    "term_en": "Higher subsidy",
+    "full_en": "Training Subsidy Programme (higher subsidy)",
+    "plain_en": "The higher tier of the T-place subsidy, for households with lower income."
+  }
+]

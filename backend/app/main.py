@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import CORS_ORIGINS
 from .routes import router
 from .transcribe import router as transcribe_router
+from .ask import router as ask_router
 
 app = FastAPI(title="CareVoice Content API", version="0.1.0")
 
@@ -17,3 +18,4 @@ app.add_middleware(
 
 app.include_router(router)
 app.include_router(transcribe_router)
+app.include_router(ask_router)

@@ -1,22 +1,42 @@
 import {useEffect, useRef, useState} from 'react';
-import {ArrowLeft, Send, Share2, MessageCircle} from 'lucide-react';
+import {ArrowLeft, Send, Share2, MessageCircle, ExternalLink} from 'lucide-react';
 import {translator} from '../i18n';
 import type {Language} from '../domain';
+import {ask, type AskResponse} from '../platform/ask';
+
+type Turn = { user: string; response: AskResponse | null; loading: boolean; error: boolean };
 
 export function CareChat({open, language, onClose, onPreview}: {open:boolean;language:Language;onClose:()=>void;onPreview:(text:string)=>void}) {
   const t=translator(language);
   const dialog=useRef<HTMLDialogElement>(null);
   const bottom=useRef<HTMLDivElement>(null);
-  const [messages,setMessages]=useState<string[]>([]);
+  const [turns,setTurns]=useState<Turn[]>([]);
   const [input,setInput]=useState('');
+  const [busy,setBusy]=useState(false);
   const [sharing,setSharing]=useState(false);
   const [post,setPost]=useState('');
   const [consent,setConsent]=useState(false);
   useEffect(()=>{if(open)dialog.current?.showModal();else dialog.current?.close();},[open]);
-  useEffect(()=>{bottom.current?.scrollIntoView({block:'nearest'});},[messages]);
+  useEffect(()=>{bottom.current?.scrollIntoView({block:'nearest'});},[turns]);
   const prompts=[t('Appointments','預約'),t('A difficult day','遇到困難'),t('Find support','尋找支援')];
-  return <dialog ref={dialog} className="care-chat-dialog" aria-label={t("Ask CareVoice", "詢問 CareVoice")} onCancel={onClose}>
-    <header className="care-chat-header"><button aria-label={t('Back','返回')} onClick={()=>sharing?setSharing(false):onClose()}><ArrowLeft/></button><div><h2>{sharing?t('Review your question','檢查你的問題'):'CareVoice'}</h2><span>{t('AI preview','AI 預覽')}</span></div><MessageCircle aria-hidden="true"/></header>
+
+  const submit=async(text:string)=>{
+    const message=text.trim();
+    if(!message||busy)return;
+    setInput('');setBusy(true);
+    setTurns(prev=>[...prev,{user:message,response:null,loading:true,error:false}]);
+    try{
+      const response=await ask(message,language);
+      setTurns(prev=>prev.map((turn,i)=>i===prev.length-1?{...turn,response,loading:false}:turn));
+    }catch{
+      setTurns(prev=>prev.map((turn,i)=>i===prev.length-1?{...turn,response:{suggestions:[]},loading:false,error:true}:turn));
+    }finally{
+      setBusy(false);
+    }
+  };
+
+  return <dialog ref={dialog} className="care-chat-dialog" onCancel={onClose}>
+    <header className="care-chat-header"><button aria-label={t('Back','返回')} onClick={()=>sharing?setSharing(false):onClose()}><ArrowLeft/></button><div><h2>{sharing?t('Review your question','檢查你的問題'):'CareVoice'}</h2><span>{t('AI assistance','AI 助手')}</span></div><MessageCircle aria-hidden="true"/></header>
     {sharing ? <div className="care-chat-review">
       <h3>{t('What would you like other parents to see?','你想讓其他家長看到甚麼？')}</h3>
       <p>{t('Only the text below goes into your post preview. Your chat and child’s records are not included.','貼文預覽只包括以下文字，不包含對話或小朋友的記錄。')}</p>
@@ -27,15 +47,33 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
       <button className="primary" disabled={!post.trim()||!consent} onClick={()=>{onPreview(post.trim());setSharing(false);onClose();}}>{t('Preview community post','預覽社區貼文')}</button>
     </div> : <>
       <div className="care-chat-messages" role="log" aria-label={t('Conversation','對話')} aria-live="polite">
-        {!messages.length && <div className="care-chat-intro"><span aria-hidden="true">💬</span><h3>{t('What’s on your mind?','今天想聊聊甚麼？')}</h3></div>}
-        <details className="care-chat-preview-info"><summary>{t('Preview only · AI not connected','僅供預覽 · AI 未連接')}</summary><p>{t('Nothing is sent. Messages clear when you leave Community or refresh.','不會傳送資料。離開社區或重新整理後，訊息會清除。')}</p></details>
-        {!messages.length && <div className="care-chat-prompts">{prompts.map(prompt=><button key={prompt} onClick={()=>setInput(prompt)}>{prompt}</button>)}</div>}
-        {messages.map((message,i)=><div className="care-chat-turn" key={i}><div className="care-chat-user"><small>{t('You','你')}</small><p>{message}</p></div><div className="care-chat-placeholder"><small>{t('AI reply placeholder','AI 回覆預留位置')}</small><p>{t('An AI response will appear here once connected.','連接後，AI 回覆會顯示在這裡。')}</p></div></div>)}
+        {!turns.length && <div className="care-chat-intro"><span aria-hidden="true">💬</span><h3>{t('What’s on your mind?','今天想聊聊甚麼？')}</h3></div>}
+        {!turns.length && <div className="care-chat-prompts">{prompts.map(prompt=><button key={prompt} onClick={()=>submit(prompt)}>{prompt}</button>)}</div>}
+        {turns.map((turn,i)=><div className="care-chat-turn" key={i}>
+          <div className="care-chat-user"><small>{t('You','你')}</small><p>{turn.user}</p></div>
+          {turn.loading ? <div className="care-chat-reply"><p>{t('Thinking…','思考中……')}</p></div>
+          : turn.error ? <div className="care-chat-reply care-chat-error"><p>{t('Could not reach CareVoice. Check your connection and try again.','暫時未能連接 CareVoice，請檢查網絡再試。')}</p></div>
+          : turn.response?.safety ? <div className="care-chat-reply care-chat-safety">
+              <p className="care-chat-signal">{turn.response.safety.signal}</p>
+              <p className="care-chat-route">{turn.response.safety.route}</p>
+              {turn.response.safety.contact && <p className="care-chat-contact">{turn.response.safety.contact}</p>}
+            </div>
+          : turn.response?.suggestions?.length ? <div className="care-chat-reply">
+              {turn.response.suggestions.map((s,j)=><article className="care-chat-suggestion" key={j}>
+                <p className="care-chat-why">{s.why}</p>
+                <p className="care-chat-title">{s.title}</p>
+                {s.plain && <p className="care-chat-plain">{s.plain}</p>}
+                {s.url && <a className="care-chat-source" href={s.url} target="_blank" rel="noopener noreferrer">{t('Official source','官方來源')}<ExternalLink size={12} aria-hidden="true"/></a>}
+              </article>)}
+              <p className="care-chat-ai-note">{t('AI suggestion. Confirm with a professional before acting.','此為 AI 建議，行動前請與專業人士確認。')}</p>
+            </div>
+          : <div className="care-chat-reply"><p>{t('I could not find matching official information. You can call the Social Welfare Department hotline 2343 2255 (24 hours).','未能找到相關官方資料。你可以致電社會福利署熱線 2343 2255（24 小時）。')}</p></div>}
+        </div>)}
         <div ref={bottom}/>
       </div>
       <footer className="care-chat-footer">
-        {messages.length>0 && <button className="care-chat-share" onClick={()=>{setPost(messages[0]);setConsent(false);setSharing(true);}}><Share2 size={17}/>{t('Share a question with parents','與其他家長分享問題')}</button>}
-        <form onSubmit={e=>{e.preventDefault();if(!input.trim())return;setMessages([...messages,input.trim()]);setInput('');}}><textarea aria-label={t('Message','訊息')} placeholder={t('Type your question…','輸入你的問題…')} rows={1} maxLength={2000} value={input} onChange={e=>setInput(e.target.value)}/><button aria-label={t('Send message','傳送訊息')} disabled={!input.trim()}><Send size={22}/></button></form>
+        {turns.length>0 && <button className="care-chat-share" onClick={()=>{setPost(turns[0]?.user||'');setConsent(false);setSharing(true);}}><Share2 size={17}/>{t('Share a question with parents','與其他家長分享問題')}</button>}
+        <form onSubmit={e=>{e.preventDefault();submit(input);}}><textarea aria-label={t('Message','訊息')} placeholder={t('Describe what happened, what came before, and what helped…','描述發生咗咩事、之前嘅情況，同埋有咩方法幫到手……')} rows={2} maxLength={2000} value={input} disabled={busy} onChange={e=>setInput(e.target.value)}/><button aria-label={t('Send message','傳送訊息')} disabled={!input.trim()||busy}><Send size={22}/></button></form>
       </footer>
     </>}
   </dialog>;

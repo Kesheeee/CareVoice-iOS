@@ -1,0 +1,19 @@
+{
+  "built_on": "2026-10-16",
+  "db_file": "phase1.db",
+  "content_fingerprint": "0ae157aa8e0a22c8",
+  "fingerprint_note": "内容指纹＝schema.sql ＋ 全部 seed CSV 的 sha256 前 16 位。算法：按文件名排序，每个文件先写入文件名、再写入文件内容，最后取 sha256 的前 16 位。同样的 seed 一定得到同样的指纹，与生成时间无关。交付或答辩时报出这个值，即可证明双方手上是同一版数据。",
+  "contract": "本目錄為只讀快照。開發同學請勿寫入；發現資料問題請回報，由資料層重新建庫導出。",
+  "counts": {
+    "source": 23,
+    "assertion": 32,
+    "service_type": 7,
+    "service_unit": 124,
+    "waiting_snapshot": 124,
+    "pathway_step": 7,
+    "checklist_item": 10,
+    "glossary": 20,
+    "red_flag": 5
+  },
+  "only_active_guarantee": "citable_assertions.json 只含 status=active 且來源 active 的條目；未核對的一律不出現在產品輸出裡。"
+}
