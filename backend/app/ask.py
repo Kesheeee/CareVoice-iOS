@@ -34,7 +34,7 @@ def ask(req: AskRequest) -> AskResponse:
         raise HTTPException(status_code=502, detail="AI service temporarily unavailable") from exc
 
     # 4. Validate returned ids against the directory; build cited suggestions.
+    reply = prompt.parse_reply(raw)
     suggestions = prompt.parse_suggestions(raw, req.language)
 
-    # "No match" -> empty suggestions (the client shows a "can't find" note + hotline).
-    return AskResponse(suggestions=suggestions, content_fingerprint=store.fingerprint)
+    return AskResponse(reply=reply, suggestions=suggestions, content_fingerprint=store.fingerprint)

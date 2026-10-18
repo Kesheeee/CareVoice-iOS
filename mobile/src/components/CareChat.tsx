@@ -60,6 +60,7 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
               {turn.response.safety.contact && <p className="care-chat-contact">{turn.response.safety.contact}</p>}
             </div>
           : turn.response?.suggestions?.length ? <div className="care-chat-reply">
+              {turn.response.reply && <p>{turn.response.reply}</p>}
               {turn.response.suggestions.map((s,j)=><article className="care-chat-suggestion" key={j}>
                 <p className="care-chat-why">{s.why}</p>
                 <p className="care-chat-title">{s.title}</p>
@@ -68,7 +69,7 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
               </article>)}
               <p className="care-chat-ai-note">{t('AI suggestion. Confirm with a professional before acting.','此為 AI 建議，行動前請與專業人士確認。')}</p>
             </div>
-          : <div className="care-chat-reply"><p>{t('I could not find matching official information. You can call the Social Welfare Department hotline 2343 2255 (24 hours).','未能找到相關官方資料。你可以致電社會福利署熱線 2343 2255（24 小時）。')}</p></div>}
+          : <div className="care-chat-reply"><p>{turn.response?.reply || t('I could not find matching official information. You can call the Social Welfare Department hotline 2343 2255 (24 hours).','未能找到相關官方資料。你可以致電社會福利署熱線 2343 2255（24 小時）。')}</p></div>}
         </div>)}
         <div ref={bottom}/>
       </div>

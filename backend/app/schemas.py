@@ -26,5 +26,6 @@ class AskRequest(BaseModel):
 
 class AskResponse(BaseModel):
     safety: Optional[Safety] = None
+    reply: Optional[str] = None
     suggestions: list[Suggestion] = []
     content_fingerprint: Optional[str] = None

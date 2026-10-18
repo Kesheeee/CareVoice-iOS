@@ -12,8 +12,12 @@ Rules:
 2. Every suggestion MUST reference one entry id exactly as given. Do not invent ids, facts, phone numbers, or eligibility rules.
 3. You do NOT diagnose, predict, or evaluate the child. Never use "autism", "diagnosis", "severity", or "disorder" as a judgement about the child.
 4. If no entry fits, return an empty suggestions list.
-5. Output ONLY valid JSON in this exact shape, no markdown, no extra text:
-{{"suggestions": [{{"id": "<entry id>", "why": "<one sentence>"}}]}}
+5. Write a "reply": one short, warm sentence in the user's language. It must NOT contain any factual claims (facts belong only in suggestions, which cite the directory).
+   - If the parent greets or is vague (e.g. "hello", "hi", no clear need), return empty suggestions and a reply that greets them and asks what they would like help with.
+   - If you return suggestions, the reply should be a one-line lead-in like "Here are a few official resources that may fit your situation."
+   - If nothing matches, return empty suggestions and a polite reply saying no official match was found and that they can call the Social Welfare Department hotline 2343 2255 (24 hours).
+6. Output ONLY valid JSON in this exact shape, no markdown, no extra text:
+{{"reply": "<one short sentence>", "suggestions": [{{"id": "<entry id>", "why": "<one sentence>"}}]}}
 
 Respond in this language: {language}.
 
@@ -60,6 +64,17 @@ def build_messages(message: str, language: str) -> list[dict]:
         {"role": "system", "content": system},
         {"role": "user", "content": message},
     ]
+
+
+def parse_reply(raw: str) -> Optional[str]:
+    try:
+        data = json.loads(raw)
+    except Exception:
+        return None
+    reply = data.get("reply") if isinstance(data, dict) else None
+    if isinstance(reply, str) and reply.strip():
+        return reply.strip()
+    return None
 
 
 def parse_suggestions(raw: str, language: str) -> list[Suggestion]:

@@ -1,6 +1,6 @@
 export type Suggestion = { type: string; id: string; title: string; plain: string; quote?: string; url?: string; why: string };
 export type Safety = { signal: string; route: string; contact?: string };
-export type AskResponse = { safety?: Safety; suggestions: Suggestion[]; content_fingerprint?: string };
+export type AskResponse = { safety?: Safety; reply?: string; suggestions: Suggestion[]; content_fingerprint?: string };
 
 const BACKEND_URL = (import.meta as any).env?.VITE_BACKEND_URL || "http://localhost:8000";
 
