@@ -4,10 +4,11 @@ import { ArrowLeft, ChevronRight, Clock3, FileText, MapPin, Pencil, Trash2 } fro
 import { categories, relatedRecords, type Language, type Observation } from "../domain";
 import { languageLocale, translator } from "../i18n";
 
-export function RecordDetails({ record, records, language, saved, onBack, onEdit, onOpen, onReport, onDelete }: {
+export function RecordDetails({ record, records, language, saved, onBack, onEdit, onAddDetails, onOpen, onReport, onDelete }: {
   record: Observation; records: Observation[]; language: Language;
   saved: boolean;
   onBack: () => void; onEdit: () => void; onOpen: (record: Observation) => void;
+  onAddDetails: () => void;
   onReport: () => void; onDelete: () => void;
 }) {
   const t = translator(language);
@@ -37,7 +38,7 @@ export function RecordDetails({ record, records, language, saved, onBack, onEdit
     {(!record.context || !record.helped) && <aside className="record-detail-prompt">
       <h2>{t("Remember a little more?", "還記得更多細節嗎？")}</h2>
       <p>{t("Add what happened before or what helped, while it’s still fresh.", "趁記憶還清晰，補充之前發生的事或有幫助的方法。")}</p>
-      <button onClick={onEdit}><Pencil size={16} aria-hidden="true" />{t("Add details", "補充詳情")}</button>
+      <button onClick={onAddDetails}><Pencil size={16} aria-hidden="true" />{t("Add details", "補充詳情")}</button>
     </aside>}
     <section className="record-detail-related" aria-labelledby="same-category-title">
       <h2 id="same-category-title">{t("Earlier records in this category", "同類別的過往記錄")}</h2>

@@ -21,6 +21,10 @@ test("read first, edit explicitly, save back to details, then delete with confir
   await page.locator(".record-main").filter({ hasText: "Covered ears" }).click();
   await expect(page.getByRole("heading", { name: "Record details" })).toBeVisible();
   await expect(page.locator("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Add details", exact: true }).click();
+  await expect(page.locator("dialog .observation-details")).toHaveAttribute("open", "");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("dialog")).toHaveCount(0);
   await page.locator(".record-detail-related-list").getByRole("button").click();
   await expect(page.locator(".record-detail-note")).toHaveText("Asked for a quiet break.");
   await page.getByRole("button", { name: "Edit", exact: true }).click();
@@ -46,6 +50,8 @@ test("new text record opens saved details", async ({ page }) => {
   await page.locator(".bottom-nav").getByRole("button", { name: "Records", exact: true }).click();
   await page.getByRole("button", { name: "Add a record" }).click();
   await page.getByRole("tab", { name: "Text record", exact: true }).click();
+  await page.getByRole("button", { name: "More details", exact: true }).click();
+  await expect(page.locator("dialog .observation-details")).toHaveAttribute("open", "");
   await page.locator("dialog textarea").first().fill("A new little win.");
   await page.getByRole("button", { name: "Save record", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Record details" })).toBeVisible();

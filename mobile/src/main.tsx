@@ -147,6 +147,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
     [professional, setProfessional] = useState(true),
     [saved, setSaved] = useState(false);
   const [voiceEntry, setVoiceEntry] = useState(false);
+  const [expandRecordDetails, setExpandRecordDetails] = useState(false);
   const [voiceBusy, setVoiceBusy] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [languageSaved, setLanguageSaved] = useState(false);
@@ -349,6 +350,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               onReport={() => go("report")}
               onAdd={() => {
                 setVoiceEntry(false);
+                setExpandRecordDetails(false);
                 setRecord(newRecord());
               }}
               onEdit={openRecord}
@@ -365,7 +367,8 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
             onFilter={setFilter}
             onVoice={() => {
               setVoiceEntry(true);
-              setRecord(newRecord());
+              setExpandRecordDetails(false);
+                setRecord(newRecord());
             }}
             onReport={() => go("report")}
             onOpen={openRecord}
@@ -373,7 +376,8 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
         )}
         {page === "recordDetails" && selectedRecord && (
           <RecordDetails record={selectedRecord} records={data.records} language={data.language} saved={saved}
-            onBack={() => go("records")} onEdit={() => { setVoiceEntry(false); setRecord({ ...selectedRecord }); }}
+            onBack={() => go("records")} onEdit={() => { setExpandRecordDetails(false); setVoiceEntry(false); setRecord({ ...selectedRecord }); }}
+            onAddDetails={() => { setExpandRecordDetails(true); setVoiceEntry(false); setRecord({ ...selectedRecord }); }}
             onOpen={openRecord} onReport={() => go("report")} onDelete={() => setDeleteId(selectedRecord.id)} />
         )}
         {page === "journey" && (
@@ -990,7 +994,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
                   }
                 />
               </label>
-              <details className="observation-details">
+              <details className="observation-details" open={expandRecordDetails} onToggle={event => setExpandRecordDetails(event.currentTarget.open)}>
                 <summary role="button">{t("More details", "補充資料")}<ChevronDown size={17} aria-hidden="true" /></summary>
               <label>
                 {t("Category", "分類")}

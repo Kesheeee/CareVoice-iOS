@@ -70,6 +70,7 @@ struct RecordDetail: View {
     @Environment(\.dismiss) private var dismiss
     let recordID: UUID
     @State private var editing = false
+    @State private var expandDetails = false
     @State private var deleting = false
     var body: some View {
         Group {
@@ -90,7 +91,7 @@ struct RecordDetail: View {
                             Card {
                                 Text(store.t("Remember a little more?", "還記得更多細節嗎？")).font(.headline)
                                 Text(store.t("Add what happened before or what helped, while it’s still fresh.", "趁記憶還清晰，補充之前發生的事或有幫助的方法。")).font(.subheadline).foregroundStyle(.secondary)
-                                Button { editing = true } label: { Label(store.t("Add details", "補充詳情"), systemImage: "pencil").frame(minHeight: 44) }
+                                Button { expandDetails = true; editing = true } label: { Label(store.t("Add details", "補充詳情"), systemImage: "pencil").frame(minHeight: 44) }
                             }
                         }
                         let related = store.data.related(to: record)
@@ -104,8 +105,8 @@ struct RecordDetail: View {
                         Button(store.t("Delete record", "刪除記錄"), role: .destructive) { deleting = true }
                     }.padding(20).frame(maxWidth: 680).frame(maxWidth: .infinity)
                 }.background(Brand.background)
-                    .toolbar { Button(store.t("Edit", "編輯")) { editing = true } }
-                    .sheet(isPresented: $editing) { NavigationStack { RecordEditor(existing: record) } }
+                    .toolbar { Button(store.t("Edit", "編輯")) { expandDetails = false; editing = true } }
+                    .sheet(isPresented: $editing) { NavigationStack { RecordEditor(existing: record, expandDetails: expandDetails) } }
             }
         }
         .navigationTitle(store.t("Record details", "記錄詳情")).navigationBarTitleDisplayMode(.inline)
@@ -121,6 +122,7 @@ struct RecordEditor: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     var existing: BehaviorRecord?
+    var expandDetails = false
     var onSaved: (BehaviorRecord) -> Void = { _ in }
     @State private var record = BehaviorRecord(text: "")
     @StateObject private var speech = SpeechRecorder()
@@ -188,7 +190,7 @@ struct RecordEditor: View {
                 Button(store.t("Discard", "放棄"), role: .destructive) { dismiss() }
                 Button(store.t("Keep editing", "繼續編輯"), role: .cancel) {}
             }
-            .onAppear { if let existing { record = existing; duration = existing.durationMinutes.map(String.init) ?? ""; voice = false } }
+            .onAppear { moreDetails = expandDetails; if let existing { record = existing; duration = existing.durationMinutes.map(String.init) ?? ""; voice = false } }
             .onChange(of: speech.transcript) { _, value in
                 if !value.isEmpty { record.text = beforeSpeech + (beforeSpeech.isEmpty ? "" : "\n") + value }
             }
