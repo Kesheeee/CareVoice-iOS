@@ -1790,7 +1790,7 @@ main {
 .profile-screen .settings-list button > svg:first-child { flex-shrink: 0; color: var(--color-accent); stroke-width: 1.7; }
 .profile-screen .settings-list button > span { margin-left: auto; color: var(--color-muted); font-size: 0.76rem; }
 .profile-screen .settings-list button > svg:last-child { margin-left: auto; flex-shrink: 0; color: var(--color-muted); width: 16px; }
-.profile-screen .settings-list button > span + svg { margin-left: 0; }
+.profile-screen .settings-list button > span + svg:last-child { margin-left: 0; }
 .profile-screen .settings-list button:active { background: var(--color-blue-soft); }
 .profile-screen .profile-delete { margin-top: 16px; }
 .profile-screen .settings-list .danger-text, .profile-screen .settings-list .danger-text > svg:first-child { color: var(--color-danger); }
