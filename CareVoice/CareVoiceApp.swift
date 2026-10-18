@@ -98,7 +98,7 @@ struct MainView: View {
     }
     private func tab(_ index: Int, _ icon: String, _ title: String) -> some View {
         Button { selection = index } label: {
-            Image(systemName: icon).font(.system(size: 25, weight: selection == index ? .semibold : .regular))
+            Image(systemName: selection == index ? "\(icon).fill" : icon).font(.system(size: 25, weight: .regular))
                 .frame(maxWidth: .infinity, minHeight: 44).foregroundStyle(selection == index ? Brand.blue : .secondary)
         }.accessibilityLabel(title).accessibilityIdentifier("tab-\(index)").accessibilityAddTraits(selection == index ? .isSelected : [])
     }

@@ -73,6 +73,7 @@ import {
 } from "./components/Onboarding";
 import { Dashboard } from "./components/Dashboard";
 import { RecordDetails } from "./components/RecordDetails";
+import { SelectedTabIcon } from "./components/SelectedTabIcon";
 import { RecordsScreen } from "./components/RecordsScreen";
 import { VoiceRecorder } from "./components/VoiceRecorder";
 import { ReportPreview } from "./components/ReportPreview";
@@ -822,7 +823,9 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               }
               onClick={() => go(p)}
             >
-              <Icon size={23} strokeWidth={1.8} aria-hidden="true" />
+              {page === p || (p === "home" && ["journey", "questionnaire"].includes(page)) || (p === "records" && ["report", "recordDetails"].includes(page))
+                ? <SelectedTabIcon tab={p} />
+                : <Icon size={23} strokeWidth={1.8} aria-hidden="true" />}
               <span className="sr-only">{t(en, cn)}</span>
             </button>
           ))}
