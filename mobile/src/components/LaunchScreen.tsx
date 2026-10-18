@@ -31,6 +31,10 @@ export function LaunchScreen({ language, initialSignIn = false, onContinue, onCl
       trigger.current?.focus();
     };
   }, [open]);
+  useEffect(() => {
+    // Announce the new screen without highlighting Back or opening the keyboard.
+    dialog.current?.querySelector<HTMLElement>("h1, h2")?.focus({ preventScroll: true });
+  }, [sheet]);
   function close() {
     setSheet(null);
     setMessage("");
@@ -67,7 +71,7 @@ export function LaunchScreen({ language, initialSignIn = false, onContinue, onCl
         <div className="account-sheet-handle" aria-hidden="true" />
         {sheet === "choices" && <button className="account-sheet-close" onClick={close} aria-label={t("Close", "關閉")}><X size={20} /></button>}
         {sheet !== "choices" ? <SignIn key={sheet} embedded emailOnly={sheet === "emailEntry"} language={language} onBack={() => { setSheet("choices"); setMessage(""); }} onContinue={continueLocal} /> : <div className="account-sheet-content">
-          <h2 id="account-sheet-title">{existing ? t("Welcome back", "歡迎返嚟") : t("Let’s get started", "一齊開始")}</h2>
+          <h2 id="account-sheet-title" tabIndex={-1}>{existing ? t("Welcome back", "歡迎返嚟") : t("Let’s get started", "一齊開始")}</h2>
           <div className="account-providers">
             <button className="account-provider" onClick={() => setMessage(t("Google sign-in is a preview and is not connected yet.", "Google 登入目前只供預覽，暫時未連接。"))}><img className="provider-google" src="/media/google-g.png" width="22" height="22" alt="" />{t("Continue with Google", "使用 Google 繼續")}</button>
             <button className="account-provider" onClick={() => setMessage(t("Apple sign-in is a preview and is not connected yet.", "Apple 登入目前只供預覽，暫時未連接。"))}><svg viewBox="5 3 15 18" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M17.1 12.3c0-2 1.6-3 1.7-3.1-1-1.4-2.5-1.6-3-1.6-1.3-.1-2.5.8-3.2.8-.6 0-1.6-.8-2.7-.8-1.4 0-2.7.9-3.4 2.1-1.5 2.6-.4 6.5 1 8.6.7 1 1.5 2.1 2.6 2 1-.1 1.5-.7 2.8-.7s1.7.7 2.8.7c1.2 0 1.9-1 2.6-2 .8-1.2 1.2-2.3 1.2-2.4-.1 0-2.4-.9-2.4-3.6ZM15 6.2c.6-.8 1.1-1.8 1-2.9-.9 0-2.1.6-2.7 1.4-.6.6-1.1 1.7-1 2.7 1 .1 2.1-.5 2.7-1.2Z" /></svg>{t("Continue with Apple", "使用 Apple 繼續")}</button>

@@ -72,7 +72,7 @@ export function SignIn({ language, onBack, onContinue, embedded = false, emailOn
         if (sentTo) { setSentTo(""); setCode(""); setShowCode(false); setError(""); }
         else onBack();
       }}><ArrowLeft size={20} aria-hidden="true" />{t("Back", "返回")}</button>
-      <header className="sign-in-heading"><h1 id="sign-in-title">{sentTo ? t("Check your email", "查看你的電郵", "查看你的邮箱") : linkMode ? t("Enter your email", "輸入你嘅電郵") : t("Welcome back", "歡迎返嚟")}</h1></header>
+      <header className="sign-in-heading"><h1 id="sign-in-title" tabIndex={-1}>{sentTo ? t("Check your email", "查看你的電郵", "查看你的邮箱") : linkMode ? t("Enter your email", "輸入你嘅電郵") : t("Welcome back", "歡迎返嚟")}</h1></header>
       {sentTo && <div className="sign-in-delivery" role="status">
         <p>{t("Open the sign-in link sent to", "請開啟發送至以下地址的登入連結：", "请打开已发送至以下地址的登录链接：")} <strong>{sentTo}</strong></p>
         <p>{t("Check your spam folder too. If the email contains a code, you can enter it below.", "也請查看垃圾郵件。如電郵附有驗證碼，可在下方輸入。", "也请检查垃圾邮件。如果邮件附有验证码，可在下方输入。")}</p>
