@@ -101,7 +101,7 @@ export function Dashboard({
       )}
       <section className="home-feedback" aria-labelledby="home-feedback-title">
         <h2 id="home-feedback-title">{t("Share your thoughts", "分享你的想法")}</h2>
-        <p>{t("Have an idea or feedback? Help us improve CareVoice.", "有新點子或意見？一起讓 CareVoice 做得更好。")}</p>
+        <p>{t("Have an idea or feedback?", "有新點子或意見？")}<br />{t("Help us improve CareVoice.", "一起讓 CareVoice 做得更好。")}</p>
         <button type="button" disabled>{t("Give feedback", "提供意見")}</button>
       </section>
     </div>
