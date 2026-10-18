@@ -2144,3 +2144,20 @@ main {
 .care-chat-dialog .care-chat-footer textarea { display: block; width: 0; flex: 1 1 0; min-width: 0; min-height: 48px; max-height: 120px; height: 48px; margin: 0; padding: 12px 14px; border-radius: 24px; font-size: 16px; line-height: 22px; overflow-y: auto; }
 .care-chat-dialog .care-chat-footer form button { flex: 0 0 48px; width: 48px; height: 48px; min-height: 48px; padding: 0; margin: 0; }
 .care-chat-dialog .care-chat-review { min-height: 0; min-width: 0; }
+
+.anonymous-qna{margin:28px 0;padding:0;min-width:0}
+.anonymous-qna .qna-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.anonymous-qna h2{font-size:22px;margin:0}
+.anonymous-qna .qna-heading button,.anonymous-qna .qna-back,.anonymous-qna .qna-card-actions button{border:0;background:transparent;color:#1964b8;min-height:44px;display:inline-flex;align-items:center;gap:7px;padding:8px}
+.anonymous-qna .qna-caption{display:block;font-size:13px;line-height:1.5;color:#667085;margin:8px 0 16px}
+.anonymous-qna .qna-card,.anonymous-qna .qna-compose{background:white;border:1px solid #e0e5ec;border-radius:18px;padding:18px;margin:14px 0;min-width:0}
+.anonymous-qna .qna-byline{display:flex;align-items:center;gap:7px;font-size:12px;color:#667085;flex-wrap:wrap}
+.anonymous-qna time{margin-left:auto;font-size:11px}
+.anonymous-qna .qna-card p{white-space:pre-wrap;overflow-wrap:anywhere;margin:14px 0;line-height:1.55}
+.anonymous-qna .qna-card-actions{display:flex;justify-content:space-between;gap:12px}
+.anonymous-qna .qna-card-actions button{font-size:13px}
+.anonymous-qna .qna-compose textarea{width:100%;min-width:0;min-height:100px;resize:vertical;margin:10px 0;font-size:16px}
+.anonymous-qna .qna-compose small{font-size:12px;color:#667085;line-height:1.5}
+.anonymous-qna .qna-consent{display:flex;align-items:flex-start;gap:10px;font-size:13px;margin:16px 0}
+.anonymous-qna .qna-consent input{width:18px;min-height:18px;margin:2px 0;flex-shrink:0}
+.anonymous-qna .qna-empty{padding:22px 12px;text-align:center;color:#667085;font-size:14px}

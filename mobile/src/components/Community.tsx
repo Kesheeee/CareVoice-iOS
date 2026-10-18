@@ -1,3 +1,4 @@
+import { AnonymousQna } from "./AnonymousQna";
 import { CareChat } from "./CareChat";
 import { useState } from "react";
 import { MessageCircle, Bookmark, X, Send, Heart } from "lucide-react";
@@ -76,6 +77,7 @@ export function Community({ language }: { language: Language }) {
         </div>
       </section>
       <CareChat open={compose} language={language} onClose={() => setCompose(false)} onPreview={text => {setDrafts([...drafts,text]);setView("drafts");}} />
+      <AnonymousQna language={language} />
       <section className="ask-browser">
         <div className="ask-section-heading"><h2>{view === "drafts" ? t("My post previews", "我的貼文預覽") : view === "saved" ? t("Saved questions", "已收藏問題") : t("Questions you may have", "你可能想問")}</h2>{view !== "questions" && <button onClick={() => setView("questions")}>{t("View all", "查看全部")}</button>}</div>
         {view === "drafts" ? (drafts.length ? drafts.map((draft,i)=><article className="ask-question-card" key={i}><span className="ask-topic">{t("Private preview · Not published", "私人預覽 · 未發佈")}</span><p>{draft}</p><button onClick={()=>{setDrafts(drafts.filter((_,j)=>i!==j));}}>{t("Remove preview", "移除預覽")}</button></article>) : <p>{t("Your question drafts will appear here.", "你的問題草稿會顯示於此。")}</p>) : <>
