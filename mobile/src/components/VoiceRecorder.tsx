@@ -1,15 +1,20 @@
 import { BrowserVoiceRecorder } from "./BrowserVoiceRecorder";
 import { translator } from "../i18n";
 import { useEffect, useRef, useState } from "react";
-import { Mic, Square } from "lucide-react";
+import { Mic, Square, Upload } from "lucide-react";
 import type { Language } from "../domain";
 import { transcribe, TranscriptionError } from "../platform/transcribe";
 
+import { AudioFileError } from "../platform/wav";
+
 const VOICE_LIMIT_SECONDS = 60;
 type Status = "idle" | "requesting" | "listening" | "transcribing" | "review" | "error";
-type ErrorKey = "unsupported" | "permission" | "microphone" | "network" | "no-speech" | "timeout" | "unknown" | "auth" | "unconfigured" | "rate-limit";
+type ErrorKey = "unsupported" | "permission" | "microphone" | "network" | "no-speech" | "timeout" | "unknown" | "auth" | "unconfigured" | "rate-limit" | "file-size" | "file-duration" | "file-format";
 
 const errors: Record<ErrorKey, [string, string]> = {
+  "file-size": ["Choose an audio file smaller than 20 MB.", "請選擇小於 20 MB 嘅音訊檔案。"],
+  "file-duration": ["Choose a clip up to 60 seconds. Trim longer recordings first.", "請選擇不超過 60 秒嘅錄音，較長錄音請先剪輯。"],
+  "file-format": ["This file couldn’t be read. Try an MP3, M4A or WAV audio file.", "未能讀取檔案，請試用 MP3、M4A 或 WAV 音訊檔案。"],
   auth: ["Sign in to use voice recording. You can still type your record.", "請先登入使用語音記錄，你仍可輸入文字。"],
   unconfigured: ["Voice transcription is being set up. Please use Text record for now.", "語音轉寫服務設定中，請暫時使用文字記錄。"],
   "rate-limit": ["The speech service is busy. Please try again shortly.", "語音服務繁忙，請稍後再試。"],
@@ -35,6 +40,9 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
   const [status, setStatus] = useState<Status>("idle");
   const [seconds, setSeconds] = useState(0);
   const [error, setError] = useState<ErrorKey | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState("");
 
   const callbacks = useRef({ onTranscript, onActiveChange, text });
   callbacks.current = { onTranscript, onActiveChange, text };
@@ -66,19 +74,19 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
   // Tear down on unmount.
   useEffect(() => () => { cancelledRef.current = true; generationRef.current++; requestRef.current?.abort(); clearTimer(); stopRecorder(); stopStream(); setActive(false); }, []);
 
-  const finish = async (generation: number, mimeType: string) => {
+  const finish = async (generation: number, mimeType: string, uploadedFile?: File) => {
     if (cancelledRef.current || generation !== generationRef.current) return;
     clearTimer();
     stopStream();
     recorderRef.current = null;
-    const blob = new Blob(chunksRef.current, { type: mimeType });
+    const blob = uploadedFile || new Blob(chunksRef.current, { type: mimeType });
     chunksRef.current = [];
     setStatus("transcribing");
     const controller = new AbortController();
     requestRef.current = controller;
     const timeout = window.setTimeout(() => controller.abort(), 60000);
     try {
-      const result = await transcribe(blob, locale, controller.signal);
+      const result = await transcribe(blob, locale, controller.signal, !!uploadedFile);
       if (cancelledRef.current || generation !== generationRef.current) return;
       const got = (result.text || "").trim();
       if (!got) { setStatus("error"); setError("no-speech"); setActive(false); return; }
@@ -87,9 +95,18 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
       setStatus("review"); setActive(false);
     } catch (e) {
       if (cancelledRef.current || generation !== generationRef.current) return;
-      const code = e instanceof TranscriptionError ? e.code : controller.signal.aborted ? "timeout" : "network";
+      const code = e instanceof TranscriptionError || e instanceof AudioFileError ? e.code : controller.signal.aborted ? "timeout" : "network";
       setStatus("error"); setError(code in errors ? code as ErrorKey : "network"); setActive(false);
     } finally { window.clearTimeout(timeout); }
+  };
+
+  const upload = (file?: File) => {
+    if (!file || busy) return;
+    const generation = ++generationRef.current;
+    cancelledRef.current = false;
+    baseTextRef.current = callbacks.current.text.trimEnd();
+    setFileName(file.name); setError(null); setSeconds(0); setActive(true);
+    void finish(generation, file.type, file);
   };
 
   const start = async () => {
@@ -97,7 +114,7 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
     const generation = ++generationRef.current;
     cancelledRef.current = false;
     baseTextRef.current = callbacks.current.text.trimEnd();
-    setError(null); setSeconds(0);
+    setError(null); setSeconds(0); setFileName("");
     setStatus("requesting"); setActive(true);
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
@@ -162,15 +179,19 @@ export function AzureVoiceRecorder({ language, text, onTranscript, onActiveChang
         <option value="en-US">English</option><option value="zh-HK">廣東話</option><option value="zh-CN">普通话</option>
       </select>
     </label>
+    {fileName && <p className="voice-file-name">{fileName}</p>}
     {statusLabel() && <p className="voice-progress" role="status">{statusLabel()}</p>}
-    {busy && <output className="voice-timer" aria-label={t("Recording time", "錄音時間")}>{`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} / 1:00`}</output>}
+    {status === "listening" && <output className="voice-timer" aria-label={t("Recording time", "錄音時間")}>{`${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")} / 1:00`}</output>}
     {error && <p className="voice-error" role="alert">{t(...errors[error])}</p>}
     {status === "transcribing" && <button type="button" className="secondary full" onClick={cancel}>{t("Cancel transcription", "取消轉寫")}</button>}
-    {busy ? <button type="button" className="primary full" disabled={status === "transcribing"} onClick={stop}>
+    {status !== "transcribing" && (busy ? <button type="button" className="primary full" onClick={stop}>
       <Square size={16} aria-hidden="true" />{status === "requesting" ? t("Cancel request", "取消請求") : t("Stop recording", "停止錄音")}
     </button> : <button type="button" className="primary full" onClick={start}>
       <Mic size={18} aria-hidden="true" />{error ? t("Try again", "再試一次") : status === "review" ? t("Record more", "繼續錄音") : t("Start recording", "開始錄音")}
-    </button>}
+    </button>)}
+    <input ref={fileInputRef} type="file" hidden accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg,.webm,.flac" aria-label={t("Choose audio file", "選擇音訊檔案")} onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; upload(file); }}/>
+    {!busy && <button type="button" className="secondary full voice-upload" onClick={() => fileInputRef.current?.click()}><Upload size={18} aria-hidden="true" />{t("Upload audio", "上傳錄音")}</button>}
+    {!busy && <small className="voice-upload-limit">{t("Up to 60 seconds · 20 MB", "最長 60 秒 · 20 MB")}</small>}
   </div>;
 }
 

@@ -14,10 +14,20 @@ export function encodeWav(samples: Float32Array): ArrayBuffer {
   return buffer;
 }
 
-export async function recordingToWav(audio: Blob): Promise<Blob> {
+export class AudioFileError extends Error {
+  code: string;
+  constructor(code: string) { super(code); this.code = code; }
+}
+
+export async function recordingToWav(audio: Blob, uploaded = false): Promise<Blob> {
+  if (!audio.size) throw new AudioFileError("file-format");
+  if (audio.size > 20 * 1024 * 1024) throw new AudioFileError("file-size");
   const context = new AudioContext();
   try {
-    const decoded = await context.decodeAudioData(await audio.arrayBuffer());
+    let decoded: AudioBuffer;
+    try { decoded = await context.decodeAudioData(await audio.arrayBuffer()); }
+    catch { throw new AudioFileError("file-format"); }
+    if (uploaded && decoded.duration > 60) throw new AudioFileError("file-duration");
     const frames = Math.min(Math.ceil(decoded.duration * 16000), 960000);
     if (!frames) throw new Error("Empty recording");
     const offline = new OfflineAudioContext(1, frames, 16000);

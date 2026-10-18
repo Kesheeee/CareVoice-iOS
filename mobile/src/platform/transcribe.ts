@@ -11,11 +11,11 @@ export class TranscriptionError extends Error {
 export async function transcribe(
   audio: Blob,
   language: string,
-  signal?: AbortSignal,
+  signal?: AbortSignal, uploaded = false,
 ): Promise<TranscribeResult> {
   const { data: { session } } = await authClient.auth.getSession();
   if (!session) throw new TranscriptionError("auth");
-  const wav = await recordingToWav(audio);
+  const wav = await recordingToWav(audio, uploaded);
   signal?.throwIfAborted();
   const { data, error } = await authClient.functions.invoke("transcribe", {
     body: wav, headers: { "Content-Type": "audio/wav", "x-speech-language": language }, signal,

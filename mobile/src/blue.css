@@ -2104,3 +2104,7 @@ main {
 .questionnaire-intro .question-group:hover{background:#f4f8fc}
 .questionnaire-intro .question-group:active{background:#e9f2fb}
 .questionnaire-intro .question-group:focus-visible{outline:2px solid var(--color-accent);outline-offset:-3px}
+
+.voice-recorder .voice-upload { margin-top: 10px; }
+.voice-recorder .voice-upload-limit { display: block; margin-top: 8px; color: var(--color-muted); }
+.voice-recorder .voice-file-name { overflow-wrap: anywhere; font-size: 0.875rem; }
