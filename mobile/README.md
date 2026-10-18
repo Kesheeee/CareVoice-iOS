@@ -1,113 +1,99 @@
 # CareVoice mobile web
 
-A phone-first React + TypeScript version of CareVoice. English and Traditional Chinese, with 33 questions: 31 verbatim Cantonese prompts from Queenie’s onboarding document and two additional safety prompts for seizures and self-injury. The existing native iOS project remains alongside it.
+Phone-first React 19 + TypeScript + Vite app, deployed at **https://carevoice-preview-zeta.vercel.app**. Use the `feature/mobile-web` branch for the current implementation. See the [project README](../README.md) for the product overview and team.
 
-The current UI follows the blue Cici UI+UX_1013 v4 reference, with subtitles removed. Queenie's onboarding rules override the mockup's score/results screen: Welcome → child profile → caregiver-selected stage → questionnaire introduction only for the just-noticing stage → answer review → Home. All other stages go straight to Home; everyone can open the questionnaire voluntarily from Profile.
+## Features
 
-Home shows actual monthly record counts and questionnaire completion, not clinical scores. Records link earlier entries only by an explicitly chosen category. Community contains official resources, parent support links and information questions rather than a live forum. Loss-of-skills Yes/Not sure surfaces an official professional contact route immediately and offers an optional timing note. Existing professional report details are optional copies, never inferred. Quick Record can use the microphone directly through the browser's speech-recognition service; only reviewed text is saved.
+- Home shortcuts, daily tracker, calendar, and logging streak.
+- Voice recording and audio upload with an editable transcript before saving.
+- 33 observation questions across seven categories, with autosave, skip, and review.
+- Ask CareVoice AI replies and curated service suggestions through FastAPI.
+- Live anonymous parent questions and replies through Supabase.
+- Caregiver-selected journey stage, personal checklists, profile editing, and settings.
+- Appointment/family reports, text export, browser print-to-PDF, and JSON backup/restore.
+- English, Traditional Chinese, and Simplified Chinese.
 
-The additional `regressionWhen` and professional-report fields are optional additions to schema version 1. Older saved data and backups load without migration or deletion. See `design.md` for the shared design system.
+No questionnaire score or diagnosis is produced. The native SwiftUI app is a separate implementation; see [parity notes](../docs/SWIFT_PARITY.md).
 
-## Run
+## Local setup
+
+Use Node.js 22.18+ or 24 and npm.
 
 ```sh
 npm ci
+```
+
+Copy `.env.example` to `.env.local`:
+
+```dotenv
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+Run the [FastAPI backend](../backend/README.md) separately, or use its deployed HTTPS URL for authorized testing.
+
+```sh
 npm run dev
 npm run build
 npm test
 ```
 
-The development server is available on your local network. Open the printed Network address on a phone connected to the same Wi-Fi. For a home-screen install, use HTTPS hosting. The current version does not cache the app offline.
+Vite prints the local and network addresses. Phone microphone capture requires HTTPS; a plain HTTP LAN URL is not sufficient. There is no offline app cache.
 
-## Implemented
+## Service connections
 
-Profile with caregiver-selected journey stages; observation create/edit/delete, context and filters; questionnaire with autosave, skip, review and immediate loss-of-skills, seizure and self-injury routing; personal journey checklist; official resource links; family/appointment reports, text sharing/download and browser print-to-PDF; local backup/restore and delete-all. No diagnosis or scores. Voice entry includes a direct microphone action, live transcript, Stop control and a 60-second limit.
+| Feature | Implementation |
+| --- | --- |
+| Accounts | Supabase email/password authentication in `src/platform/auth.ts` |
+| AI | `src/platform/ask.ts` calls `VITE_BACKEND_URL/ask` |
+| Voice | Supabase `transcribe` Edge Function calls Azure Speech |
+| Parent Q&A | Supabase `anonymous-qna` Edge Function and Postgres |
+| Personal notebook | Local storage scoped to account and browser origin |
 
-### Direct voice entry
+The Supabase public URL and publishable key currently live in `src/platform/auth.ts`. Replace them for your own installation and deploy the matching functions/schema. Provider keys and Supabase service-role credentials belong only on servers.
 
-Records → **+** → **Voice record** → **Start recording** calls the browser's `SpeechRecognition` / `webkitSpeechRecognition` API after an explicit tap. Select English, Cantonese or Mandarin; support depends on the browser's speech service. Microphone/speech permission and HTTPS are required. No OpenAI key or server endpoint is used. The browser provider may process audio remotely; the UI discloses this before recording. CareVoice retains no audio file and never saves a note automatically.
+The AI URL falls back to `http://localhost:8000` if unset. A production build must set the HTTPS backend address explicitly; otherwise visitors will attempt to contact their own device. Vite variables are baked into the bundle, so rebuild after changing them.
 
-Final recognised phrases appear in the draft; interim text stays separate. Stop waits for a final result, then the user can edit and save. Record more appends to existing text. Cancel, closing the panel, navigation and unmount release capture; backgrounding stops recording. Permission, device, network, unsupported-language, silence and timeout errors preserve existing text and provide retry or Text record. Browser implementations may end earlier than 60 seconds after silence.
+The alternative Supabase `ask-carevoice` function is retained in the repository but is not the current web chat route.
 
-References: [SpeechRecognition and browser compatibility](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition), [stop and final results](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition/stop).
+## Voice and uploaded audio
 
-## Android / iOS path
+Open Quick Record, select **Voice record**, and record or upload an audio file. The normal voice path converts audio to mono 16 kHz WAV and sends it through the authenticated Supabase function to Azure Speech. Review and edit the returned text before saving.
 
-`capacitor.config.ts` already identifies the static `dist` bundle. React UI, typed domain models, bilingual JSON and storage/share adapters are separate. This web app does not depend on a remote web server or an SSR framework.
+Uploads support MP3, M4A, WAV, AAC, and FLAC, capped at 60 seconds and 20 MB. The client checks file signatures and decodes audio; an audio-looking filename alone is insufficient. Browser support for individual codecs can vary.
 
-When native packaging is requested:
+English, Cantonese, and Mandarin are supported recording-language options. Permission errors, cancellation, and transcription failures preserve the existing draft. Audio is not saved to the notebook or a Supabase bucket by this flow. See [transcription setup](../supabase/functions/transcribe/README.md). `VITE_VOICE_BACKEND=browser` selects the browser-speech fallback where supported.
+
+## Accounts and data
+
+Email/password sign-up, sign-in, and password recovery use Supabase Auth. Google and Apple options remain previews. Confirmation and email delivery depend on the project's actual Auth settings; configure SMTP and allowed redirect URLs for your deployment. The shared production origin is `https://carevoice-preview-zeta.vercel.app`.
+
+Profiles, questionnaire answers, and observations remain local to this browser and account. There is no family-record cloud sync or CareVoice encryption of browser storage. Clearing browser data may erase the notebook. JSON backup/restore supports moving compatible web data; automatic Swift-to-web migration is not implemented. Exported PDFs remain independent copies.
+
+Anonymous Q&A is shared remotely. Other members see an anonymous identity, while administrators can associate content with accounts. Publishing requires an explicit action. See [Q&A setup and moderation](../supabase/functions/anonymous-qna/README.md).
+
+## Questionnaire compatibility
+
+Current question IDs are 101–133. Earlier IDs 1–30 remain readable in backups and appear separately in reports. Do not renumber persisted answers. Optional timing and professional-report fields remain compatible with schema version 1.
+
+Questions include prompts for loss of skills, seizures, and self-injury. Relevant responses show professional contact guidance without assigning a diagnosis. The caregiver chooses the journey stage.
+
+## Tests
+
+`npm test` runs the domain and speech tests. Additional checks:
 
 ```sh
-npm install @capacitor/android@^8 @capacitor/ios@^8
-npx cap add android
-npx cap add ios
-npm run native:sync
-npx cap open android
-# On macOS with Xcode:
-npx cap open ios
+node --experimental-strip-types --test tests/audio-upload.test.ts tests/streak.test.ts tests/transcribe.test.ts
+npx playwright install chromium
 ```
 
-Build `dist` before syncing. Native projects are deliberately not generated yet. Android Studio/JDK and macOS/Xcode are required for the respective platform builds; review the current Capacitor environment requirements before packaging. The new bundle identifier is `com.carevoice.mobile` to avoid colliding with the existing Swift app during development.
+Start `npm run dev` in another terminal, then run `npx playwright test`. The suite includes earlier preview-state fixtures; update affected expectations when changing integrations. Mocked tests do not validate live Azure/AI credentials. Test Safari permissions and actual uploads on a physical phone.
 
-Before a native release, replace `src/platform/storage.ts` with a native protected-file/encrypted-database implementation, implement native backup policy, and adapt sharing/permissions through Capacitor plugins as needed. Confirm external-link routing and Android back navigation, then validate safe areas, accessibility, dictation, sharing and lifecycle on physical devices. Packaging reuses the UI and domain code but does not replace release testing, signing or store requirements.
+## Deploy
 
-## Data
+Set the production `VITE_BACKEND_URL` before `npm run build`. Upload the resulting `dist/` directory to Vercel; see [deployment steps](../README.md#deploy). AI backend deployment is separate.
 
-New visitors see a full-screen video welcome. Get started opens account provider
-choices; the existing-account action opens the sign-in form. Email sign-in is
-connected to the CareVoice Supabase project: password signup and password login.
-New accounts enter email once and confirm a password of at least 8 characters, including uppercase and lowercase
-letters, a number and a symbol. The same policy is enforced by Supabase Auth.
-Passwords are sent only to Supabase Auth and are never stored in the notebook.
-Signup without a session shows an email-verification screen; it does not grant
-access. Set or reset password sends a recovery link and opens a password form
-only after Supabase verifies it. Magic-link/code login is no longer offered. Google and Apple remain previews.
-The public publishable key is bundled; no service-role key is used. Supabase
-persists and refreshes the browser session. Notes remain local, scoped by account
-ID, with an explicit choice before copying an existing preview notebook.
-Local survey setup
-is available at `/#onboarding`: nickname, birthday, seven Phase 1 journey stages,
-support goals, and optional notes. Returning local profiles open Home.
-Settings contains profile editing, language, care tools, backups, and privacy.
-Bottom navigation uses icons with accessible labels.
+The welcome video and illustrations are served from `public/media/`. They do not require a media-generation service at runtime. Reduced-motion/video-failure behavior uses the poster image.
 
-### Email delivery setup
+## Native packaging
 
-The Supabase Site URL is `https://carevoice-preview-zeta.vercel.app/`.
-Keep this URL in sync with the deployment domain. The client requests that origin
-as its email redirect; additional preview/local origins must be explicitly allowed
-in Supabase before real email links can return to them.
-
-The project currently uses Supabase's default sender and unchanged templates.
-That sender is restricted to project-team addresses and has a low email rate
-limit. Configure custom SMTP in Supabase before offering email login to the
-public. Do not disable email confirmation to work around delivery restrictions.
-See [Supabase email delivery](https://supabase.com/docs/guides/auth/auth-smtp).
-
-`tests/browser/auth.spec.ts` intercepts Auth requests with synthetic fixtures:
-these tests never send real email or create production accounts. Real email
-delivery and link opening must be checked separately.
-
-The welcome and sign-in background uses an eight-second portrait Higgsfield-generated
-parent-and-child video (`carevoice-family-hd.mp4`, original 720 × 1280 quality) and matching poster, served locally from
-`public/media/`. It loops without playback controls and shows the poster instead
-when reduced motion is requested or video playback fails. The login form does
-not depend on video playback or a Higgsfield connection at runtime.
-
-Data is local to this browser and origin, schema version 1, with no analytics or cloud record sync. CareVoice does not encrypt browser storage. Clearing browser data can erase records. Download a JSON backup to transfer between devices or future native builds. Restore validates the schema before replacing current data. A failed/corrupt read blocks writes to preserve the saved copy. Reports are independent copies once exported.
-
-The original Swift app's persisted JSON uses a different date/enum representation; automatic Swift-to-web data migration is not implemented.
-
-
-## Questionnaire revision — 15 October 2026
-
-Source: `Queenie_CareVoice Categorising Suspected ASD for Onboarding_.docx`. Frequency choices are Never / Sometimes / Often / Not sure; play variety has its own choices. Regression uses Yes / No / Not sure plus optional timing. Skip remains available for every question, resolving the document’s conflicting mandatory-regression instruction in favour of the user’s explicit requirement. No answer changes the caregiver-selected stage or produces a clinical score.
-
-New question IDs 101–133 avoid assigning old answers to rewritten prompts. IDs 1–30 remain valid in storage and backups; reports include those responses under an earlier-questionnaire heading with original wording. Current completion counts exclude earlier responses. The optional timing note for the new regression item uses ID 131.
-
-Safety Yes / Not sure on items 132–133 immediately displays conditional Hong Kong emergency routing and prompt medical follow-up, without interpreting the cause. It remains available on Home and Reports after reload. Emergency calls require the user to tap the phone link. The two safety prompts are implementation additions, not verbatim Queenie quotations. No unverified milestone ages or screening thresholds are used.
-
-Official routes checked 15 October 2026:
-- DH CAS concerns and referral: https://www.dhcas.gov.hk/en/faq.html
-- FSD emergency ambulance: https://www.hkfsd.gov.hk/eng/source/safety/uambu.htm
-- HA A&E directory: https://www.ha.org.hk/visitor/ha_visitor_index.asp?Content_ID=200246&Lang=ENG&Parent_ID=0
+`capacitor.config.ts` points to `dist` and uses `com.carevoice.mobile`. Native Capacitor projects are not generated in this repository. Packaging requires platform tooling and additional validation for permissions, protected storage, sharing, safe areas, and lifecycle. The existing `CareVoice.xcodeproj` is the separate SwiftUI app.
