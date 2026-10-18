@@ -649,8 +649,8 @@ function App() {
             <PageHeading title={t("Settings", "設定")} />
             <h2 className="profile-section">{t("Preferences", "偏好設定")}</h2>
             <div className="settings-list">
-              <button onClick={() => go("signIn")}>
-                <UserRound size={20} />{t("Sign in", "登入")}
+              <button onClick={openProfile}>
+                <UserRound size={20} />{t("Profile", "個人檔案")}
                 <ChevronRight size={17} />
               </button>
               <button
