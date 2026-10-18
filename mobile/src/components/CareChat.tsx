@@ -35,7 +35,7 @@ export function CareChat({open, language, onClose, onPreview}: {open:boolean;lan
     }
   };
 
-  return <dialog ref={dialog} className="care-chat-dialog" onCancel={onClose}>
+  return <dialog ref={dialog} className="care-chat-dialog" aria-label={t("Ask CareVoice", "詢問 CareVoice")} onCancel={onClose}>
     <header className="care-chat-header"><button aria-label={t('Back','返回')} onClick={()=>sharing?setSharing(false):onClose()}><ArrowLeft/></button><div><h2>{sharing?t('Review your question','檢查你的問題'):'CareVoice'}</h2><span>{t('AI assistance','AI 助手')}</span></div><MessageCircle aria-hidden="true"/></header>
     {sharing ? <div className="care-chat-review">
       <h3>{t('What would you like other parents to see?','你想讓其他家長看到甚麼？')}</h3>
