@@ -34,7 +34,8 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
     // Convert app-owned copy at display time, never saved user text or source quotations.
     func chineseText(_ traditional: String) -> String {
         guard self == .simplifiedChinese else { return traditional }
-        return traditional.applyingTransform(StringTransform("Traditional-Simplified"), reverse: false) ?? traditional
+        let simplified = traditional.applyingTransform(StringTransform("Traditional-Simplified"), reverse: false) ?? traditional
+        return simplified.replacingOccurrences(of: "帐户", with: "账户")
     }
     func text(_ en: String, _ zh: String) -> String { self == .english ? en : chineseText(zh) }
 }

@@ -7,7 +7,7 @@ final class CareVoiceCoreTests: XCTestCase {
         XCTAssertEqual(AppLanguage.english.text("Account preferences", "帳戶偏好"), "Account preferences")
         XCTAssertEqual(AppLanguage.traditionalChinese.text("Account preferences", "帳戶偏好"), "帳戶偏好")
         XCTAssertEqual(AppLanguage.simplifiedChinese.text("Account preferences", "帳戶偏好"), "账户偏好")
-        XCTAssertEqual(AppLanguage.simplifiedChinese.locale.identifier, "zh_Hans_CN")
+        XCTAssertEqual(AppLanguage.simplifiedChinese.locale, Locale(identifier: "zh_Hans_CN"))
         XCTAssertEqual(AppLanguage.simplifiedChinese.speechLocale, Locale(identifier: "zh-CN"))
         for language in AppLanguage.allCases {
             var data = AppData(); data.language = language
