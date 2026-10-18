@@ -420,7 +420,7 @@ struct MainView: View {
                 tab(0, "house", store.t("Home", "首頁"))
                 tab(1, "text.book.closed", store.t("Records", "記錄"))
                 tab(2, "person.2", store.t("Community", "社區"))
-                tab(3, "gearshape", store.t("Settings", "設定"))
+                tab(3, "person.crop.circle", store.t("Profile", "我的檔案"))
             }.padding(.horizontal).background(.bar)
         }
     }
@@ -943,7 +943,7 @@ enum PDFReport {
 struct ProfileView: View {
     @EnvironmentObject var store: AppStore
     @State private var editing = false
-    @State private var deleting = false
+
     var body: some View {
         List {
             if let p = store.data.profile {
@@ -960,6 +960,32 @@ struct ProfileView: View {
                     LabeledContent(store.t("Current stage", "目前階段")) { Text(p.stage.title(store.language)).multilineTextAlignment(.trailing) }
                 }
             }
+            Section(store.t("Your care tools", "你的照顧工具")) {
+                NavigationLink(store.t("Observation questionnaire", "情況問卷")) { QuestionnaireView() }
+                NavigationLink(store.t("Reports", "報告")) { ReportsView() }
+            }
+        }
+        .navigationTitle(store.t("Profile", "我的檔案"))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink { SettingsView() } label: {
+                    Image(systemName: "gearshape")
+                        .font(.title3)
+                        .frame(minWidth: 44, minHeight: 44)
+                }
+                .accessibilityLabel(store.t("Settings", "設定"))
+                .accessibilityIdentifier("openSettings")
+            }
+        }
+        .sheet(isPresented: $editing) { NavigationStack { ProfileEditor() } }
+    }
+}
+
+struct SettingsView: View {
+    @EnvironmentObject var store: AppStore
+    @State private var deleting = false
+    var body: some View {
+        List {
             Section(store.t("Preferences", "偏好設定")) {
                 Picker(store.t("Language", "語言"), selection: Binding(get: { store.language }, set: { store.setLanguage($0) })) {
                     Text("English").tag(AppLanguage.english)
@@ -983,7 +1009,7 @@ struct ProfileView: View {
                 Button(store.t("Delete all local data", "刪除所有本機資料"), role: .destructive) { deleting = true }
             }
         }.navigationTitle(store.t("Settings", "設定"))
-            .sheet(isPresented: $editing) { NavigationStack { ProfileEditor() } }
+            .navigationBarTitleDisplayMode(.inline)
             .alert(store.t("Delete all local data?", "刪除所有本機資料？"), isPresented: $deleting) {
                 Button(store.t("Cancel", "取消"), role: .cancel) { }
                 Button(store.t("Delete everything", "全部刪除"), role: .destructive) { store.erase() }
