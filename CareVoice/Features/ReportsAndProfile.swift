@@ -111,38 +111,3 @@ struct ProfileView: View {
         .sheet(isPresented: $editing) { NavigationStack { ProfileEditor() } }
     }
 }
-
-struct SettingsView: View {
-    @EnvironmentObject var store: AppStore
-    @State private var deleting = false
-    var body: some View {
-        List {
-            Section(store.t("Preferences", "偏好設定")) {
-                Picker(store.t("Language", "語言"), selection: Binding(get: { store.language }, set: { store.setLanguage($0) })) {
-                    Text("English").tag(AppLanguage.english)
-                    Text("繁體中文").tag(AppLanguage.traditionalChinese)
-                }.accessibilityIdentifier("languagePicker")
-                NavigationLink(store.t("Observation questionnaire", "情況問卷")) { QuestionnaireView() }
-                NavigationLink(store.t("Reports", "報告")) { ReportsView() }
-            }
-            Section(store.t("Your privacy", "你的私隱")) {
-                Label(store.t("Stored on this device", "儲存於此裝置"), systemImage: "iphone.and.arrow.forward")
-                Text(store.t("No account, analytics, advertising or cloud sync. Records use iOS file protection and are excluded from device backups. Deleting the app or losing the device may lose your records. Share a report when you want to keep a copy.", "無帳戶、分析追蹤、廣告或雲端同步。記錄使用 iOS 檔案保護，並不會包含於裝置備份。刪除應用程式或遺失裝置可能導致記錄遺失，你可分享報告以保留副本。"))
-                    .font(.footnote).foregroundStyle(.secondary)
-            }
-            Section(store.t("About CareVoice", "關於 CareVoice")) {
-                Text(store.t("A companion for observation and service navigation. This app does not diagnose, screen for ASD, infer severity or replace professional advice.", "協助觀察記錄及服務導航的工具，不提供診斷、自閉症篩查或嚴重程度判斷，亦不能替代專業意見。"))
-                    .font(.footnote).foregroundStyle(.secondary)
-                LabeledContent(store.t("Version", "版本"), value: "1.0 · MVP")
-            }
-            Section {
-                Button(store.t("Delete all local data", "刪除所有本機資料"), role: .destructive) { deleting = true }
-            }
-        }.navigationTitle(store.t("Settings", "設定"))
-            .navigationBarTitleDisplayMode(.inline)
-            .alert(store.t("Delete all local data?", "刪除所有本機資料？"), isPresented: $deleting) {
-                Button(store.t("Cancel", "取消"), role: .cancel) { }
-                Button(store.t("Delete everything", "全部刪除"), role: .destructive) { store.erase() }
-            } message: { Text(store.t("Your profile, questionnaire and records will be removed from this app. This cannot be undone. Copies you already shared are not deleted.", "你的檔案、問卷和記錄將從此應用程式移除，無法復原。已分享的副本不會被刪除。")) }
-    }
-}

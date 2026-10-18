@@ -109,6 +109,7 @@ struct Question: Codable, Identifiable {
 struct AppData: Codable, Equatable {
     var version = 1
     var language: AppLanguage = .english
+    var caregiverName: String? = nil
     var profile: ChildProfile? = nil
     var records: [BehaviorRecord] = []
     var answers: [Int: Answer] = [:]

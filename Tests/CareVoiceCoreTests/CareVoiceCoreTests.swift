@@ -2,6 +2,18 @@ import XCTest
 @testable import CareVoiceCore
 
 final class CareVoiceCoreTests: XCTestCase {
+    func testCaregiverNameRemainsCompatibleWithExistingData() throws {
+        var data = AppData()
+        data.profile = ChildProfile(nickname: "Sam")
+        data.caregiverName = "Alex"
+        let encoded = try JSONEncoder().encode(data)
+        XCTAssertEqual(try JSONDecoder().decode(AppData.self, from: encoded), data)
+        var legacy = try XCTUnwrap(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        legacy.removeValue(forKey: "caregiverName")
+        let restored = try JSONDecoder().decode(AppData.self, from: JSONSerialization.data(withJSONObject: legacy))
+        XCTAssertNil(restored.caregiverName)
+        XCTAssertEqual(restored.profile, data.profile)
+    }
     func testPersistenceRoundTrip() throws {
         var data = AppData(); data.profile = ChildProfile(nickname: "阿明"); data.language = .traditionalChinese
         data.records = [BehaviorRecord(text: "主動打招呼", category: .progress)]

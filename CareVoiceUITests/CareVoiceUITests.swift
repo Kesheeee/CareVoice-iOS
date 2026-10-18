@@ -1,6 +1,39 @@
 import XCTest
 
 final class CareVoiceUITests: XCTestCase {
+    func testSettingsNavigationAndPreferences() throws {
+        let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
+        XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
+        app.buttons["getStarted"].tap(); app.buttons["saveProfile"].tap()
+        app.tabBars.buttons["Profile"].tap()
+        app.buttons["openSettings"].tap()
+        XCTAssertTrue(app.buttons["settings-preferences"].waitForExistence(timeout: 5))
+        snapshot(app, "Settings-Overview")
+        app.buttons["settings-preferences"].tap()
+        let name = app.textFields["caregiverName"]
+        XCTAssertTrue(name.waitForExistence(timeout: 5)); name.tap(); name.typeText("Alex")
+        app.buttons["saveCaregiverName"].tap()
+        XCTAssertTrue(app.staticTexts["Saved on this device"].waitForExistence(timeout: 5))
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+        for page in ["security", "community", "data", "notifications", "help"] {
+            let row = app.buttons["settings-" + page]
+            if !row.isHittable { app.swipeUp() }
+            row.tap()
+            if page == "data" {
+                snapshot(app, "Settings-Data")
+                app.swipeUp()
+                app.buttons["deleteLocalData"].tap()
+                XCTAssertTrue(app.alerts.firstMatch.waitForExistence(timeout: 5))
+                app.alerts.buttons["Cancel"].tap()
+            }
+            app.navigationBars.buttons.element(boundBy: 0).tap()
+        }
+        app.terminate(); app.launchArguments = ["--ui-testing", "--preserve-ui-data"]; app.launch()
+        app.tabBars.buttons["Profile"].tap(); app.buttons["openSettings"].tap()
+        XCTAssertTrue(app.staticTexts["Alex"].waitForExistence(timeout: 5))
+        app.buttons["settings-preferences"].tap()
+        XCTAssertEqual(app.textFields["caregiverName"].value as? String, "Alex")
+    }
     func testOnboardingRecordingPersistenceAndReport() throws {
         let app = XCUIApplication(); app.launchArguments = ["--ui-testing"]; app.launch()
         XCTAssertTrue(app.buttons["getStarted"].waitForExistence(timeout: 10))
@@ -41,6 +74,8 @@ final class CareVoiceUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Question 2 of 30"].isHittable)
         snapshot(app, "05-Questionnaire")
         app.navigationBars.buttons.element(boundBy: 0).tap()
+        app.buttons["openSettings"].tap()
+        app.buttons["settings-preferences"].tap()
         app.buttons["languagePicker"].tap()
         app.buttons["繁體中文"].tap()
         XCTAssertTrue(app.tabBars.buttons["首頁"].waitForExistence(timeout: 5))
