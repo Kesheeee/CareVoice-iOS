@@ -366,11 +366,6 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
             filter={filter}
             onSearch={setSearch}
             onFilter={setFilter}
-            onVoice={() => {
-              setVoiceEntry(true);
-              setExpandRecordDetails(false);
-                setRecord(newRecord());
-            }}
             onReport={() => go("report")}
             onOpen={openRecord}
           />
@@ -805,8 +800,12 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
               ["profile", Settings, "Settings", "設定"],
             ] as const
           ).map(([p, Icon, en, cn]) => (
+            <React.Fragment key={p}>
+            {p === "resources" && <button className="nav-record-add" aria-label={t("Add a record", "新增記錄")} aria-haspopup="dialog"
+              onClick={() => { setExpandRecordDetails(false); setVoiceEntry(true); setRecord(newRecord()); }}>
+              <Plus size={27} aria-hidden="true" />
+            </button>}
             <button
-              key={p}
               className={
                 page === p ||
                 (p === "home" && ["journey", "questionnaire"].includes(page)) ||
@@ -828,6 +827,7 @@ function App({ user, signedOut }: { user: User | null; signedOut: boolean }) {
                 : <Icon size={23} strokeWidth={1.8} aria-hidden="true" />}
               <span className="sr-only">{t(en, cn)}</span>
             </button>
+            </React.Fragment>
           ))}
         </nav>
       )}

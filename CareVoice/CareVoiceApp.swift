@@ -77,6 +77,8 @@ struct SectionHeading: View {
 struct MainView: View {
     @EnvironmentObject var store: AppStore
     @State private var selection = 0
+    @State private var addingRecord = false
+    @State private var savedRecordID: UUID?
     var body: some View {
         NavigationStack {
             Group {
@@ -90,10 +92,16 @@ struct MainView: View {
                 HStack {
                     tab(0, "house", store.t("Home", "首頁"))
                     tab(1, "book", store.t("Records", "記錄"))
+                    Button { addingRecord = true } label: {
+                        Image(systemName: "plus").font(.system(size: 25, weight: .semibold))
+                            .foregroundStyle(.white).frame(width: 50, height: 50).background(Brand.blue, in: Circle())
+                    }.frame(maxWidth: .infinity).accessibilityLabel(store.t("New record", "新增記錄")).accessibilityIdentifier("addRecord")
                     tab(2, "person.2", store.t("Community", "社區"))
                     tab(3, "gearshape", store.t("Settings", "設定"))
                 }.padding(.vertical, 8).background(.bar)
             }
+            .sheet(isPresented: $addingRecord) { NavigationStack { RecordEditor(onSaved: { savedRecordID = $0.id }) } }
+            .navigationDestination(item: $savedRecordID) { id in RecordDetail(recordID: id) }
         }.id(selection)
     }
     private func tab(_ index: Int, _ icon: String, _ title: String) -> some View {

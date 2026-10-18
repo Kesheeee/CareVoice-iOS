@@ -4,8 +4,6 @@ struct RecordsView: View {
     @EnvironmentObject var store: AppStore
     @State private var search = ""
     @State private var category: RecordCategory?
-    @State private var adding = false
-    @State private var savedRecordID: UUID?
     private var filtered: [BehaviorRecord] {
         store.data.records.filter { r in
             (category == nil || r.category == category) && (search.isEmpty || r.text.localizedCaseInsensitiveContains(search) || r.location.localizedCaseInsensitiveContains(search))
@@ -33,11 +31,6 @@ struct RecordsView: View {
             .navigationTitle(store.t("Records", "記錄"))
             .toolbar { NavigationLink { ReportsView() } label: { Label(store.t("Reports", "報告"), systemImage: "doc.text").labelStyle(.titleAndIcon) } }
             .searchable(text: $search, prompt: store.t("Search observations", "搜尋記錄"))
-            .overlay(alignment: .bottomTrailing) {
-                Button { adding = true } label: { Image(systemName: "plus").font(.title2.bold()).foregroundStyle(.white).frame(width: 56, height: 56).background(Brand.blue, in: Circle()).shadow(color: .black.opacity(0.15), radius: 8, y: 4) }.padding(20).accessibilityLabel(store.t("New record", "新增記錄")).accessibilityIdentifier("addRecord")
-            }
-            .sheet(isPresented: $adding) { NavigationStack { RecordEditor(onSaved: { savedRecordID = $0.id }) } }
-            .navigationDestination(item: $savedRecordID) { id in RecordDetail(recordID: id) }
     }
     private func filterButton(_ title: String, value: RecordCategory?) -> some View {
         Button { category = value } label: {

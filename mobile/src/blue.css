@@ -2081,4 +2081,7 @@ main {
 .settings-session { margin-top: 28px; padding-top: 4px; border-top: 1px solid var(--color-line); }
 .settings-session .account-email { overflow-wrap: anywhere; }
 .settings-logout { display: block; width: 100%; min-height: 52px; padding: 12px 4px; text-align: left; color: var(--color-danger); background: none; border: 0; border-radius: 6px; font-weight: 500; }
+.bottom-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.bottom-nav .nav-record-add { justify-self: center; align-self: center; width: 50px; min-height: 50px; height: 50px; border-radius: 50%; background: var(--color-accent); color: var(--color-surface); }
+.bottom-nav .nav-record-add svg { width: 27px; height: 27px; stroke-width: 2.2; }
 @media (hover: hover) { .settings-logout:hover:not(:disabled) { text-decoration: underline; } }

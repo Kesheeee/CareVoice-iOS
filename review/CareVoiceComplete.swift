@@ -196,6 +196,8 @@ struct SectionHeading: View {
 struct MainView: View {
     @EnvironmentObject var store: AppStore
     @State private var selection = 0
+    @State private var addingRecord = false
+    @State private var savedRecordID: UUID?
     var body: some View {
         NavigationStack {
             Group {
@@ -209,10 +211,16 @@ struct MainView: View {
                 HStack {
                     tab(0, "house", store.t("Home", "首頁"))
                     tab(1, "book", store.t("Records", "記錄"))
+                    Button { addingRecord = true } label: {
+                        Image(systemName: "plus").font(.system(size: 25, weight: .semibold))
+                            .foregroundStyle(.white).frame(width: 50, height: 50).background(Brand.blue, in: Circle())
+                    }.frame(maxWidth: .infinity).accessibilityLabel(store.t("New record", "新增記錄")).accessibilityIdentifier("addRecord")
                     tab(2, "person.2", store.t("Community", "社區"))
                     tab(3, "gearshape", store.t("Settings", "設定"))
                 }.padding(.vertical, 8).background(.bar)
             }
+            .sheet(isPresented: $addingRecord) { NavigationStack { RecordEditor(onSaved: { savedRecordID = $0.id }) } }
+            .navigationDestination(item: $savedRecordID) { id in RecordDetail(recordID: id) }
         }.id(selection)
     }
     private func tab(_ index: Int, _ icon: String, _ title: String) -> some View {
@@ -2550,8 +2558,6 @@ struct RecordsView: View {
     @EnvironmentObject var store: AppStore
     @State private var search = ""
     @State private var category: RecordCategory?
-    @State private var adding = false
-    @State private var savedRecordID: UUID?
     private var filtered: [BehaviorRecord] {
         store.data.records.filter { r in
             (category == nil || r.category == category) && (search.isEmpty || r.text.localizedCaseInsensitiveContains(search) || r.location.localizedCaseInsensitiveContains(search))
@@ -2579,11 +2585,6 @@ struct RecordsView: View {
             .navigationTitle(store.t("Records", "記錄"))
             .toolbar { NavigationLink { ReportsView() } label: { Label(store.t("Reports", "報告"), systemImage: "doc.text").labelStyle(.titleAndIcon) } }
             .searchable(text: $search, prompt: store.t("Search observations", "搜尋記錄"))
-            .overlay(alignment: .bottomTrailing) {
-                Button { adding = true } label: { Image(systemName: "plus").font(.title2.bold()).foregroundStyle(.white).frame(width: 56, height: 56).background(Brand.blue, in: Circle()).shadow(color: .black.opacity(0.15), radius: 8, y: 4) }.padding(20).accessibilityLabel(store.t("New record", "新增記錄")).accessibilityIdentifier("addRecord")
-            }
-            .sheet(isPresented: $adding) { NavigationStack { RecordEditor(onSaved: { savedRecordID = $0.id }) } }
-            .navigationDestination(item: $savedRecordID) { id in RecordDetail(recordID: id) }
     }
     private func filterButton(_ title: String, value: RecordCategory?) -> some View {
         Button { category = value } label: {

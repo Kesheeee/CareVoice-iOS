@@ -2,7 +2,6 @@ import { translator } from "../i18n";
 import {
   BookOpen,
   FileText,
-  Plus,
   Search,
   X,
 } from "lucide-react";
@@ -20,7 +19,6 @@ export function RecordsScreen({
   filter,
   onSearch,
   onFilter,
-  onVoice,
   onReport,
   onOpen,
 }: {
@@ -30,7 +28,6 @@ export function RecordsScreen({
   filter: Category | "all";
   onSearch: (value: string) => void;
   onFilter: (value: Category | "all") => void;
-  onVoice: () => void;
   onReport: () => void;
   onOpen: (record: Observation) => void;
 }) {
@@ -119,15 +116,6 @@ export function RecordsScreen({
           )}
         </div>
       )}
-      <button
-        type="button"
-        className="records-add"
-        aria-label={t("Add a record", "新增記錄")}
-        aria-haspopup="dialog"
-        onClick={onVoice}
-      >
-        <Plus size={26} aria-hidden="true" />
-      </button>
     </section>
   );
 }
